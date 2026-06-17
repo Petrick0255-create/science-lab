@@ -213,7 +213,9 @@ footer {
   max-height:0;
   overflow:hidden;
   opacity:0;
-  transition:.3s;
+  transition:
+  max-height 0.7s ease,
+  opacity 0.4s ease;
 }
 
 .category-item:hover .dropdown{
