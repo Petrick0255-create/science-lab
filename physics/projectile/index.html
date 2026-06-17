@@ -2,133 +2,38 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>포물선 운동 시뮬레이터</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포물선 운동 문항 제작기</title>
 
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  background: #eef3f8;
-  color: #222;
-}
-
-header {
-  background: #1f2937;
-  color: white;
-  text-align: center;
-  padding: 10px;
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.home{
-  display:inline-block;
-  color:white;
-  text-decoration:none;
-  font-size:13px;
-  margin-top:6px;
-  opacity:.85;
-}
-
-.home:hover{
-  opacity:1;
-}
-
-.container {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 8px;
-}
-
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 9px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #444;
-}
-
-input, button {
-  width: 100%;
-  min-height: 34px;
-  padding: 6px;
-  font-size: 14px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-}
-
-button {
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-weight: 700;
-}
-
-button.secondary {
-  background: #4b5563;
-}
-
-.canvas-wrap {
-  width: 100%;
-  overflow: hidden;
-}
-
-canvas {
-  width: 100%;
-  height: 260px;
-  display: block;
-  border-radius: 12px;
-  background: #dbeafe;
-}
-
-.info {
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-line;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 5px;
-  text-align: center;
-}
-
-th {
-  background: #f3f4f6;
-}
-
-@media (max-width: 430px) {
-  canvas { height: 230px; }
-  input, button { font-size: 13px; }
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#eef3f8;color:#111}
+header{background:#1f2937;color:#fff;text-align:center;padding:12px;font-weight:800;font-size:17px}
+.home{display:inline-block;margin-top:6px;color:white;font-size:13px;text-decoration:none;opacity:.85}
+.container{max-width:1120px;margin:0 auto;padding:10px}
+.card{background:white;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+label{font-size:12px;font-weight:800;color:#333}
+input,select,button{width:100%;min-height:34px;padding:6px;font-size:14px;border-radius:8px;border:1px solid #cfd4dc}
+button{border:none;background:#2563eb;color:white;font-weight:800;cursor:pointer}
+button.secondary{background:#4b5563}
+button.dark{background:#111827}
+button.warn{background:#dc2626}
+.canvas-wrap{overflow:auto;background:#f8fafc;border-radius:12px;padding:8px}
+canvas{display:block;margin:0 auto;background:white;border:1px solid #ddd}
+.info{font-size:13px;line-height:1.55;white-space:pre-line}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #ddd;padding:5px;text-align:center}
+th{background:#f3f4f6}
+.small{font-size:12px;color:#555;line-height:1.5}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 
 <body>
 
 <header>
-  ⚛️ 자유 낙하와 수평 투사 운동 비교<br>
+  ⚛️ 포물선 운동 문항 제작기<br>
   <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
 </header>
 
@@ -137,322 +42,530 @@ th {
   <div class="card grid">
     <div>
       <label>높이 h (m)</label>
-      <input id="heightInput" type="number" value="20" step="1">
+      <input id="height" type="number" value="0.5" step="0.1">
     </div>
 
     <div>
-      <label>물체 B 수평 속력 v (m/s)</label>
-      <input id="speedInput" type="number" value="8" step="0.5">
+      <label>B 수평 속력 v (m/s)</label>
+      <input id="speed" type="number" value="0.5" step="0.1">
     </div>
 
     <div>
       <label>중력 가속도 g (m/s²)</label>
-      <input id="gravityInput" type="number" value="9.8" step="0.1">
+      <input id="gravity" type="number" value="10" step="0.1">
     </div>
 
     <div>
       <label>시간 간격 Δt (s)</label>
-      <input id="dtInput" type="number" value="0.1" step="0.1">
+      <input id="dt" type="number" value="0.1" step="0.1">
+    </div>
+
+    <div>
+      <label>가로 1칸 dₓ (m)</label>
+      <input id="dx" type="number" value="0.05" step="0.01">
+    </div>
+
+    <div>
+      <label>세로 1칸 dᵧ (m)</label>
+      <input id="dy" type="number" value="0.05" step="0.01">
+    </div>
+
+    <div>
+      <label>보기 간격</label>
+      <select id="showEvery">
+        <option value="1" selected>모든 점 표시</option>
+        <option value="2">2칸마다 표시</option>
+        <option value="5">5칸마다 표시</option>
+        <option value="10">10칸마다 표시</option>
+      </select>
+    </div>
+
+    <div>
+      <label>그림 모드</label>
+      <select id="viewMode">
+        <option value="current">현재 시각만</option>
+        <option value="trail">지나온 점</option>
+        <option value="all" selected>전체 점</option>
+      </select>
+    </div>
+
+    <div>
+      <label>표면 이름</label>
+      <input id="surfaceText" value="행성X 표면">
+    </div>
+
+    <div>
+      <label>아래 표시</label>
+      <input id="captionText" value="(가)">
+    </div>
+
+    <div>
+      <label>A 색</label>
+      <select id="aColor">
+        <option value="white">흰 공</option>
+        <option value="black" selected>검은 공</option>
+      </select>
+    </div>
+
+    <div>
+      <label>B 색</label>
+      <select id="bColor">
+        <option value="black">검은 공</option>
+        <option value="white" selected>흰 공</option>
+      </select>
+    </div>
+
+    <div>
+      <label>R, H 값 표시</label>
+      <select id="showGuideText">
+        <option value="yes">표시</option>
+        <option value="no" selected>숨김</option>
+      </select>
+    </div>
+
+    <div>
+      <label>R, H 점선 표시</label>
+      <select id="showGuideLine">
+        <option value="yes">표시</option>
+        <option value="no" selected>숨김</option>
+      </select>
     </div>
   </div>
 
   <div class="card grid">
-    <button onclick="startSimulation()">▶ 실행</button>
-    <button class="secondary" onclick="resetSimulation()">↺ 초기화</button>
+    <button onclick="build()">그림 만들기</button>
+    <button onclick="play()">▶ 영상 재생</button>
+    <button class="secondary" onclick="prevFrame()">◀ 한 단계 전</button>
+    <button class="secondary" onclick="nextFrame()">한 단계 후 ▶</button>
+
+    <button class="secondary" onclick="gridXPlus()">가로 격자 +</button>
+    <button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
+    <button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
+    <button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
+
+    <button class="dark" onclick="saveImage()">PNG 저장</button>
+    <button class="warn" onclick="resetAll()">초기화</button>
+  </div>
+
+  <div class="card small">
+    기본값: h=0.5m, v=0.5m/s, g=10m/s², Δt=0.1s, 가로/세로 1칸=0.05m.
+    그림에는 땅에 닿기 전 점까지만 표시됩니다.
   </div>
 
   <div class="card canvas-wrap">
-    <canvas id="simCanvas"></canvas>
+    <canvas id="canvas" width="900" height="620"></canvas>
   </div>
 
-  <div class="card info" id="resultInfo">아직 실행 전</div>
+  <div class="card info" id="info"></div>
 
   <div class="card">
     <table>
       <thead>
         <tr>
+          <th>순서</th>
           <th>시간 t(s)</th>
-          <th>A의 H(m)</th>
-          <th>B의 H(m)</th>
-          <th>B의 R(m)</th>
+          <th>A 낙하거리(m)</th>
+          <th>B 낙하거리(m)</th>
+          <th>B 수평거리(m)</th>
         </tr>
       </thead>
-      <tbody id="resultTable"></tbody>
+      <tbody id="table"></tbody>
     </table>
   </div>
 
 </div>
 
 <script>
-const canvas = document.getElementById("simCanvas");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let data = [];
 let frame = 0;
-let playing = false;
-let requestId = null;
-let lastTime = 0;
+let timer = null;
+let extraCols = 0;
+let extraRows = 0;
 
-function resizeCanvas() {
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
+function num(id){ return Number(document.getElementById(id).value); }
+function txt(id){ return document.getElementById(id).value; }
 
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  drawScene();
-}
-
-function getInputs() {
+function getInputs(){
   return {
-    h: Number(document.getElementById("heightInput").value),
-    v: Number(document.getElementById("speedInput").value),
-    g: Number(document.getElementById("gravityInput").value),
-    dt: Number(document.getElementById("dtInput").value)
+    h:num("height"),
+    v:num("speed"),
+    g:num("gravity"),
+    dt:num("dt"),
+    dx:num("dx"),
+    dy:num("dy"),
+    showEvery:Number(document.getElementById("showEvery").value),
+    viewMode:document.getElementById("viewMode").value,
+    surfaceText:txt("surfaceText"),
+    captionText:txt("captionText"),
+    aColor:document.getElementById("aColor").value,
+    bColor:document.getElementById("bColor").value,
+    showGuideText:document.getElementById("showGuideText").value,
+    showGuideLine:document.getElementById("showGuideLine").value
   };
 }
 
-function startSimulation() {
-  const { h, v, g, dt } = getInputs();
+function build(){
+  stop();
 
-  if (h <= 0 || g <= 0 || dt <= 0) {
-    alert("높이, 중력 가속도, 시간 간격은 0보다 커야 합니다.");
+  const s = getInputs();
+
+  if(s.h<=0 || s.g<=0 || s.dt<=0 || s.dx<=0 || s.dy<=0){
+    alert("h, g, Δt, dₓ, dᵧ는 모두 0보다 커야 합니다.");
     return;
   }
 
-  data = [];
-
-  const fallTime = Math.sqrt(2 * h / g);
-
-  for (let t = 0; t <= fallTime + 0.0001; t += dt) {
-    const H = 0.5 * g * t * t;
-    const R = v * t;
-
-    data.push({
-      t,
-      H: Math.min(H, h),
-      R
-    });
-  }
-
-  if (data[data.length - 1].H < h) {
-    const t = fallTime;
-    data.push({
-      t,
-      H: h,
-      R: v * t
-    });
-  }
-
+  data = makeData(s);
   frame = 0;
-  playing = true;
-  lastTime = 0;
-
   makeTable();
+  draw();
+}
+
+function makeData(s){
+  const arr = [];
+  const totalTime = Math.sqrt(2*s.h/s.g);
+
+  let n = 0;
+  while(true){
+    const t = n * s.dt;
+    const y = 0.5 * s.g * t * t;
+
+    if(y >= s.h - 1e-9) break;
+
+    arr.push({
+      t:t,
+      x:s.v*t,
+      y:y
+    });
+
+    n++;
+  }
+
+  return arr;
+}
+
+function buildSilent(){
+  const s = getInputs();
+  data = makeData(s);
+  frame = Math.min(frame, data.length-1);
+}
+
+function getFinalData(){
+  const s = getInputs();
+  const totalTime = Math.sqrt(2*s.h/s.g);
+  return {
+    t:totalTime,
+    x:s.v*totalTime,
+    y:s.h
+  };
+}
+
+function getGrid(){
+  const s = getInputs();
+  const final = getFinalData();
+
+  let cols = Math.ceil(final.x / s.dx) + 4 + extraCols;
+  let rows = Math.ceil(s.h / s.dy) + 1 + extraRows;
+
+  cols = Math.max(cols, 5);
+  rows = Math.max(rows, 5);
+
+  return {cols, rows};
+}
+
+function draw(){
+  if(!data.length) buildSilent();
+
+  const s = getInputs();
+  const grid = getGrid();
+
+  const cell = 48;
+  const left = 70;
+  const top = 58;
+  const rightSpace = 28;
+  const bottomSpace = 94;
+
+  const gridW = grid.cols * cell;
+  const gridH = grid.rows * cell;
+
+  canvas.width = left + gridW + rightSpace;
+  canvas.height = top + gridH + bottomSpace;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawGrid(left, top, grid.cols, grid.rows, cell);
+  drawSurface(left, top + gridH, gridW, s);
+
+  if(s.viewMode === "all"){
+    drawPoints(0, data.length-1, left, top, cell, s);
+  }else if(s.viewMode === "trail"){
+    drawPoints(0, frame, left, top, cell, s);
+  }else{
+    drawPoints(frame, frame, left, top, cell, s);
+  }
+
+  drawGuide(left, top, cell, s);
   updateInfo();
-
-  if (requestId) cancelAnimationFrame(requestId);
-  requestId = requestAnimationFrame(loop);
 }
 
-function resetSimulation() {
-  playing = false;
-  frame = 0;
-  data = [];
-  document.getElementById("resultInfo").textContent = "아직 실행 전";
-  document.getElementById("resultTable").innerHTML = "";
-  drawScene();
+function drawGrid(x0, y0, cols, rows, cell){
+  ctx.strokeStyle = "#9ca3af";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5,4]);
+
+  for(let c=0;c<=cols;c++){
+    ctx.beginPath();
+    ctx.moveTo(x0+c*cell, y0);
+    ctx.lineTo(x0+c*cell, y0+rows*cell);
+    ctx.stroke();
+  }
+
+  for(let r=0;r<=rows;r++){
+    ctx.beginPath();
+    ctx.moveTo(x0, y0+r*cell);
+    ctx.lineTo(x0+cols*cell, y0+r*cell);
+    ctx.stroke();
+  }
+
+  ctx.setLineDash([]);
 }
 
-function loop(timestamp) {
-  if (!lastTime) lastTime = timestamp;
+function drawSurface(x0, groundY, gridW, s){
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=2;
 
-  if (playing && timestamp - lastTime > 45) {
+  ctx.beginPath();
+  ctx.moveTo(x0-10, groundY);
+  ctx.lineTo(x0+gridW+10, groundY);
+  ctx.stroke();
+
+  const grad = ctx.createLinearGradient(0, groundY, 0, groundY+34);
+  grad.addColorStop(0, "#f9fafb");
+  grad.addColorStop(1, "#d1d5db");
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(x0-10, groundY, gridW+20, 34);
+
+  ctx.fillStyle="#111";
+  ctx.font="26px serif";
+  ctx.textAlign="center";
+  ctx.fillText(s.surfaceText, x0+gridW/2, groundY+25);
+
+  ctx.font="25px serif";
+  ctx.fillText(s.captionText, x0+gridW/2, groundY+70);
+
+  ctx.textAlign="left";
+}
+
+function screenX(x, x0, cell, s){
+  return x0 + cell*3 + (x / s.dx) * cell;
+}
+
+function screenY(y, y0, cell, s){
+  return y0 + (y / s.dy) * cell;
+}
+
+function drawPoints(start, end, x0, y0, cell, s){
+  const aX = x0 + cell;
+  const bX0 = x0 + cell*3;
+
+  ctx.fillStyle="#111";
+  ctx.font="27px serif";
+  ctx.textAlign="center";
+
+  ctx.fillText("A", aX, y0-10);
+  ctx.fillText("B", bX0, y0-10);
+
+  for(let i=start;i<=end;i++){
+    if(i % s.showEvery !== 0 && i !== frame) continue;
+
+    const p = data[i];
+
+    const ax = aX;
+    const ay = screenY(p.y, y0, cell, s);
+
+    const bx = screenX(p.x, x0, cell, s);
+    const by = screenY(p.y, y0, cell, s);
+
+    drawBall(ax, ay, s.aColor);
+    drawBall(bx, by, s.bColor);
+  }
+
+  ctx.textAlign="left";
+}
+
+function drawGuide(x0, y0, cell, s){
+  if(!data.length) return;
+
+  const p = data[frame];
+
+  const bX0 = x0 + cell*3;
+  const bx = screenX(p.x, x0, cell, s);
+  const by = screenY(p.y, y0, cell, s);
+
+  if(s.showGuideLine === "yes"){
+    ctx.strokeStyle="#111";
+    ctx.lineWidth=1.2;
+    ctx.setLineDash([4,4]);
+
+    ctx.beginPath();
+    ctx.moveTo(bx, y0);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(bX0, by);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+  }
+
+  if(s.showGuideText === "yes"){
+    ctx.fillStyle="#111";
+    ctx.font="13px Arial";
+    ctx.fillText(`t=${p.t.toFixed(2)}s`, bx+8, by-8);
+    ctx.fillText(`R=${p.x.toFixed(2)}m`, (bX0+bx)/2-18, by-8);
+    ctx.fillText(`H=${p.y.toFixed(2)}m`, bx+8, (y0+by)/2);
+  }
+}
+
+function drawBall(x, y, style){
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI*2);
+
+  if(style==="black"){
+    ctx.fillStyle="#333";
+    ctx.fill();
+  }else{
+    ctx.fillStyle="white";
+    ctx.fill();
+  }
+
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=2.4;
+  ctx.stroke();
+}
+
+function play(){
+  if(!data.length) build();
+  stop();
+
+  timer = setInterval(()=>{
     frame++;
 
-    if (frame >= data.length) {
-      frame = data.length - 1;
-      playing = false;
+    if(frame >= data.length){
+      frame = data.length-1;
+      stop();
     }
 
-    drawScene();
-    updateInfo();
-    lastTime = timestamp;
+    draw();
+  }, 180);
+}
+
+function stop(){
+  if(timer){
+    clearInterval(timer);
+    timer = null;
   }
-
-  requestId = requestAnimationFrame(loop);
 }
 
-function worldToScreenX(x, maxR) {
-  const w = canvas.getBoundingClientRect().width;
-  return 60 + x / Math.max(maxR, 1) * (w - 100);
+function nextFrame(){
+  stop();
+  if(!data.length) build();
+  frame = Math.min(frame+1, data.length-1);
+  draw();
 }
 
-function worldToScreenY(H, h) {
-  const ch = canvas.getBoundingClientRect().height;
-  const top = 30;
-  const bottom = ch - 45;
-  return top + H / h * (bottom - top);
+function prevFrame(){
+  stop();
+  if(!data.length) build();
+  frame = Math.max(frame-1, 0);
+  draw();
 }
 
-function drawScene() {
-  const w = canvas.getBoundingClientRect().width;
-  const hpx = canvas.getBoundingClientRect().height;
+function gridXPlus(){ extraCols++; draw(); }
+function gridXMinus(){ extraCols--; draw(); }
+function gridYPlus(){ extraRows++; draw(); }
+function gridYMinus(){ extraRows--; draw(); }
 
-  ctx.clearRect(0, 0, w, hpx);
-
-  const { h } = getInputs();
-  const current = data.length ? data[frame] : { t: 0, H: 0, R: 0 };
-  const maxR = data.length ? data[data.length - 1].R : 20;
-
-  // 배경
-  const grad = ctx.createLinearGradient(0, 0, 0, hpx);
-  grad.addColorStop(0, "#bfdbfe");
-  grad.addColorStop(1, "#eff6ff");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, hpx);
-
-  // 지면
-  ctx.fillStyle = "#86efac";
-  ctx.fillRect(0, hpx - 38, w, 38);
-
-  // 절벽
-  const cliffX = 45;
-  const topY = worldToScreenY(0, h);
-  const groundY = worldToScreenY(h, h);
-
-  ctx.fillStyle = "#9ca3af";
-  ctx.fillRect(20, topY, 50, groundY - topY);
-
-  ctx.fillStyle = "#374151";
-  ctx.font = "12px Arial";
-  ctx.fillText("높이 h", 18, (topY + groundY) / 2);
-
-  // 궤적
-  if (data.length) {
-    ctx.lineWidth = 2;
-
-    ctx.strokeStyle = "#2563eb";
-    ctx.beginPath();
-    for (let i = 0; i <= frame; i++) {
-      const x = cliffX;
-      const y = worldToScreenY(data[i].H, h);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    ctx.strokeStyle = "#f97316";
-    ctx.beginPath();
-    for (let i = 0; i <= frame; i++) {
-      const x = worldToScreenX(data[i].R, maxR);
-      const y = worldToScreenY(data[i].H, h);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-
-  // 물체 A
-  const ax = cliffX;
-  const ay = worldToScreenY(current.H, h);
-  drawBall(ax, ay, "#2563eb", "A");
-
-  // 물체 B
-  const bx = worldToScreenX(current.R, maxR);
-  const by = worldToScreenY(current.H, h);
-  drawBall(bx, by, "#f97316", "B");
-
-  // H 표시
-  ctx.strokeStyle = "#111";
-  ctx.setLineDash([5, 4]);
-  ctx.beginPath();
-  ctx.moveTo(bx, topY);
-  ctx.lineTo(bx, by);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.fillStyle = "#111";
-  ctx.font = "12px Arial";
-  ctx.fillText("H=" + current.H.toFixed(2) + "m", bx + 6, (topY + by) / 2);
-
-  // R 표시
-  ctx.strokeStyle = "#111";
-  ctx.setLineDash([5, 4]);
-  ctx.beginPath();
-  ctx.moveTo(cliffX, groundY + 14);
-  ctx.lineTo(bx, groundY + 14);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.fillStyle = "#111";
-  ctx.fillText("R=" + current.R.toFixed(2) + "m", (cliffX + bx) / 2 - 20, groundY + 30);
-}
-
-function drawBall(x, y, color, label) {
-  ctx.beginPath();
-  ctx.arc(x, y, 13, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = "#111";
-  ctx.font = "13px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(label, x, y - 18);
-  ctx.textAlign = "left";
-}
-
-function updateInfo() {
-  if (!data.length) return;
-
-  const { h, v, g } = getInputs();
-  const current = data[frame];
-  const final = data[data.length - 1];
-
-  document.getElementById("resultInfo").textContent =
-    `t = ${current.t.toFixed(2)} s
-A와 B의 연직 이동 거리 H = ${current.H.toFixed(2)} m
-B의 수평 이동 거리 R = ${current.R.toFixed(2)} m
-
-최종 낙하 시간 = ${final.t.toFixed(2)} s
-최종 수평 이동 거리 R = ${final.R.toFixed(2)} m
-중력 가속도 g = ${g} m/s²
-B의 수평 속력 = ${v} m/s`;
-}
-
-function makeTable() {
-  const tbody = document.getElementById("resultTable");
+function makeTable(){
+  const tbody = document.getElementById("table");
   tbody.innerHTML = "";
 
-  data.forEach(row => {
+  data.forEach((p,i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${row.t.toFixed(2)}</td>
-      <td>${row.H.toFixed(2)}</td>
-      <td>${row.H.toFixed(2)}</td>
-      <td>${row.R.toFixed(2)}</td>
+      <td>${i}</td>
+      <td>${p.t.toFixed(2)}</td>
+      <td>${p.y.toFixed(3)}</td>
+      <td>${p.y.toFixed(3)}</td>
+      <td>${p.x.toFixed(3)}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-window.addEventListener("resize", () => {
-  setTimeout(resizeCanvas, 100);
-});
+function updateInfo(){
+  if(!data.length) return;
 
-window.addEventListener("orientationchange", () => {
-  setTimeout(resizeCanvas, 400);
-});
+  const s = getInputs();
+  const now = data[frame];
+  const final = getFinalData();
+  const grid = getGrid();
 
-window.addEventListener("load", () => {
-  resizeCanvas();
-  setTimeout(resizeCanvas, 300);
-});
+  document.getElementById("info").textContent =
+`현재 시각 t = ${now.t.toFixed(2)} s
+A와 B의 낙하 거리 = ${now.y.toFixed(3)} m
+B의 수평 이동 거리 = ${now.x.toFixed(3)} m
+
+전체 낙하 시간 = ${final.t.toFixed(3)} s
+최종 수평 도달 거리 = ${final.x.toFixed(3)} m
+
+격자 설정
+가로 1칸 dₓ = ${s.dx} m
+세로 1칸 dᵧ = ${s.dy} m
+가로 칸 수 = ${grid.cols}
+세로 칸 수 = ${grid.rows}`;
+}
+
+function saveImage(){
+  const link = document.createElement("a");
+  link.download = "projectile_problem.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+function resetAll(){
+  stop();
+
+  frame = 0;
+  extraCols = 0;
+  extraRows = 0;
+
+  document.getElementById("height").value = 0.5;
+  document.getElementById("speed").value = 0.5;
+  document.getElementById("gravity").value = 10;
+  document.getElementById("dt").value = 0.1;
+  document.getElementById("dx").value = 0.05;
+  document.getElementById("dy").value = 0.05;
+  document.getElementById("showEvery").value = 1;
+  document.getElementById("viewMode").value = "all";
+  document.getElementById("surfaceText").value = "행성X 표면";
+  document.getElementById("captionText").value = "(가)";
+  document.getElementById("aColor").value = "black";
+  document.getElementById("bColor").value = "white";
+  document.getElementById("showGuideText").value = "no";
+  document.getElementById("showGuideLine").value = "no";
+
+  build();
+}
+
+window.onload = build;
 </script>
 
 </body>
