@@ -8,7 +8,6 @@
 
 <link rel="stylesheet" href="style.css">
 <link rel="icon" href="logo.png">
-
 </head>
 
 <body>
@@ -27,155 +26,60 @@
       과학을 직접 실험하고 관찰하는 온라인 실험실<br>
       물리 · 화학 · 생명과학 · 지구과학 시뮬레이터
     </p>
-
-    <a href="#experiments" class="start-btn">실험 시작하기 →</a>
   </section>
 
   <div class="section-title">실험 카테고리</div>
 
   <section class="lab-grid">
 
-    <a href="#physics" class="card physics">
+    <div class="card physics">
       <div class="icon">⚛️</div>
       <h2>물리학</h2>
       <p>운동, 힘, 에너지, 충돌, 파동과 전기 현상을 실험합니다.</p>
-      <div class="go">들어가기 →</div>
-    </a>
 
-    <a href="#chemistry" class="card chemistry">
+      <div class="experiment-list">
+        <a href="physics/collision/index.html">충돌 실험 시뮬레이터</a>
+        <a href="physics/projectile/index.html">자유낙하와 수평 투사</a>
+        <a href="#">포물선 운동 <span>제작 예정</span></a>
+      </div>
+    </div>
+
+    <div class="card chemistry">
       <div class="icon">🧪</div>
       <h2>화학</h2>
       <p>중화 반응, 기체 법칙, 반응 속도 변화를 시각화합니다.</p>
-      <div class="go">들어가기 →</div>
-    </a>
 
-    <a href="#biology" class="card biology">
+      <div class="experiment-list">
+        <a href="chemistry/neutralization/index.html">중화 반응 시뮬레이터</a>
+        <a href="#">기체 법칙 <span>제작 예정</span></a>
+        <a href="#">반응 속도 <span>제작 예정</span></a>
+      </div>
+    </div>
+
+    <div class="card biology">
       <div class="icon">🧬</div>
       <h2>생명과학</h2>
       <p>효소, 세포, 유전자 발현을 직접 실험합니다.</p>
-      <div class="go">들어가기 →</div>
-    </a>
 
-    <a href="#earth" class="card earth">
+      <div class="experiment-list">
+        <a href="biology/dna-transcription/index.html">DNA 전사 시뮬레이터</a>
+        <a href="#">효소 작용 <span>제작 예정</span></a>
+        <a href="#">유전자 발현 <span>제작 예정</span></a>
+      </div>
+    </div>
+
+    <div class="card earth">
       <div class="icon">🌎</div>
       <h2>지구과학</h2>
       <p>판 구조론, 해령 확장, 지구 시스템을 탐구합니다.</p>
-      <div class="go">들어가기 →</div>
-    </a>
 
-  </section>
-
-  <div class="section-title" id="experiments">물리학 실험실</div>
-
-  <section class="experiments" id="physics">
-
-    <a class="experiment" href="physics/collision/index.html">
-      <div>
-        <strong>충돌 실험 시뮬레이터</strong><br>
-        <span>운동량 보존과 탄성 충돌</span>
+      <div class="experiment-list">
+        <a href="earth/plate_boundary/index.html">판 경계와 연령 분포 시뮬레이터</a>
+        <a href="#">해령 확장 <span>제작 예정</span></a>
       </div>
-      <div>→</div>
-    </a>
-
-    <a class="experiment" href="physics/projectile/index.html">
-      <div>
-        <strong>자유낙하와 수평 투사</strong><br>
-        <span>H와 R 비교 실험</span>
-      </div>
-      <div>→</div>
-    </a>
-
-    <a class="experiment" href="#">
-      <div>
-        <strong>포물선 운동</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
-
-  </section>
-
-  <div class="section-title" id="chemistry">화학 실험실</div>
-
-  <section class="experiments">
-
-    <a class="experiment" href="chemistry/neutralization/index.html">
-      <div>
-        <strong>중화 반응 시뮬레이터</strong><br>
-        <span>1가·2가·3가 산염기와 총 이온수 비교</span>
-      </div>
-      <div>→</div>
-    </a>
-
-    <a class="experiment" href="#">
-      <div>
-        <strong>기체 법칙</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
-
-    <a class="experiment" href="#">
-      <div>
-        <strong>반응 속도</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
-
-  </section>
-
-  <div class="section-title" id="biology">생명과학 실험실</div>
-
-  <a class="experiment" href="biology/dna-transcription/index.html">
-    <div>
-      <strong>DNA 전사 시뮬레이터</strong><br>
-      <span>주형 가닥 선택과 RNA 염기 조성 계산</span>
     </div>
-    <div>→</div>
-  </a>
-
-  <section class="experiments">
-
-    <a class="experiment" href="#">
-      <div>
-        <strong>효소 작용</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
-
-    <a class="experiment" href="#">
-      <div>
-        <strong>유전자 발현</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
 
   </section>
-
-  <div class="section-title" id="earth">지구과학 실험실</div>
-  
-  <section class="experiments">
-  
-    <a class="experiment" href="earth/plate_boundary/index.html">
-      <div>
-        <strong>판 경계와 연령 분포 시뮬레이터</strong><br>
-        <span>수렴형 · 발산형 · 보존형 경계와 해양지각 연령 분포</span>
-      </div>
-      <div>→</div>
-    </a>
-  
-    <a class="experiment" href="#">
-      <div>
-        <strong>해령 확장</strong><br>
-        <span>제작 예정</span>
-      </div>
-      <div>⌛</div>
-    </a>
-
-</section>
 
 </main>
 
