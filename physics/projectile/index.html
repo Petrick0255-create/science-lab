@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>포물선 운동 시뮬레이터</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #eef3f8;
+  color: #222;
+}
+
+header {
+  background: #1f2937;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 9px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+
+input, button {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+}
+
+button.secondary {
+  background: #4b5563;
+}
+
+.canvas-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 260px;
+  display: block;
+  border-radius: 12px;
+  background: #dbeafe;
+}
+
+.info {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+@media (max-width: 430px) {
+  canvas { height: 230px; }
+  input, button { font-size: 13px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>자유 낙하와 수평 투사 운동 비교</header>
+
+<div class="container">
+
+  <div class="card grid">
+    <div>
+      <label>높이 h (m)</label>
+      <input id="heightInput" type="number" value="20" step="1">
+    </div>
+
+    <div>
+      <label>물체 B 수평 속력 v (m/s)</label>
+      <input id="speedInput" type="number" value="8" step="0.5">
+    </div>
+
+    <div>
+      <label>중력 가속도 g (m/s²)</label>
+      <input id="gravityInput" type="number" value="9.8" step="0.1">
+    </div>
+
+    <div>
+      <label>시간 간격 Δt (s)</label>
+      <input id="dtInput" type="number" value="0.1" step="0.1">
+    </div>
+  </div>
+
+  <div class="card grid">
+    <button onclick="startSimulation()">▶ 실행</button>
+    <button class="secondary" onclick="resetSimulation()">↺ 초기화</button>
+  </div>
+
+  <div class="card canvas-wrap">
+    <canvas id="simCanvas"></canvas>
+  </div>
+
+  <div class="card info" id="resultInfo">아직 실행 전</div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>시간 t(s)</th>
+          <th>A의 H(m)</th>
+          <th>B의 H(m)</th>
+          <th>B의 R(m)</th>
+        </tr>
+      </thead>
+      <tbody id="resultTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+
+let data = [];
+let frame = 0;
+let playing = false;
+let requestId = null;
+let lastTime = 0;
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  drawScene();
+}
+
+function getInputs() {
+  return {
+    h: Number(document.getElementById("heightInput").value),
+    v: Number(document.getElementById("speedInput").value),
+    g: Number(document.getElementById("gravityInput").value),
+    dt: Number(document.getElementById("dtInput").value)
+  };
+}
+
+function startSimulation() {
+  const { h, v, g, dt } = getInputs();
+
+  if (h <= 0 || g <= 0 || dt <= 0) {
+    alert("높이, 중력 가속도, 시간 간격은 0보다 커야 합니다.");
+    return;
+  }
+
+  data = [];
+
+  const fallTime = Math.sqrt(2 * h / g);
+
+  for (let t = 0; t <= fallTime + 0.0001; t += dt) {
+    const H = 0.5 * g * t * t;
+    const R = v * t;
+
+    data.push({
+      t,
+      H: Math.min(H, h),
+      R
+    });
+  }
+
+  if (data[data.length - 1].H < h) {
+    const t = fallTime;
+    data.push({
+      t,
+      H: h,
+      R: v * t
+    });
+  }
+
+  frame = 0;
+  playing = true;
+  lastTime = 0;
+
+  makeTable();
+  updateInfo();
+
+  if (requestId) cancelAnimationFrame(requestId);
+  requestId = requestAnimationFrame(loop);
+}
+
+function resetSimulation() {
+  playing = false;
+  frame = 0;
+  data = [];
+  document.getElementById("resultInfo").textContent = "아직 실행 전";
+  document.getElementById("resultTable").innerHTML = "";
+  drawScene();
+}
+
+function loop(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+
+  if (playing && timestamp - lastTime > 45) {
+    frame++;
+
+    if (frame >= data.length) {
+      frame = data.length - 1;
+      playing = false;
+    }
+
+    drawScene();
+    updateInfo();
+    lastTime = timestamp;
+  }
+
+  requestId = requestAnimationFrame(loop);
+}
+
+function worldToScreenX(x, maxR) {
+  const w = canvas.getBoundingClientRect().width;
+  return 60 + x / Math.max(maxR, 1) * (w - 100);
+}
+
+function worldToScreenY(H, h) {
+  const ch = canvas.getBoundingClientRect().height;
+  const top = 30;
+  const bottom = ch - 45;
+  return top + H / h * (bottom - top);
+}
+
+function drawScene() {
+  const w = canvas.getBoundingClientRect().width;
+  const hpx = canvas.getBoundingClientRect().height;
+
+  ctx.clearRect(0, 0, w, hpx);
+
+  const { h } = getInputs();
+  const current = data.length ? data[frame] : { t: 0, H: 0, R: 0 };
+  const maxR = data.length ? data[data.length - 1].R : 20;
+
+  // 배경
+  const grad = ctx.createLinearGradient(0, 0, 0, hpx);
+  grad.addColorStop(0, "#bfdbfe");
+  grad.addColorStop(1, "#eff6ff");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, hpx);
+
+  // 지면
+  ctx.fillStyle = "#86efac";
+  ctx.fillRect(0, hpx - 38, w, 38);
+
+  // 절벽
+  const cliffX = 45;
+  const topY = worldToScreenY(0, h);
+  const groundY = worldToScreenY(h, h);
+
+  ctx.fillStyle = "#9ca3af";
+  ctx.fillRect(20, topY, 50, groundY - topY);
+
+  ctx.fillStyle = "#374151";
+  ctx.font = "12px Arial";
+  ctx.fillText("높이 h", 18, (topY + groundY) / 2);
+
+  // 궤적
+  if (data.length) {
+    ctx.lineWidth = 2;
+
+    ctx.strokeStyle = "#2563eb";
+    ctx.beginPath();
+    for (let i = 0; i <= frame; i++) {
+      const x = cliffX;
+      const y = worldToScreenY(data[i].H, h);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "#f97316";
+    ctx.beginPath();
+    for (let i = 0; i <= frame; i++) {
+      const x = worldToScreenX(data[i].R, maxR);
+      const y = worldToScreenY(data[i].H, h);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // 물체 A
+  const ax = cliffX;
+  const ay = worldToScreenY(current.H, h);
+  drawBall(ax, ay, "#2563eb", "A");
+
+  // 물체 B
+  const bx = worldToScreenX(current.R, maxR);
+  const by = worldToScreenY(current.H, h);
+  drawBall(bx, by, "#f97316", "B");
+
+  // H 표시
+  ctx.strokeStyle = "#111";
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  ctx.moveTo(bx, topY);
+  ctx.lineTo(bx, by);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#111";
+  ctx.font = "12px Arial";
+  ctx.fillText("H=" + current.H.toFixed(2) + "m", bx + 6, (topY + by) / 2);
+
+  // R 표시
+  ctx.strokeStyle = "#111";
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  ctx.moveTo(cliffX, groundY + 14);
+  ctx.lineTo(bx, groundY + 14);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#111";
+  ctx.fillText("R=" + current.R.toFixed(2) + "m", (cliffX + bx) / 2 - 20, groundY + 30);
+}
+
+function drawBall(x, y, color, label) {
+  ctx.beginPath();
+  ctx.arc(x, y, 13, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#111";
+  ctx.font = "13px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(label, x, y - 18);
+  ctx.textAlign = "left";
+}
+
+function updateInfo() {
+  if (!data.length) return;
+
+  const { h, v, g } = getInputs();
+  const current = data[frame];
+  const final = data[data.length - 1];
+
+  document.getElementById("resultInfo").textContent =
+    `t = ${current.t.toFixed(2)} s
+A와 B의 연직 이동 거리 H = ${current.H.toFixed(2)} m
+B의 수평 이동 거리 R = ${current.R.toFixed(2)} m
+
+최종 낙하 시간 = ${final.t.toFixed(2)} s
+최종 수평 이동 거리 R = ${final.R.toFixed(2)} m
+중력 가속도 g = ${g} m/s²
+B의 수평 속력 = ${v} m/s`;
+}
+
+function makeTable() {
+  const tbody = document.getElementById("resultTable");
+  tbody.innerHTML = "";
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.t.toFixed(2)}</td>
+      <td>${row.H.toFixed(2)}</td>
+      <td>${row.H.toFixed(2)}</td>
+      <td>${row.R.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addEventListener("resize", () => {
+  setTimeout(resizeCanvas, 100);
+});
+
+window.addEventListener("orientationchange", () => {
+  setTimeout(resizeCanvas, 400);
+});
+
+window.addEventListener("load", () => {
+  resizeCanvas();
+  setTimeout(resizeCanvas, 300);
+});
+</script>
+
+</body>
+</html>

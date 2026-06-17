@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>충돌 시뮬레이터</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+  overflow-x: hidden;
+}
+
+header {
+  background: #1f2937;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.container {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 2px;
+}
+
+input, select, button {
+  width: 100%;
+  min-height: 34px;
+  padding: 5px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+}
+
+button.secondary {
+  background: #4b5563;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.object-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr 1fr;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.object-row input {
+  text-align: center;
+  min-height: 32px;
+  font-size: 12px;
+}
+
+.header-row {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+}
+
+.object-name {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.canvas-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+#motionCanvas {
+  height: 180px;
+  min-height: 180px;
+}
+
+#graphCanvas {
+  height: 260px;
+  min-height: 260px;
+}
+
+.momentum {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.small {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+}
+</style>
+</head>
+
+<body>
+
+<header>1차원 충돌 실험 시뮬레이터</header>
+
+<div class="container">
+
+  <div class="card top-grid">
+    <div>
+      <label>물체 수</label>
+      <select id="objectCount" onchange="buildInputs()">
+        <option value="2">2개</option>
+        <option value="3" selected>3개</option>
+      </select>
+    </div>
+
+    <div>
+      <label>충돌</label>
+      <select id="restitution">
+        <option value="1">탄성</option>
+        <option value="0.5">비탄성</option>
+        <option value="0">완전 비탄성</option>
+      </select>
+    </div>
+
+    <div>
+      <label>시간</label>
+      <input id="totalTime" type="number" value="8" step="0.1">
+    </div>
+
+    <div>
+      <label>dt</label>
+      <input id="dt" type="number" value="0.01" step="0.001">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="object-row header-row">
+      <div>물체</div>
+      <div>질량</div>
+      <div>위치</div>
+      <div>속도</div>
+    </div>
+    <div id="objectInputs"></div>
+    <div class="small">공을 손가락으로 드래그하면 초기 위치가 바뀝니다.</div>
+  </div>
+
+  <div class="card button-row">
+    <button onclick="runSimulation()">▶ 실행</button>
+    <button class="secondary" onclick="togglePlay()">⏸ 정지/재생</button>
+  </div>
+
+  <div class="card canvas-wrap">
+    <canvas id="motionCanvas"></canvas>
+  </div>
+
+  <div class="card momentum" id="momentumText">아직 실행 전</div>
+
+  <div class="card canvas-wrap">
+    <canvas id="graphCanvas"></canvas>
+  </div>
+
+</div>
+
+<script>
+const motionCanvas = document.getElementById("motionCanvas");
+const mctx = motionCanvas.getContext("2d");
+
+const graphCanvas = document.getElementById("graphCanvas");
+const gctx = graphCanvas.getContext("2d");
+
+let objects = [];
+let simData = null;
+let frame = 0;
+let playing = false;
+let draggingIndex = null;
+let lastTimestamp = 0;
+let animRequest = null;
+
+const colors = ["#2563eb", "#f97316", "#16a34a"];
+const xMin = 0;
+const xMax = 10;
+
+function resizeCanvas(canvas, fixedHeight) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  const width = Math.max(300, rect.width);
+  const height = fixedHeight;
+
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  canvas.style.height = height + "px";
+}
+
+function resizeAllCanvases() {
+  resizeCanvas(motionCanvas, 180);
+  resizeCanvas(graphCanvas, 260);
+
+  if (simData) {
+    drawFrame();
+  } else {
+    drawInitial();
+  }
+}
+
+function cw(canvas) {
+  return canvas.getBoundingClientRect().width;
+}
+
+function ch(canvas) {
+  return canvas.getBoundingClientRect().height;
+}
+
+function buildInputs() {
+  const count = Number(document.getElementById("objectCount").value);
+  const wrap = document.getElementById("objectInputs");
+  wrap.innerHTML = "";
+
+  const defaults = [
+    {m: 1, x: 2, v: 2},
+    {m: 1, x: 5.5, v: 0},
+    {m: 1, x: 8, v: -1}
+  ];
+
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement("div");
+    row.className = "object-row";
+    row.innerHTML = `
+      <div class="object-name" style="color:${colors[i]}">물체${i + 1}</div>
+      <input id="m${i}" type="number" value="${defaults[i].m}" step="0.1">
+      <input id="x${i}" type="number" value="${defaults[i].x}" step="0.1">
+      <input id="v${i}" type="number" value="${defaults[i].v}" step="0.1">
+    `;
+    wrap.appendChild(row);
+  }
+
+  simData = null;
+  playing = false;
+  readObjects();
+  resizeAllCanvases();
+}
+
+function readObjects() {
+  const count = Number(document.getElementById("objectCount").value);
+  objects = [];
+
+  for (let i = 0; i < count; i++) {
+    const m = Number(document.getElementById("m" + i).value);
+    const x = Number(document.getElementById("x" + i).value);
+    const v = Number(document.getElementById("v" + i).value);
+
+    objects.push({
+      m,
+      x,
+      v,
+      r: 0.18 + 0.06 * Math.sqrt(Math.max(m, 0.01))
+    });
+  }
+}
+
+function worldToScreen(x) {
+  return (x - xMin) / (xMax - xMin) * cw(motionCanvas);
+}
+
+function screenToWorld(px) {
+  return xMin + px / cw(motionCanvas) * (xMax - xMin);
+}
+
+function clearCanvas(ctx, canvas) {
+  ctx.clearRect(0, 0, cw(canvas), ch(canvas));
+}
+
+function drawInitial() {
+  if (!document.getElementById("m0")) return;
+
+  readObjects();
+  clearCanvas(mctx, motionCanvas);
+
+  const width = cw(motionCanvas);
+  const height = ch(motionCanvas);
+  const y = height / 2;
+
+  mctx.strokeStyle = "#111";
+  mctx.lineWidth = 3;
+  mctx.beginPath();
+  mctx.moveTo(20, y);
+  mctx.lineTo(width - 20, y);
+  mctx.stroke();
+
+  objects.forEach((o, i) => {
+    drawBall(o.x, y, i, o.m, o.m * o.v);
+  });
+
+  drawGraphEmpty();
+  document.getElementById("momentumText").textContent = "아직 실행 전";
+}
+
+function drawBall(x, y, i, mass, momentum) {
+  const sx = worldToScreen(x);
+  const radius = Math.max(13, 15 + 5 * Math.sqrt(mass));
+
+  mctx.beginPath();
+  mctx.arc(sx, y, radius, 0, Math.PI * 2);
+  mctx.fillStyle = colors[i];
+  mctx.fill();
+  mctx.strokeStyle = "#111";
+  mctx.lineWidth = 2;
+  mctx.stroke();
+
+  mctx.fillStyle = "#111";
+  mctx.font = "12px Arial";
+  mctx.textAlign = "center";
+  mctx.fillText("물체 " + (i + 1), sx, y - radius - 7);
+  mctx.fillText("p=" + momentum.toFixed(2), sx, y + radius + 16);
+}
+
+function runSimulation() {
+  readObjects();
+
+  const e = Number(document.getElementById("restitution").value);
+  const totalTime = Number(document.getElementById("totalTime").value);
+  const dt = Number(document.getElementById("dt").value);
+
+  if (objects.some(o => o.m <= 0)) {
+    alert("질량은 0보다 커야 합니다.");
+    return;
+  }
+
+  if (dt <= 0 || totalTime <= 0) {
+    alert("시간 값은 0보다 커야 합니다.");
+    return;
+  }
+
+  let positions = objects.map(o => o.x);
+  let velocities = objects.map(o => o.v);
+  let masses = objects.map(o => o.m);
+  let radii = objects.map(o => o.r);
+
+  const times = [];
+  const posHistory = [];
+  const momentumHistory = [];
+  const totalMomentumHistory = [];
+  const collisions = [];
+
+  for (let t = 0; t <= totalTime; t += dt) {
+    for (let i = 0; i < objects.length; i++) {
+      positions[i] += velocities[i] * dt;
+
+      if (positions[i] - radii[i] < xMin) {
+        positions[i] = xMin + radii[i];
+        velocities[i] *= -1;
+      }
+
+      if (positions[i] + radii[i] > xMax) {
+        positions[i] = xMax - radii[i];
+        velocities[i] *= -1;
+      }
+    }
+
+    for (let i = 0; i < objects.length; i++) {
+      for (let j = i + 1; j < objects.length; j++) {
+        const dist = Math.abs(positions[i] - positions[j]);
+        const minDist = radii[i] + radii[j];
+
+        const approaching =
+          (positions[i] < positions[j] && velocities[i] > velocities[j]) ||
+          (positions[i] > positions[j] && velocities[i] < velocities[j]);
+
+        if (dist <= minDist && approaching) {
+          const m1 = masses[i];
+          const m2 = masses[j];
+          const u1 = velocities[i];
+          const u2 = velocities[j];
+
+          const v1 = ((m1 - e * m2) * u1 + (1 + e) * m2 * u2) / (m1 + m2);
+          const v2 = ((m2 - e * m1) * u2 + (1 + e) * m1 * u1) / (m1 + m2);
+
+          velocities[i] = v1;
+          velocities[j] = v2;
+
+          collisions.push({
+            time: t,
+            x: (positions[i] + positions[j]) / 2
+          });
+
+          const overlap = minDist - dist;
+          if (overlap > 0) {
+            const correction = overlap / 2 + 0.001;
+            if (positions[i] < positions[j]) {
+              positions[i] -= correction;
+              positions[j] += correction;
+            } else {
+              positions[i] += correction;
+              positions[j] -= correction;
+            }
+          }
+        }
+      }
+    }
+
+    const momenta = masses.map((m, i) => m * velocities[i]);
+
+    times.push(t);
+    posHistory.push([...positions]);
+    momentumHistory.push(momenta);
+    totalMomentumHistory.push(momenta.reduce((a, b) => a + b, 0));
+  }
+
+  simData = {
+    times,
+    posHistory,
+    momentumHistory,
+    totalMomentumHistory,
+    collisions,
+    masses
+  };
+
+  frame = 0;
+  playing = true;
+  lastTimestamp = 0;
+
+  if (animRequest) cancelAnimationFrame(animRequest);
+  animRequest = requestAnimationFrame(animationLoop);
+}
+
+function animationLoop(timestamp) {
+  if (!simData) return;
+
+  if (!lastTimestamp) lastTimestamp = timestamp;
+
+  const elapsed = timestamp - lastTimestamp;
+
+  if (playing && elapsed > 20) {
+    const step = Math.max(1, Math.floor(simData.times.length / 500));
+    frame += step;
+
+    if (frame >= simData.times.length) {
+      frame = simData.times.length - 1;
+      playing = false;
+    }
+
+    drawFrame();
+    lastTimestamp = timestamp;
+  }
+
+  animRequest = requestAnimationFrame(animationLoop);
+}
+
+function drawFrame() {
+  if (!simData) return;
+
+  clearCanvas(mctx, motionCanvas);
+
+  const width = cw(motionCanvas);
+  const height = ch(motionCanvas);
+  const y = height / 2;
+
+  mctx.strokeStyle = "#111";
+  mctx.lineWidth = 3;
+  mctx.beginPath();
+  mctx.moveTo(20, y);
+  mctx.lineTo(width - 20, y);
+  mctx.stroke();
+
+  simData.collisions.forEach(c => {
+    const sx = worldToScreen(c.x);
+
+    mctx.strokeStyle = "red";
+    mctx.lineWidth = 3;
+    mctx.beginPath();
+    mctx.moveTo(sx - 8, y - 34);
+    mctx.lineTo(sx + 8, y - 18);
+    mctx.moveTo(sx + 8, y - 34);
+    mctx.lineTo(sx - 8, y - 18);
+    mctx.stroke();
+
+    mctx.fillStyle = "red";
+    mctx.font = "11px Arial";
+    mctx.textAlign = "center";
+    mctx.fillText(c.time.toFixed(2) + "s", sx, y - 40);
+  });
+
+  const positions = simData.posHistory[frame];
+  const momenta = simData.momentumHistory[frame];
+
+  for (let i = 0; i < positions.length; i++) {
+    drawBall(positions[i], y, i, simData.masses[i], momenta[i]);
+  }
+
+  let text = `t = ${simData.times[frame].toFixed(2)} s\n`;
+  for (let i = 0; i < momenta.length; i++) {
+    text += `물체 ${i + 1}: p = ${momenta[i].toFixed(2)} kg·m/s\n`;
+  }
+  text += `전체: p = ${simData.totalMomentumHistory[frame].toFixed(2)} kg·m/s`;
+
+  document.getElementById("momentumText").textContent = text;
+
+  drawGraph();
+}
+
+function drawGraphEmpty() {
+  clearCanvas(gctx, graphCanvas);
+  gctx.fillStyle = "#111";
+  gctx.font = "14px Arial";
+  gctx.fillText("실행하면 운동량 그래프가 표시됩니다.", 20, 38);
+}
+
+function drawGraph() {
+  if (!simData) return;
+
+  const times = simData.times;
+  const momenta = simData.momentumHistory;
+  const totalP = simData.totalMomentumHistory;
+
+  clearCanvas(gctx, graphCanvas);
+
+  const width = cw(graphCanvas);
+  const height = ch(graphCanvas);
+
+  const left = 40;
+  const right = width - 16;
+  const top = 18;
+  const bottom = height - 32;
+
+  let values = [];
+  momenta.forEach(row => values.push(...row));
+  values.push(...totalP);
+
+  const minY = Math.min(...values, -1);
+  const maxY = Math.max(...values, 1);
+  const range = maxY - minY || 1;
+
+  function sx(t) {
+    return left + t / times[times.length - 1] * (right - left);
+  }
+
+  function sy(v) {
+    return bottom - (v - minY) / range * (bottom - top);
+  }
+
+  gctx.strokeStyle = "#222";
+  gctx.lineWidth = 1;
+  gctx.beginPath();
+  gctx.moveTo(left, top);
+  gctx.lineTo(left, bottom);
+  gctx.lineTo(right, bottom);
+  gctx.stroke();
+
+  const n = momenta[0].length;
+
+  for (let obj = 0; obj < n; obj++) {
+    gctx.strokeStyle = colors[obj];
+    gctx.lineWidth = 2;
+    gctx.beginPath();
+
+    for (let i = 0; i <= frame; i++) {
+      const x = sx(times[i]);
+      const y = sy(momenta[i][obj]);
+
+      if (i === 0) gctx.moveTo(x, y);
+      else gctx.lineTo(x, y);
+    }
+
+    gctx.stroke();
+  }
+
+  gctx.strokeStyle = "#111";
+  gctx.setLineDash([6, 4]);
+  gctx.lineWidth = 2;
+  gctx.beginPath();
+
+  for (let i = 0; i <= frame; i++) {
+    const x = sx(times[i]);
+    const y = sy(totalP[i]);
+
+    if (i === 0) gctx.moveTo(x, y);
+    else gctx.lineTo(x, y);
+  }
+
+  gctx.stroke();
+  gctx.setLineDash([]);
+
+  const currentX = sx(times[frame]);
+  gctx.strokeStyle = "purple";
+  gctx.lineWidth = 2;
+  gctx.beginPath();
+  gctx.moveTo(currentX, top);
+  gctx.lineTo(currentX, bottom);
+  gctx.stroke();
+
+  gctx.fillStyle = "#111";
+  gctx.font = "11px Arial";
+  gctx.fillText("운동량 p", 6, 14);
+  gctx.fillText("시간 t", right - 34, bottom + 22);
+}
+
+function togglePlay() {
+  if (!simData) return;
+  playing = !playing;
+  lastTimestamp = 0;
+}
+
+function getTouchX(e) {
+  const rect = motionCanvas.getBoundingClientRect();
+  let clientX;
+
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+  } else {
+    clientX = e.clientX;
+  }
+
+  return clientX - rect.left;
+}
+
+function startDragFromEvent(e) {
+  if (simData) return;
+
+  e.preventDefault();
+
+  const px = getTouchX(e);
+  const x = screenToWorld(px);
+
+  readObjects();
+
+  let minDist = Infinity;
+  let idx = null;
+
+  objects.forEach((o, i) => {
+    const d = Math.abs(o.x - x);
+    if (d < minDist) {
+      minDist = d;
+      idx = i;
+    }
+  });
+
+  if (minDist < 0.6) {
+    draggingIndex = idx;
+  }
+}
+
+function moveDragFromEvent(e) {
+  if (draggingIndex === null || simData) return;
+
+  e.preventDefault();
+
+  const px = getTouchX(e);
+  let x = screenToWorld(px);
+
+  x = Math.max(xMin, Math.min(xMax, x));
+  document.getElementById("x" + draggingIndex).value = x.toFixed(2);
+
+  drawInitial();
+}
+
+function endDrag() {
+  draggingIndex = null;
+}
+
+motionCanvas.addEventListener("mousedown", startDragFromEvent, {passive: false});
+motionCanvas.addEventListener("mousemove", moveDragFromEvent, {passive: false});
+window.addEventListener("mouseup", endDrag);
+
+motionCanvas.addEventListener("touchstart", startDragFromEvent, {passive: false});
+motionCanvas.addEventListener("touchmove", moveDragFromEvent, {passive: false});
+window.addEventListener("touchend", endDrag);
+window.addEventListener("touchcancel", endDrag);
+
+window.addEventListener("resize", () => {
+  setTimeout(resizeAllCanvases, 100);
+});
+
+window.addEventListener("orientationchange", () => {
+  setTimeout(resizeAllCanvases, 400);
+});
+
+function startApp() {
+  buildInputs();
+
+  setTimeout(() => {
+    resizeAllCanvases();
+    drawInitial();
+  }, 100);
+
+  setTimeout(() => {
+    resizeAllCanvases();
+    drawInitial();
+  }, 500);
+}
+
+window.addEventListener("load", startApp);
+</script>
+
+</body>
+</html>
