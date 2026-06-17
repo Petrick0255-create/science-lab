@@ -28,7 +28,6 @@ header {
 .brand {
   font-size: 24px;
   font-weight: 900;
-  letter-spacing: -0.5px;
 }
 
 .badge {
@@ -40,7 +39,6 @@ header {
 }
 
 .container {
-  width: 100%;
   max-width: 1050px;
   margin: 0 auto;
   padding: 34px 18px;
@@ -81,48 +79,20 @@ header {
   align-items: start;
 }
 
-.category {
-  position: relative;
-  z-index: 1;
-}
-
-.category:hover {
-  z-index: 20;
-}
-
 .card {
-  position: relative;
-  overflow: hidden;
-  min-height: 190px;
+  min-height: 225px;
   padding: 24px;
   border-radius: 24px;
   color: white;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(10px);
   box-shadow: 0 12px 35px rgba(0,0,0,0.25);
   transition: 0.25s;
+  overflow: hidden;
 }
 
-.category:hover .card {
+.card:hover {
   transform: translateY(-4px);
-  border-radius: 24px 24px 0 0;
-}
-
-.card::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  opacity: 0.25;
-  background: radial-gradient(circle, white, transparent 50%);
-  transform: translate(30%, -30%);
-  pointer-events: none;
-}
-
-.card h2,
-.card p,
-.card .icon {
-  position: relative;
 }
 
 .card h2 {
@@ -161,54 +131,40 @@ header {
   border-color: rgba(245,158,11,0.55);
 }
 
-.dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background: white;
-  border-radius: 0 0 22px 22px;
-  overflow: hidden;
+.experiment-list {
+  margin-top: 0;
+  max-height: 0;
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: 0.25s ease;
-  box-shadow: 0 18px 35px rgba(0,0,0,0.28);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-top: none;
+  overflow: hidden;
+  display: grid;
+  gap: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.25s ease, gap 0.25s ease;
 }
 
-.category:hover .dropdown {
+.card:hover .experiment-list {
+  margin-top: 22px;
+  max-height: 300px;
   opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+  gap: 8px;
 }
 
-.dropdown a {
+.experiment-list a {
   display: block;
-  padding: 17px 20px;
-  text-decoration: none;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.95);
   color: #111827;
+  text-decoration: none;
   font-size: 15px;
-  font-weight: 850;
-  border-bottom: 1px solid #e5e7eb;
+  font-weight: 800;
+}
+
+.experiment-list a:hover {
   background: white;
-  transition: 0.18s;
-}
-
-.dropdown a:last-child {
-  border-bottom: none;
-}
-
-.dropdown a:hover {
-  background: #f3f4f6;
   color: #2563eb;
-  padding-left: 26px;
 }
 
-.dropdown span {
-  display: block;
-  margin-top: 4px;
+.experiment-list span {
   color: #6b7280;
   font-size: 12px;
   font-weight: 600;
@@ -222,62 +178,11 @@ footer {
 }
 
 @media (max-width: 720px) {
-  header {
-    padding: 14px;
-  }
-
-  .logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  .brand {
-    font-size: 21px;
-  }
-
-  .container {
-    padding: 24px 14px;
-  }
-
-  .hero {
-    padding-top: 22px;
+  .lab-grid {
+    grid-template-columns: 1fr;
   }
 
   .hero h1 {
     font-size: 48px;
-  }
-
-  .hero p {
-    font-size: 16px;
-  }
-
-  .lab-grid {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .card {
-    min-height: 170px;
-  }
-
-  .category {
-    position: relative;
-  }
-
-  .dropdown {
-    position: static;
-    max-height: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: none;
-    border-radius: 0 0 18px 18px;
-    transition: 0.25s ease;
-  }
-
-  .category:hover .dropdown,
-  .category:focus-within .dropdown {
-    max-height: 400px;
-    opacity: 1;
-    visibility: visible;
   }
 }
