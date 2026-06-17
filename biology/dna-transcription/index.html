@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA 전사 시뮬레이터</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #eef3f8;
+  color: #222;
+}
+
+header {
+  background: #1f2937;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.home{
+  display:inline-block;
+  color:white;
+  text-decoration:none;
+  font-size:13px;
+  margin-top:6px;
+  opacity:.85;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+
+input, select, button {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+}
+
+.canvas-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+canvas {
+  width: 100%;
+  height: 330px;
+  display: block;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #d1d5db;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
+}
+
+th { background: #f3f4f6; }
+
+.info {
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.badge {
+  display:inline-block;
+  padding:2px 6px;
+  border-radius:6px;
+  background:#dbeafe;
+  color:#1d4ed8;
+  font-size:12px;
+  font-weight:700;
+}
+
+@media (max-width: 430px) {
+  canvas { height: 300px; }
+  input, button, select { font-size: 13px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  🧬 DNA 전사 시뮬레이터<br>
+  <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>DNA 한 가닥 총 염기 수</label>
+        <input id="total" type="number" min="4" max="40" value="20">
+      </div>
+
+      <div>
+        <label>주형 가닥 선택</label>
+        <select id="template">
+          <option value="x1">X1 가닥</option>
+          <option value="x2">X2 가닥</option>
+        </select>
+      </div>
+
+      <div>
+        <label>X1의 A 개수</label>
+        <input id="aCount" type="number" min="0" value="5">
+      </div>
+
+      <div>
+        <label>X1의 G 개수</label>
+        <input id="gCount" type="number" min="0" value="5">
+      </div>
+
+      <div>
+        <label>X1의 C 개수</label>
+        <input id="cCount" type="number" min="0" value="5">
+      </div>
+
+      <div>
+        <label>X1의 T 개수</label>
+        <input id="tCount" type="number" min="0" value="5">
+      </div>
+    </div>
+
+    <br>
+    <button onclick="update()">계산하기</button>
+  </div>
+
+  <div class="card">
+    <div class="info" id="summary"></div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th>A</th>
+          <th>G</th>
+          <th>C</th>
+          <th>T / U</th>
+          <th>총 염기 수</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const compDNA = {
+  A: "T",
+  T: "A",
+  G: "C",
+  C: "G"
+};
+
+const compRNA = {
+  A: "U",
+  T: "A",
+  G: "C",
+  C: "G"
+};
+
+function makeSequence(a, g, c, t) {
+  let arr = [];
+  arr.push(...Array(a).fill("A"));
+  arr.push(...Array(g).fill("G"));
+  arr.push(...Array(c).fill("C"));
+  arr.push(...Array(t).fill("T"));
+
+  // 보기 좋게 섞기
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor((i * 7 + 3) % arr.length);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
+
+function countBases(seq, bases) {
+  const result = {};
+  bases.forEach(b => result[b] = 0);
+  seq.forEach(x => result[x]++);
+  return result;
+}
+
+function update() {
+  const total = Number(document.getElementById("total").value);
+  let a = Number(document.getElementById("aCount").value);
+  let g = Number(document.getElementById("gCount").value);
+  let c = Number(document.getElementById("cCount").value);
+  let t = Number(document.getElementById("tCount").value);
+  const template = document.getElementById("template").value;
+
+  const sum = a + g + c + t;
+
+  if (sum !== total) {
+    document.getElementById("summary").innerHTML =
+      `⚠️ X1의 A+G+C+T 개수 합이 총 염기 수와 맞지 않습니다.\n현재 합: ${sum}, 총 염기 수: ${total}`;
+    return;
+  }
+
+  const x1 = makeSequence(a, g, c, t);
+  const x2 = x1.map(b => compDNA[b]);
+
+  const templateSeq = template === "x1" ? x1 : x2;
+  const rna = templateSeq.map(b => compRNA[b]);
+
+  const x1Count = countBases(x1, ["A","G","C","T"]);
+  const x2Count = countBases(x2, ["A","G","C","T"]);
+  const rnaCount = countBases(rna, ["A","G","C","U"]);
+
+  document.getElementById("summary").innerHTML =
+    `<span class="badge">주형 가닥: ${template.toUpperCase()}</span>\n` +
+    `DNA에서 A는 T와, G는 C와 상보적으로 결합합니다.\n` +
+    `전사 과정에서 주형 가닥의 A → U, T → A, G → C, C → G로 RNA가 만들어집니다.`;
+
+  document.getElementById("tableBody").innerHTML = `
+    <tr>
+      <td>X1 DNA</td>
+      <td>${x1Count.A}</td>
+      <td>${x1Count.G}</td>
+      <td>${x1Count.C}</td>
+      <td>${x1Count.T}</td>
+      <td>${x1.length}</td>
+    </tr>
+    <tr>
+      <td>X2 DNA</td>
+      <td>${x2Count.A}</td>
+      <td>${x2Count.G}</td>
+      <td>${x2Count.C}</td>
+      <td>${x2Count.T}</td>
+      <td>${x2.length}</td>
+    </tr>
+    <tr>
+      <td>RNA</td>
+      <td>${rnaCount.A}</td>
+      <td>${rnaCount.G}</td>
+      <td>${rnaCount.C}</td>
+      <td>${rnaCount.U}</td>
+      <td>${rna.length}</td>
+    </tr>
+  `;
+
+  draw(x1, x2, rna, template);
+}
+
+function draw(x1, x2, rna, template) {
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 1000;
+  canvas.height = 330;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.font = "bold 16px Arial";
+  ctx.fillStyle = "#111827";
+  ctx.fillText("X1 DNA", 30, 65);
+  ctx.fillText("X2 DNA", 30, 145);
+  ctx.fillText("RNA", 30, 245);
+
+  const startX = 120;
+  const gap = Math.min(38, 780 / x1.length);
+
+  for (let i = 0; i < x1.length; i++) {
+    const x = startX + i * gap;
+
+    drawBase(ctx, x, 45, x1[i], template === "x1");
+    drawBase(ctx, x, 125, x2[i], template === "x2");
+
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 14, 78);
+    ctx.lineTo(x + 14, 125);
+    ctx.stroke();
+
+    drawBase(ctx, x, 225, rna[i], false, true);
+  }
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "13px Arial";
+  ctx.fillText("※ 노란색으로 표시된 DNA 가닥이 주형 가닥입니다.", 30, 305);
+}
+
+function drawBase(ctx, x, y, base, isTemplate=false, isRNA=false) {
+  let color = {
+    A: "#ef4444",
+    G: "#22c55e",
+    C: "#3b82f6",
+    T: "#f97316",
+    U: "#a855f7"
+  }[base];
+
+  ctx.fillStyle = isTemplate ? "#fde68a" : "#ffffff";
+  ctx.strokeStyle = isRNA ? "#7c3aed" : "#334155";
+  ctx.lineWidth = 2;
+
+  roundRect(ctx, x, y, 30, 30, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 16px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(base, x + 15, y + 15);
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+update();
+</script>
+
+</body>
+</html>
