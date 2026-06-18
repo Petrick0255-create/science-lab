@@ -427,7 +427,7 @@ function drawPeakGraph(){
     let end=Number(row[2]);
     let height=Number(row[3]);
     const areaText=(row[4]||"").trim();
-    const shape=row[6]||"보통";
+    const shape=row[6]||"좁게";
     const line=row[7]||"실선";
 
     if(isNaN(start)||isNaN(end)||isNaN(height)||end<=start) return;
