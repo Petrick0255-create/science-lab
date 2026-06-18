@@ -130,6 +130,14 @@ th{background:#f3f4f6}
         <option value="no" selected>숨김</option>
       </select>
     </div>
+
+    <div>
+      <label>우측 상단 d 표시</label>
+      <select id="showD">
+        <option value="yes" selected>표시</option>
+        <option value="no">숨김</option>
+      </select>
+    </div>
   </div>
 
   <div class="card grid">
@@ -203,7 +211,8 @@ function getInputs(){
     aColor:document.getElementById("aColor").value,
     bColor:document.getElementById("bColor").value,
     showGuideText:document.getElementById("showGuideText").value,
-    showGuideLine:document.getElementById("showGuideLine").value
+    showGuideLine:document.getElementById("showGuideLine").value,
+    showD:document.getElementById("showD").value
   };
 }
 
@@ -283,8 +292,8 @@ function draw(){
 
   const cell = 48;
   const left = 70;
-  const top = 58;
-  const rightSpace = 28;
+  const top = 70;
+  const rightSpace = s.showD === "yes" ? 72 : 28;
   const bottomSpace = 94;
 
   const gridW = grid.cols * cell;
@@ -297,7 +306,7 @@ function draw(){
   ctx.fillStyle = "white";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  drawGrid(left, top, grid.cols, grid.rows, cell);
+  drawGrid(left, top, grid.cols, grid.rows, cell, s);
   drawSurface(left, top + gridH, gridW, s);
 
   if(s.viewMode === "all"){
@@ -312,8 +321,8 @@ function draw(){
   updateInfo();
 }
 
-function drawGrid(x0, y0, cols, rows, cell){
-  ctx.strokeStyle = "#9ca3af";
+function drawGrid(x0, y0, cols, rows, cell, s){
+  ctx.strokeStyle = "#b8bec8";
   ctx.lineWidth = 1;
   ctx.setLineDash([5,4]);
 
@@ -332,6 +341,70 @@ function drawGrid(x0, y0, cols, rows, cell){
   }
 
   ctx.setLineDash([]);
+
+  if(s.showD === "yes"){
+    drawDMarker(x0, y0, cols, cell);
+  }
+}
+
+function drawDMarker(x0, y0, cols, cell){
+  const gridRight = x0 + cols * cell;
+
+  ctx.save();
+
+  ctx.strokeStyle = "#111";
+  ctx.fillStyle = "#111";
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([]);
+  ctx.font = "18px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // 가로 d: 마지막 한 칸 위쪽
+  const hx1 = gridRight - cell;
+  const hx2 = gridRight;
+  const hy = y0 - 20;
+
+  ctx.beginPath();
+  ctx.moveTo(hx1, hy);
+  ctx.lineTo(hx2, hy);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(hx1, hy - 5);
+  ctx.lineTo(hx1, hy + 5);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(hx2, hy - 5);
+  ctx.lineTo(hx2, hy + 5);
+  ctx.stroke();
+
+  ctx.fillText("d", (hx1 + hx2) / 2, hy - 12);
+
+  // 세로 d: 맨 오른쪽 바깥 한 칸
+  const vx = gridRight + 18;
+  const vy1 = y0;
+  const vy2 = y0 + cell;
+
+  ctx.beginPath();
+  ctx.moveTo(vx, vy1);
+  ctx.lineTo(vx, vy2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(vx - 5, vy1);
+  ctx.lineTo(vx + 5, vy1);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(vx - 5, vy2);
+  ctx.lineTo(vx + 5, vy2);
+  ctx.stroke();
+
+  ctx.fillText("d", vx + 15, (vy1 + vy2) / 2);
+
+  ctx.restore();
 }
 
 function drawSurface(x0, groundY, gridW, s){
@@ -561,6 +634,7 @@ function resetAll(){
   document.getElementById("bColor").value = "white";
   document.getElementById("showGuideText").value = "no";
   document.getElementById("showGuideLine").value = "no";
+  document.getElementById("showD").value = "yes";
 
   build();
 }
