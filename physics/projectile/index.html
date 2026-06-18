@@ -1,1014 +1,3 @@
-ChatGPT
-
-
-
-
-
-image(88).png
-이 파일들을 올려줄테니, html에서 동일하게 기능하도록 고쳐줄레? py 3개를 올려줄게
-
-2초 동안 생각함
-네. py 3개 올려주세요.
-
-올려주시면 제가 그 구조 그대로 보고, HTML/CSS/JS에서 같은 기능으로 작동하는 버전으로 바꿔드릴게요.
-
-가능하면 같이 알려주세요:
-
-index.html 하나로 끝낼지,
-아니면 index.html + style.css + script.js로 나눌지.
-
-
-
-붙여넣은 텍스트 (1)(10).txt
-문서
-
-2초 동안 생각함
-app.py 하나만 들어왔습니다. 
-
-
-curve_graph.py, peak_graph.py도 올려주세요.
-3개 다 있어야 HTML에서 그래프 그리는 로직까지 정확히 똑같이 옮길 수 있습니다.
-
-
-# curve_graph.py
-
-import numpy as np
-
-
-def ease_in_out(t):
-    return 3 * t**2 - 2 * t**3
-
-
-def draw_guide_lines(ax, points, guide_width):
-    used = set()
-
-    for x, y in points:
-        key = (round(x, 6), round(y, 6))
-        if key in used:
-            continue
-        used.add(key)
-
-        if x > 0 and y > 0:
-            ax.plot(
-                [x, x],
-                [0, y],
-                color="black",
-                linewidth=guide_width,
-                linestyle=(0, (2, 3)),
-                alpha=0.6,
-                zorder=1
-            )
-
-            ax.plot(
-                [0, x],
-                [y, y],
-                color="black",
-                linewidth=guide_width,
-                linestyle=(0, (2, 3)),
-                alpha=0.6,
-                zorder=1
-            )
-
-
-def draw_curve_graph(ax, rows, graph_width=2.2, guide_width=0.9):
-    guide_points = []
-
-    for row in rows:
-        if len(row) < 8:
-            continue
-
-        kind = row[0]
-        line = row[7] if len(row) > 7 and row[7] else "실선"
-        linestyle = "--" if line == "점선" else "-"
-
-        try:
-            if kind == "수평":
-                x1 = float(row[1])
-                x2 = float(row[2])
-                y = float(row[3])
-
-                guide_points.append((x1, y))
-                guide_points.append((x2, y))
-
-                ax.plot(
-                    [x1, x2],
-                    [y, y],
-                    color="black",
-                    linewidth=graph_width,
-                    linestyle=linestyle,
-                    zorder=3
-                )
-
-            elif kind == "변화":
-                x1 = float(row[1])
-                x2 = float(row[2])
-                y1 = float(row[3])
-                y2 = float(row[4])
-
-                if x2 <= x1:
-                    continue
-
-                guide_points.append((x1, y1))
-                guide_points.append((x2, y2))
-
-                x = np.linspace(x1, x2, 300)
-                t = (x - x1) / (x2 - x1)
-                s = ease_in_out(t)
-                y = y1 + (y2 - y1) * s
-
-                ax.plot(
-                    x,
-                    y,
-                    color="black",
-                    linewidth=graph_width,
-                    linestyle=linestyle,
-                    zorder=3
-                )
-
-            elif kind == "직선":
-                x1 = float(row[1])
-                y1 = float(row[2])
-                x2 = float(row[3])
-                y2 = float(row[4])
-
-                guide_points.append((x1, y1))
-                guide_points.append((x2, y2))
-
-                ax.plot(
-                    [x1, x2],
-                    [y1, y2],
-                    color="black",
-                    linewidth=graph_width,
-                    linestyle=linestyle,
-                    zorder=3
-                )
-
-            elif kind == "꺾은선":
-                x1 = float(row[1])
-                y1 = float(row[2])
-                mx = float(row[3])
-                my = float(row[4])
-                x2 = float(row[5])
-                y2 = float(row[6])
-
-                guide_points.append((x1, y1))
-                guide_points.append((mx, my))
-                guide_points.append((x2, y2))
-
-                ax.plot(
-                    [x1, mx, x2],
-                    [y1, my, y2],
-                    color="black",
-                    linewidth=graph_width,
-                    linestyle=linestyle,
-                    zorder=3
-                )
-
-            elif kind == "A":
-                x1 = float(row[1])
-                x2 = float(row[2])
-                y1 = float(row[3])
-                y2 = float(row[4])
-
-                if x2 <= x1:
-                    continue
-
-                guide_points.append((x1, y1))
-                guide_points.append((x2, y2))
-
-                x = np.linspace(x1, x2, 300)
-                t = (x - x1) / (x2 - x1)
-                s = ease_in_out(t)
-                y = y1 + (y2 - y1) * s
-
-                ax.plot(
-                    x,
-                    y,
-                    color="black",
-                    linewidth=graph_width,
-                    linestyle=linestyle,
-                    zorder=3
-                )
-
-        except ValueError:
-            continue
-        except ZeroDivisionError:
-            continue
-
-    draw_guide_lines(ax, guide_points, guide_width)
-
-좋습니다. 이제 peak_graph.py만 남았습니다.
-
-올려주시면 바로 HTML 버전 전체 코드로 바꿔드리겠습니다.
-
-
-# peak_graph.py
-
-import numpy as np
-
-
-def draw_peak_graph(ax, rows, graph_width=2.2):
-    for row in rows:
-        if len(row) < 8:
-            continue
-
-        name = row[0]
-
-        try:
-            start = float(row[1])
-            end = float(row[2])
-            height = float(row[3])
-        except ValueError:
-            continue
-
-        if end <= start:
-            continue
-
-        area_text = row[4].strip() if len(row) > 4 else ""
-
-        if area_text:
-            try:
-                area = float(area_text)
-                width = end - start
-                height = area * 3 / (2 * width)
-            except ValueError:
-                pass
-
-        shape = row[6] if len(row) > 6 and row[6] else "보통"
-        line = row[7] if len(row) > 7 and row[7] else "실선"
-
-        center = (start + end) / 2
-        half = (end - start) / 2
-
-        x = np.linspace(start, end, 500)
-        base = np.maximum(1 - ((x - center) / half) ** 2, 0)
-
-        if shape == "좁게":
-            y = height * base ** 2
-        elif shape == "넓게":
-            y = height * np.sqrt(base)
-        else:
-            y = height * base
-
-        linestyle = "--" if line == "점선" else "-"
-
-        ax.plot(
-            x,
-            y,
-            linewidth=graph_width,
-            color="black",
-            linestyle=linestyle,
-            zorder=3
-        )
-
-        ax.text(
-            center,
-            height + height * 0.05,
-            name,
-            fontsize=14,
-            ha="center",
-            va="bottom"
-        )
-
-2초 동안 생각함
-가능합니다. 아래 파일을 index.html로 저장해서 실행하면 됩니다.
-
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<title>수능 물리 그래프 생성기</title>
-<style>
-body {
-  margin: 0;
-  font-family: "Malgun Gothic", Arial, sans-serif;
-  background: #f4f4f4;
-}
-.app {
-  display: flex;
-  height: 100vh;
-}
-.panel {
-  width: 430px;
-  padding: 14px;
-  background: white;
-  overflow-y: auto;
-  box-sizing: border-box;
-  border-right: 1px solid #ccc;
-}
-.canvas-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-canvas {
-  background: white;
-  border: 1px solid #ccc;
-}
-fieldset {
-  margin-bottom: 12px;
-  border: 1px solid #bbb;
-}
-legend {
-  font-weight: bold;
-}
-label {
-  display: block;
-  margin-top: 7px;
-  font-size: 14px;
-}
-input, select, textarea, button {
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 3px;
-  padding: 6px;
-  font-family: inherit;
-}
-textarea {
-  height: 72px;
-}
-button {
-  cursor: pointer;
-  margin-top: 8px;
-}
-.row {
-  display: flex;
-  gap: 6px;
-}
-.row > * {
-  flex: 1;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  margin-top: 8px;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 4px;
-  text-align: center;
-}
-tr.selected {
-  background: #d7ebff;
-}
-.small {
-  font-size: 12px;
-  color: #666;
-}
-</style>
-</head>
-<body>
-
-<div class="app">
-  <div class="panel">
-
-    <fieldset>
-      <legend>그래프 종류</legend>
-      <select id="graphType">
-        <option>봉우리 곡선 그래프</option>
-        <option>구간 그래프</option>
-      </select>
-    </fieldset>
-
-    <fieldset>
-      <legend>축 설정</legend>
-      <label>x축 제목</label>
-      <input id="xLabel" value="시간">
-
-      <label>y축 제목</label>
-      <textarea id="yLabel">힘
-의
-
-크
-기</textarea>
-
-      <div class="row">
-        <label>x최소<input id="xMin" value="0"></label>
-        <label>x최대<input id="xMax" value="5"></label>
-      </div>
-
-      <div class="row">
-        <label>y최소<input id="yMin" value="0"></label>
-        <label>y최대<input id="yMax" value="3"></label>
-      </div>
-
-      <label>x눈금</label>
-      <input id="xTicks" value="0">
-
-      <label>y눈금</label>
-      <input id="yTicks" value="0">
-    </fieldset>
-
-    <fieldset>
-      <legend>스타일</legend>
-      <label>그래프 굵기</label>
-      <input id="graphWidth" value="2.2">
-
-      <label>축 굵기</label>
-      <input id="axisWidth" value="1.3">
-
-      <label>점선 굵기</label>
-      <input id="guideWidth" value="0.9">
-    </fieldset>
-
-    <fieldset id="peakBox">
-      <legend>봉우리 곡선 설정</legend>
-
-      <label>이름</label>
-      <input id="peakName" value="A">
-
-      <label>최댓값</label>
-      <input id="peakHeight" value="2.4">
-
-      <label>내부 면적</label>
-      <input id="peakArea">
-
-      <label>모양</label>
-      <select id="peakShape">
-        <option>좁게</option>
-        <option selected>보통</option>
-        <option>넓게</option>
-      </select>
-
-      <label>선</label>
-      <select id="peakLine">
-        <option>실선</option>
-        <option>점선</option>
-      </select>
-
-      <div class="small">그래프에서 드래그하면 시작 x~끝 x가 입력됩니다.</div>
-    </fieldset>
-
-    <fieldset id="segmentBox">
-      <legend>구간 그래프 설정</legend>
-
-      <label>종류</label>
-      <select id="segmentType">
-        <option>수평</option>
-        <option>완만 변화</option>
-        <option>직선</option>
-        <option>꺾은선</option>
-        <option>감소곡선</option>
-        <option>증가곡선</option>
-      </select>
-
-      <div class="row">
-        <label>시작 x<input id="segStart" value="0"></label>
-        <label>끝 x<input id="segEnd" value="2"></label>
-      </div>
-
-      <div class="row">
-        <label>시작 y<input id="segY1" value="12"></label>
-        <label id="segY2Wrap">끝 y<input id="segY2" value="21"></label>
-      </div>
-
-      <div class="row" id="midWrap">
-        <label>중간 x<input id="segMidX"></label>
-        <label>중간 y<input id="segMidY"></label>
-      </div>
-
-      <label id="segShapeWrap">모양
-        <select id="segmentShape">
-          <option>좁게</option>
-          <option selected>보통</option>
-          <option>넓게</option>
-        </select>
-      </label>
-
-      <label>선</label>
-      <select id="segmentLine">
-        <option>실선</option>
-        <option>점선</option>
-      </select>
-
-      <button onclick="addSegment()">구간 추가</button>
-    </fieldset>
-
-    <fieldset>
-      <legend>데이터 목록</legend>
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>종류/이름</th><th>x1</th><th>x2/y1</th><th>y1/x2</th>
-            <th>y2/면적</th><th>그래프</th><th>모양</th><th>선</th><th>비고</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <div class="row">
-        <button onclick="deleteSelected()">선택 행 삭제</button>
-        <button onclick="deleteLast()">마지막 행 삭제</button>
-      </div>
-      <button onclick="clearRows()">전체 초기화</button>
-      <button onclick="draw()">미리보기</button>
-      <button onclick="savePNG()">PNG 저장</button>
-    </fieldset>
-
-  </div>
-
-  <div class="canvas-wrap">
-    <canvas id="canvas" width="900" height="620"></canvas>
-  </div>
-</div>
-
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-let rows = [];
-let selectedRow = null;
-let dragStart = null;
-
-const plot = {
-  left: 160,
-  right: 90,
-  top: 70,
-  bottom: 110
-};
-
-function v(id) {
-  return document.getElementById(id).value;
-}
-
-function num(id) {
-  return parseFloat(v(id));
-}
-
-function parseTicks(text) {
-  if (!text.trim()) return [];
-  return text.split(",").map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
-}
-
-function xMap(x) {
-  const xMin = num("xMin"), xMax = num("xMax");
-  return plot.left + (x - xMin) / (xMax - xMin) * (canvas.width - plot.left - plot.right);
-}
-
-function yMap(y) {
-  const yMin = num("yMin"), yMax = num("yMax");
-  return canvas.height - plot.bottom - (y - yMin) / (yMax - yMin) * (canvas.height - plot.top - plot.bottom);
-}
-
-function invX(px) {
-  const xMin = num("xMin"), xMax = num("xMax");
-  return xMin + (px - plot.left) / (canvas.width - plot.left - plot.right) * (xMax - xMin);
-}
-
-function easeInOut(t) {
-  return 3 * t * t - 2 * t * t * t;
-}
-
-function dash(line) {
-  ctx.setLineDash(line === "점선" ? [8, 6] : []);
-}
-
-function drawAxes() {
-  const axisWidth = num("axisWidth");
-  const xMin = num("xMin"), xMax = num("xMax");
-  const yMin = num("yMin"), yMax = num("yMax");
-
-  const x0 = xMap(xMin);
-  const y0 = yMap(yMin);
-  const xEnd = xMap(xMax);
-  const yEnd = yMap(yMax);
-
-  ctx.save();
-  ctx.strokeStyle = "black";
-  ctx.fillStyle = "black";
-  ctx.lineWidth = axisWidth;
-  ctx.setLineDash([]);
-
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(xEnd + 25, y0);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(xEnd + 25, y0);
-  ctx.lineTo(xEnd + 14, y0 - 5);
-  ctx.lineTo(xEnd + 14, y0 + 5);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x0, yEnd - 25);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x0, yEnd - 25);
-  ctx.lineTo(x0 - 5, yEnd - 14);
-  ctx.lineTo(x0 + 5, yEnd - 14);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.font = "17px Malgun Gothic";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText(v("xLabel"), xEnd + 28, y0 + 18);
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "bottom";
-  const lines = v("yLabel").split("\n");
-  lines.forEach((line, i) => {
-    ctx.fillText(line, x0 - 80, yEnd - 40 + i * 18);
-  });
-
-  let xTicks = parseTicks(v("xTicks"));
-  let yTicks = parseTicks(v("yTicks"));
-
-  if (xMin === 0 && yMin === 0) {
-    xTicks = xTicks.filter(t => t !== 0);
-    yTicks = yTicks.filter(t => t !== 0);
-
-    ctx.font = "15px Malgun Gothic";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "top";
-    ctx.fillText("0", x0 - 8, y0 + 8);
-  }
-
-  ctx.font = "15px Malgun Gothic";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-
-  xTicks.forEach(t => {
-    const x = xMap(t);
-    ctx.beginPath();
-    ctx.moveTo(x, y0);
-    ctx.lineTo(x, y0 + 6);
-    ctx.stroke();
-    ctx.fillText(String(t), x, y0 + 10);
-  });
-
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-
-  yTicks.forEach(t => {
-    const y = yMap(t);
-    ctx.beginPath();
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x0 - 6, y);
-    ctx.stroke();
-    ctx.fillText(String(t), x0 - 10, y);
-  });
-
-  ctx.restore();
-}
-
-function drawGuideLines(points) {
-  const used = new Set();
-  ctx.save();
-  ctx.strokeStyle = "black";
-  ctx.lineWidth = num("guideWidth");
-  ctx.globalAlpha = 0.6;
-  ctx.setLineDash([2, 5]);
-
-  points.forEach(([x, y]) => {
-    const key = `${x.toFixed(6)},${y.toFixed(6)}`;
-    if (used.has(key)) return;
-    used.add(key);
-
-    if (x > 0 && y > 0) {
-      ctx.beginPath();
-      ctx.moveTo(xMap(x), yMap(0));
-      ctx.lineTo(xMap(x), yMap(y));
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(xMap(0), yMap(y));
-      ctx.lineTo(xMap(x), yMap(y));
-      ctx.stroke();
-    }
-  });
-
-  ctx.restore();
-}
-
-function drawCurveGraph() {
-  const guide = [];
-
-  rows.forEach(row => {
-    const kind = row[0];
-    const line = row[7] || "실선";
-
-    ctx.save();
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = num("graphWidth");
-    dash(line);
-    ctx.beginPath();
-
-    try {
-      if (kind === "수평") {
-        const x1 = +row[1], x2 = +row[2], y = +row[3];
-        guide.push([x1, y], [x2, y]);
-        ctx.moveTo(xMap(x1), yMap(y));
-        ctx.lineTo(xMap(x2), yMap(y));
-      }
-
-      else if (kind === "변화" || kind === "A") {
-        const x1 = +row[1], x2 = +row[2], y1 = +row[3], y2 = +row[4];
-        if (x2 <= x1) return;
-        guide.push([x1, y1], [x2, y2]);
-
-        for (let i = 0; i <= 300; i++) {
-          const t = i / 300;
-          const x = x1 + (x2 - x1) * t;
-          const s = easeInOut(t);
-          const y = y1 + (y2 - y1) * s;
-          if (i === 0) ctx.moveTo(xMap(x), yMap(y));
-          else ctx.lineTo(xMap(x), yMap(y));
-        }
-      }
-
-      else if (kind === "직선") {
-        const x1 = +row[1], y1 = +row[2], x2 = +row[3], y2 = +row[4];
-        guide.push([x1, y1], [x2, y2]);
-        ctx.moveTo(xMap(x1), yMap(y1));
-        ctx.lineTo(xMap(x2), yMap(y2));
-      }
-
-      else if (kind === "꺾은선") {
-        const x1 = +row[1], y1 = +row[2], mx = +row[3], my = +row[4], x2 = +row[5], y2 = +row[6];
-        guide.push([x1, y1], [mx, my], [x2, y2]);
-        ctx.moveTo(xMap(x1), yMap(y1));
-        ctx.lineTo(xMap(mx), yMap(my));
-        ctx.lineTo(xMap(x2), yMap(y2));
-      }
-
-      ctx.stroke();
-    } catch {}
-
-    ctx.restore();
-  });
-
-  drawGuideLines(guide);
-}
-
-function drawPeakGraph() {
-  rows.forEach(row => {
-    const name = row[0];
-    let start = +row[1];
-    let end = +row[2];
-    let height = +row[3];
-    const areaText = row[4];
-    const shape = row[6] || "보통";
-    const line = row[7] || "실선";
-
-    if (end <= start) return;
-
-    if (areaText) {
-      const area = +areaText;
-      const width = end - start;
-      if (!isNaN(area)) height = area * 3 / (2 * width);
-    }
-
-    const center = (start + end) / 2;
-    const half = (end - start) / 2;
-
-    ctx.save();
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = num("graphWidth");
-    dash(line);
-    ctx.beginPath();
-
-    for (let i = 0; i <= 500; i++) {
-      const x = start + (end - start) * i / 500;
-      let base = Math.max(1 - Math.pow((x - center) / half, 2), 0);
-      let y;
-
-      if (shape === "좁게") y = height * Math.pow(base, 2);
-      else if (shape === "넓게") y = height * Math.sqrt(base);
-      else y = height * base;
-
-      if (i === 0) ctx.moveTo(xMap(x), yMap(y));
-      else ctx.lineTo(xMap(x), yMap(y));
-    }
-
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font = "17px Malgun Gothic";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillText(name, xMap(center), yMap(height + height * 0.05));
-    ctx.restore();
-  });
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  if (v("graphType") === "봉우리 곡선 그래프") {
-    drawPeakGraph();
-  } else {
-    drawCurveGraph();
-  }
-
-  drawAxes();
-}
-
-function renderTable() {
-  const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = "";
-
-  rows.forEach((row, r) => {
-    const tr = document.createElement("tr");
-    if (r === selectedRow) tr.classList.add("selected");
-
-    for (let c = 0; c < 9; c++) {
-      const td = document.createElement("td");
-      td.contentEditable = true;
-      td.textContent = row[c] ?? "";
-      td.oninput = () => {
-        rows[r][c] = td.textContent.trim();
-        draw();
-      };
-      tr.appendChild(td);
-    }
-
-    tr.onclick = () => {
-      selectedRow = r;
-      renderTable();
-    };
-
-    tbody.appendChild(tr);
-  });
-}
-
-function addRow(row) {
-  rows.push(row);
-  renderTable();
-  draw();
-}
-
-function addSegment() {
-  const mode = v("segmentType");
-  const x1 = +v("segStart");
-  const x2 = +v("segEnd");
-  const y1 = +v("segY1");
-  const y2 = +v("segY2");
-  const line = v("segmentLine");
-  const shape = v("segmentShape");
-
-  if (x2 <= x1) {
-    alert("구간 끝 x는 시작 x보다 커야 합니다.");
-    return;
-  }
-
-  if (mode === "수평") {
-    addRow(["수평", x1, x2, y1, "", "", "", line, ""]);
-  } else if (mode === "완만 변화") {
-    addRow(["변화", x1, x2, y1, y2, "", shape, line, ""]);
-  } else if (mode === "직선") {
-    addRow(["직선", x1, y1, x2, y2, "", "", line, ""]);
-  } else if (mode === "꺾은선") {
-    const mx = v("segMidX").trim() ? +v("segMidX") : (x1 + x2) / 2;
-    const my = v("segMidY").trim() ? +v("segMidY") : y2;
-    addRow(["꺾은선", x1, y1, mx, my, x2, y2, line, ""]);
-  } else {
-    addRow(["A", x1, x2, y1, y2, mode, shape, line, ""]);
-  }
-}
-
-function deleteSelected() {
-  if (selectedRow === null) return;
-  rows.splice(selectedRow, 1);
-  selectedRow = null;
-  renderTable();
-  draw();
-}
-
-function deleteLast() {
-  rows.pop();
-  selectedRow = null;
-  renderTable();
-  draw();
-}
-
-function clearRows() {
-  rows = [];
-  selectedRow = null;
-  renderTable();
-  draw();
-}
-
-function savePNG() {
-  draw();
-  const a = document.createElement("a");
-  a.download = "graph.png";
-  a.href = canvas.toDataURL("image/png");
-  a.click();
-}
-
-canvas.addEventListener("mousedown", e => {
-  if (v("graphType") !== "봉우리 곡선 그래프") return;
-  const rect = canvas.getBoundingClientRect();
-  dragStart = invX(e.clientX - rect.left);
-});
-
-canvas.addEventListener("mouseup", e => {
-  if (v("graphType") !== "봉우리 곡선 그래프") return;
-  if (dragStart === null) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const endX = invX(e.clientX - rect.left);
-
-  const start = Math.min(dragStart, endX);
-  const end = Math.max(dragStart, endX);
-  dragStart = null;
-
-  if (end <= start) return;
-
-  let height;
-  let area = v("peakArea").trim();
-
-  if (area) {
-    height = (+area) * 3 / (2 * (end - start));
-  } else {
-    height = +v("peakHeight");
-  }
-
-  addRow([
-    v("peakName") || "A",
-    start.toFixed(2),
-    end.toFixed(2),
-    height.toFixed(2),
-    area,
-    "",
-    v("peakShape"),
-    v("peakLine"),
-    ""
-  ]);
-});
-
-function changeGraphType() {
-  rows = [];
-  selectedRow = null;
-  renderTable();
-
-  const isPeak = v("graphType") === "봉우리 곡선 그래프";
-
-  document.getElementById("peakBox").style.display = isPeak ? "block" : "none";
-  document.getElementById("segmentBox").style.display = isPeak ? "none" : "block";
-
-  if (isPeak) {
-    document.getElementById("xLabel").value = "시간";
-    document.getElementById("yLabel").value = "힘\n의\n\n크\n기";
-    document.getElementById("xMin").value = "0";
-    document.getElementById("xMax").value = "5";
-    document.getElementById("yMin").value = "0";
-    document.getElementById("yMax").value = "3";
-    document.getElementById("xTicks").value = "0";
-    document.getElementById("yTicks").value = "0";
-  } else {
-    document.getElementById("xLabel").value = "시간(s)";
-    document.getElementById("yLabel").value = "B\n의\n\n운\n동\n량\n\n(kg·m/s)";
-    document.getElementById("xMin").value = "0";
-    document.getElementById("xMax").value = "5";
-    document.getElementById("yMin").value = "0";
-    document.getElementById("yMax").value = "25";
-    document.getElementById("xTicks").value = "0,2,2.2,3,3.1";
-    document.getElementById("yTicks").value = "0,11,12,21";
-  }
-
-  changeSegmentType();
-  draw();
-}
-
-function changeSegmentType() {
-  const mode = v("segmentType");
-
-  document.getElementById("segY2Wrap").style.display =
-    mode === "수평" ? "none" : "block";
-
-  document.getElementById("midWrap").style.display =
-    mode === "꺾은선" ? "flex" : "none";
-
-  document.getElementById("segShapeWrap").style.display =
-    ["완만 변화", "감소곡선", "증가곡선"].includes(mode) ? "block" : "none";
-}
-
-document.getElementById("graphType").onchange = changeGraphType;
-document.getElementById("segmentType").onchange = changeSegmentType;
-
-document.querySelectorAll("input, textarea, select").forEach(el => {
-  el.addEventListener("input", draw);
-});
-
-changeGraphType();
-</script>
-
-</body>
-</html>
-
-이건 일단 단일 index.html 버전입니다.
-파이썬 앱의 핵심 기능은 옮겼고, 다음 단계에서 UI를 더 “앱처럼” 다듬으면 됩니다.
-
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1082,947 +71,502 @@ th{background:#f3f4f6}
     </div>
 
     <div>
-
-요 헤드를 넣어줘
-
-네. 방금 만든 HTML에 저 헤드를 그대로 넣으면 됩니다.
-
-다만 지금 HTML은
-
-<body>
-
-<div class="app">
-로 시작하는 구조니까,
-
-기존
-
-<body>
-
-<header>
-  ⚛️ 포물선 운동 문항 제작기<br>
-  <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
-</header>
-
-<div class="container">
-를 그대로 넣으면 레이아웃이 깨집니다.
-
-대신 CSS에 아래를 추가:
-
-header{
-  background:#1f2937;
-  color:#fff;
-  text-align:center;
-  padding:12px;
-  font-weight:800;
-  font-size:17px;
-}
-
-.home{
-  display:inline-block;
-  margin-top:6px;
-  color:white;
-  font-size:13px;
-  text-decoration:none;
-  opacity:.85;
-}
-
-.main-wrap{
-  height:calc(100vh - 74px);
-}
-그리고 body 시작 부분을
-
-<body>
-
-<header>
-  ⚛️ 수능 물리 그래프 생성기
-  <br>
-  <a class="home" href="../../index.html">
-    ← J&B LAB 홈으로
-  </a>
-</header>
-
-<div class="main-wrap">
-<div class="app">
-로 바꾸고,
-
-맨 마지막
-
-</div>
-</body>
-를
-
-</div>
-</div>
-</body>
-로 바꾸면 됩니다.
-
-그런데 지금 보니까 사용자가 원하는 건 단순히 "그래프 생성기"가 아니라 기존 J&B LAB 스타일에 맞춘 웹앱 형태인 것 같습니다.
-
-그래서 다음 단계에서는
-
-J&B LAB 공통 헤더
-
-좌측 설정 패널
-
-우측 그래프
-
-드래그 생성
-
-PNG 저장
-
-모바일 대응
-
-GitHub Pages 배포 가능
-
-형태로 UI를 통째로 J&B LAB 스타일로 정리하는 게 더 좋아 보입니다.
-
-
-
-붙여넣은 텍스트 (1)(11).txt
-문서
-맞아 기존 J&B에 넣을거라서 아래랑 같은 구조여야해. 전체를 바꿔줄래?
-
-4s 동안 생각함
-네. 아래 코드로 index.html 전체 교체하면 됩니다.
-올려주신 J&B LAB 구조에 맞춰 그래프 생성기를 통째로 넣은 버전입니다. 
-
-
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>수능 물리 그래프 생성기</title>
-
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#eef3f8;color:#111}
-header{background:#1f2937;color:#fff;text-align:center;padding:12px;font-weight:800;font-size:17px}
-.home{display:inline-block;margin-top:6px;color:white;font-size:13px;text-decoration:none;opacity:.85}
-.container{max-width:1280px;margin:0 auto;padding:10px}
-.card{background:white;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.grid2{display:grid;grid-template-columns:420px 1fr;gap:10px}
-label{font-size:12px;font-weight:800;color:#333}
-input,select,textarea,button{width:100%;min-height:34px;padding:6px;font-size:14px;border-radius:8px;border:1px solid #cfd4dc}
-textarea{height:70px;resize:vertical}
-button{border:none;background:#2563eb;color:white;font-weight:800;cursor:pointer}
-button.secondary{background:#4b5563}
-button.dark{background:#111827}
-button.warn{background:#dc2626}
-.canvas-wrap{overflow:auto;background:#f8fafc;border-radius:12px;padding:8px}
-canvas{display:block;margin:0 auto;background:white;border:1px solid #ddd}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{border:1px solid #ddd;padding:5px;text-align:center}
-th{background:#f3f4f6}
-td{background:#fff}
-tr.selected td{background:#dbeafe}
-.small{font-size:12px;color:#555;line-height:1.5}
-.section-title{font-weight:900;margin:4px 0 8px}
-.hidden{display:none}
-@media(max-width:900px){
-  .grid{grid-template-columns:repeat(2,1fr)}
-  .grid2{grid-template-columns:1fr}
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  ⚛️ 수능 물리 그래프 생성기<br>
-  <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
-</header>
-
-<div class="container">
-
-  <div class="card grid">
-    <div>
-      <label>그래프 종류</label>
-      <select id="graphType">
-        <option>봉우리 곡선 그래프</option>
-        <option>구간 그래프</option>
+      <label>보기 간격</label>
+      <select id="showEvery">
+        <option value="1" selected>모든 점 표시</option>
+        <option value="2">2칸마다 표시</option>
+        <option value="5">5칸마다 표시</option>
+        <option value="10">10칸마다 표시</option>
       </select>
     </div>
 
     <div>
-      <label>x축 제목</label>
-      <input id="xLabel" value="시간">
+      <label>그림 모드</label>
+      <select id="viewMode">
+        <option value="current">현재 시각만</option>
+        <option value="trail">지나온 점</option>
+        <option value="all" selected>전체 점</option>
+      </select>
     </div>
 
     <div>
-      <label>x범위 최소</label>
-      <input id="xMin" value="0">
+      <label>표면 이름</label>
+      <input id="surfaceText" value="행성X 표면">
     </div>
 
     <div>
-      <label>x범위 최대</label>
-      <input id="xMax" value="5">
+      <label>아래 표시</label>
+      <input id="captionText" value="(가)">
     </div>
 
     <div>
-      <label>y축 제목</label>
-      <textarea id="yLabel">힘
-의
-
-크
-기</textarea>
+      <label>A 색</label>
+      <select id="aColor">
+        <option value="white">흰 공</option>
+        <option value="black" selected>검은 공</option>
+      </select>
     </div>
 
     <div>
-      <label>y범위 최소</label>
-      <input id="yMin" value="0">
+      <label>B 색</label>
+      <select id="bColor">
+        <option value="black">검은 공</option>
+        <option value="white" selected>흰 공</option>
+      </select>
     </div>
 
     <div>
-      <label>y범위 최대</label>
-      <input id="yMax" value="3">
+      <label>R, H 값 표시</label>
+      <select id="showGuideText">
+        <option value="yes">표시</option>
+        <option value="no" selected>숨김</option>
+      </select>
     </div>
 
     <div>
-      <label>x눈금</label>
-      <input id="xTicks" value="0">
-    </div>
-
-    <div>
-      <label>y눈금</label>
-      <input id="yTicks" value="0">
-    </div>
-
-    <div>
-      <label>그래프 굵기</label>
-      <input id="graphWidth" value="2.2">
-    </div>
-
-    <div>
-      <label>축 굵기</label>
-      <input id="axisWidth" value="1.3">
-    </div>
-
-    <div>
-      <label>점선 굵기</label>
-      <input id="guideWidth" value="0.9">
+      <label>R, H 점선 표시</label>
+      <select id="showGuideLine">
+        <option value="yes">표시</option>
+        <option value="no" selected>숨김</option>
+      </select>
     </div>
   </div>
 
-  <div class="grid2">
+  <div class="card grid">
+    <button onclick="build()">그림 만들기</button>
+    <button onclick="play()">▶ 영상 재생</button>
+    <button class="secondary" onclick="prevFrame()">◀ 한 단계 전</button>
+    <button class="secondary" onclick="nextFrame()">한 단계 후 ▶</button>
 
-    <div>
+    <button class="secondary" onclick="gridXPlus()">가로 격자 +</button>
+    <button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
+    <button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
+    <button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
 
-      <div class="card" id="peakBox">
-        <div class="section-title">봉우리 곡선 설정</div>
-
-        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-          <div>
-            <label>이름</label>
-            <input id="peakName" value="A">
-          </div>
-
-          <div>
-            <label>최댓값</label>
-            <input id="peakHeight" value="2.4">
-          </div>
-
-          <div>
-            <label>내부 면적</label>
-            <input id="peakArea">
-          </div>
-
-          <div>
-            <label>모양</label>
-            <select id="peakShape">
-              <option>좁게</option>
-              <option selected>보통</option>
-              <option>넓게</option>
-            </select>
-          </div>
-
-          <div>
-            <label>선</label>
-            <select id="peakLine">
-              <option>실선</option>
-              <option>점선</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="small" style="margin-top:8px">
-          그래프 영역에서 드래그하면 시작 x~끝 x가 자동으로 추가됩니다.
-        </div>
-      </div>
-
-      <div class="card hidden" id="segmentBox">
-        <div class="section-title">구간 그래프 설정</div>
-
-        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-          <div>
-            <label>종류</label>
-            <select id="segmentType">
-              <option>수평</option>
-              <option>완만 변화</option>
-              <option>직선</option>
-              <option>꺾은선</option>
-              <option>감소곡선</option>
-              <option>증가곡선</option>
-            </select>
-          </div>
-
-          <div>
-            <label>선</label>
-            <select id="segmentLine">
-              <option>실선</option>
-              <option>점선</option>
-            </select>
-          </div>
-
-          <div>
-            <label>시작 x</label>
-            <input id="segStart" value="0">
-          </div>
-
-          <div>
-            <label>끝 x</label>
-            <input id="segEnd" value="2">
-          </div>
-
-          <div>
-            <label>시작 y</label>
-            <input id="segY1" value="12">
-          </div>
-
-          <div id="segY2Wrap">
-            <label>끝 y</label>
-            <input id="segY2" value="21">
-          </div>
-
-          <div id="segMidXWrap">
-            <label>중간 x</label>
-            <input id="segMidX">
-          </div>
-
-          <div id="segMidYWrap">
-            <label>중간 y</label>
-            <input id="segMidY">
-          </div>
-
-          <div id="segShapeWrap">
-            <label>모양</label>
-            <select id="segmentShape">
-              <option>좁게</option>
-              <option selected>보통</option>
-              <option>넓게</option>
-            </select>
-          </div>
-        </div>
-
-        <button style="margin-top:8px" onclick="addSegment()">구간 추가</button>
-      </div>
-
-      <div class="card grid" style="grid-template-columns:repeat(2,1fr)">
-        <button onclick="draw()">미리보기</button>
-        <button class="dark" onclick="savePNG()">PNG 저장</button>
-        <button class="secondary" onclick="deleteSelected()">선택 행 삭제</button>
-        <button class="secondary" onclick="deleteLast()">마지막 행 삭제</button>
-        <button class="warn" onclick="clearRows()">전체 초기화</button>
-      </div>
-
-      <div class="card">
-        <div class="section-title">데이터 목록</div>
-        <table id="dataTable">
-          <thead>
-            <tr>
-              <th>종류/이름</th><th>x1</th><th>x2/y1</th><th>y1/x2</th>
-              <th>y2/면적</th><th>그래프</th><th>모양</th><th>선</th><th>비고</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-    </div>
-
-    <div class="card canvas-wrap">
-      <canvas id="canvas" width="900" height="620"></canvas>
-    </div>
-
+    <button class="dark" onclick="saveImage()">PNG 저장</button>
+    <button class="warn" onclick="resetAll()">초기화</button>
   </div>
+
+  <div class="card small">
+    기본값: h=0.5m, v=0.5m/s, g=10m/s², Δt=0.1s, 가로/세로 1칸=0.05m.
+    그림에는 땅에 닿기 전 점까지만 표시됩니다.
+  </div>
+
+  <div class="card canvas-wrap">
+    <canvas id="canvas" width="900" height="620"></canvas>
+  </div>
+
+  <div class="card info" id="info"></div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>순서</th>
+          <th>시간 t(s)</th>
+          <th>A 낙하거리(m)</th>
+          <th>B 낙하거리(m)</th>
+          <th>B 수평거리(m)</th>
+        </tr>
+      </thead>
+      <tbody id="table"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-let rows = [];
-let selectedRow = null;
-let dragStart = null;
+let data = [];
+let frame = 0;
+let timer = null;
+let extraCols = 0;
+let extraRows = 0;
 
-const plot = { left:160, right:90, top:70, bottom:110 };
+function num(id){ return Number(document.getElementById(id).value); }
+function txt(id){ return document.getElementById(id).value; }
 
-function v(id){ return document.getElementById(id).value; }
-function n(id){ return Number(document.getElementById(id).value); }
-
-function parseTicks(text){
-  if(!text.trim()) return [];
-  return text.split(",").map(x=>Number(x.trim())).filter(x=>!isNaN(x));
+function getInputs(){
+  return {
+    h:num("height"),
+    v:num("speed"),
+    g:num("gravity"),
+    dt:num("dt"),
+    dx:num("dx"),
+    dy:num("dy"),
+    showEvery:Number(document.getElementById("showEvery").value),
+    viewMode:document.getElementById("viewMode").value,
+    surfaceText:txt("surfaceText"),
+    captionText:txt("captionText"),
+    aColor:document.getElementById("aColor").value,
+    bColor:document.getElementById("bColor").value,
+    showGuideText:document.getElementById("showGuideText").value,
+    showGuideLine:document.getElementById("showGuideLine").value
+  };
 }
 
-function xMap(x){
-  const xMin=n("xMin"), xMax=n("xMax");
-  return plot.left + (x-xMin)/(xMax-xMin)*(canvas.width-plot.left-plot.right);
-}
+function build(){
+  stop();
 
-function yMap(y){
-  const yMin=n("yMin"), yMax=n("yMax");
-  return canvas.height-plot.bottom - (y-yMin)/(yMax-yMin)*(canvas.height-plot.top-plot.bottom);
-}
+  const s = getInputs();
 
-function invX(px){
-  const xMin=n("xMin"), xMax=n("xMax");
-  return xMin + (px-plot.left)/(canvas.width-plot.left-plot.right)*(xMax-xMin);
-}
-
-function easeInOut(t){
-  return 3*t*t - 2*t*t*t;
-}
-
-function setDash(line){
-  ctx.setLineDash(line==="점선" ? [8,6] : []);
-}
-
-function drawAxes(){
-  const axisWidth=n("axisWidth");
-  const xMin=n("xMin"), xMax=n("xMax");
-  const yMin=n("yMin"), yMax=n("yMax");
-
-  const x0=xMap(xMin), y0=yMap(yMin);
-  const xEnd=xMap(xMax), yEnd=yMap(yMax);
-
-  ctx.save();
-  ctx.strokeStyle="#111";
-  ctx.fillStyle="#111";
-  ctx.lineWidth=axisWidth;
-  ctx.setLineDash([]);
-
-  ctx.beginPath();
-  ctx.moveTo(x0,y0);
-  ctx.lineTo(xEnd+25,y0);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(xEnd+25,y0);
-  ctx.lineTo(xEnd+13,y0-5);
-  ctx.lineTo(xEnd+13,y0+5);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(x0,y0);
-  ctx.lineTo(x0,yEnd-25);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x0,yEnd-25);
-  ctx.lineTo(x0-5,yEnd-13);
-  ctx.lineTo(x0+5,yEnd-13);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.font="17px Malgun Gothic";
-  ctx.textAlign="left";
-  ctx.textBaseline="top";
-  ctx.fillText(v("xLabel"), xEnd+30, y0+18);
-
-  ctx.textAlign="center";
-  ctx.textBaseline="bottom";
-  const yLines=v("yLabel").split("\n");
-  yLines.forEach((line,i)=>{
-    ctx.fillText(line, x0-82, yEnd-40+i*18);
-  });
-
-  let xTicks=parseTicks(v("xTicks"));
-  let yTicks=parseTicks(v("yTicks"));
-
-  if(xMin===0 && yMin===0){
-    xTicks=xTicks.filter(t=>t!==0);
-    yTicks=yTicks.filter(t=>t!==0);
-    ctx.font="15px Malgun Gothic";
-    ctx.textAlign="right";
-    ctx.textBaseline="top";
-    ctx.fillText("0", x0-8, y0+8);
+  if(s.h<=0 || s.g<=0 || s.dt<=0 || s.dx<=0 || s.dy<=0){
+    alert("h, g, Δt, dₓ, dᵧ는 모두 0보다 커야 합니다.");
+    return;
   }
 
-  ctx.font="15px Malgun Gothic";
-  ctx.textAlign="center";
-  ctx.textBaseline="top";
-
-  xTicks.forEach(t=>{
-    const x=xMap(t);
-    ctx.beginPath();
-    ctx.moveTo(x,y0);
-    ctx.lineTo(x,y0+6);
-    ctx.stroke();
-    ctx.fillText(String(t),x,y0+10);
-  });
-
-  ctx.textAlign="right";
-  ctx.textBaseline="middle";
-
-  yTicks.forEach(t=>{
-    const y=yMap(t);
-    ctx.beginPath();
-    ctx.moveTo(x0,y);
-    ctx.lineTo(x0-6,y);
-    ctx.stroke();
-    ctx.fillText(String(t),x0-10,y);
-  });
-
-  ctx.restore();
+  data = makeData(s);
+  frame = 0;
+  makeTable();
+  draw();
 }
 
-function drawGuideLines(points){
-  const used=new Set();
+function makeData(s){
+  const arr = [];
+  const totalTime = Math.sqrt(2*s.h/s.g);
 
-  ctx.save();
-  ctx.strokeStyle="#111";
-  ctx.lineWidth=n("guideWidth");
-  ctx.globalAlpha=.6;
-  ctx.setLineDash([2,5]);
+  let n = 0;
+  while(true){
+    const t = n * s.dt;
+    const y = 0.5 * s.g * t * t;
 
-  points.forEach(([x,y])=>{
-    const key=`${x.toFixed(6)},${y.toFixed(6)}`;
-    if(used.has(key)) return;
-    used.add(key);
+    if(y >= s.h - 1e-9) break;
 
-    if(x>0 && y>0){
-      ctx.beginPath();
-      ctx.moveTo(xMap(x),yMap(0));
-      ctx.lineTo(xMap(x),yMap(y));
-      ctx.stroke();
+    arr.push({
+      t:t,
+      x:s.v*t,
+      y:y
+    });
 
-      ctx.beginPath();
-      ctx.moveTo(xMap(0),yMap(y));
-      ctx.lineTo(xMap(x),yMap(y));
-      ctx.stroke();
-    }
-  });
+    n++;
+  }
 
-  ctx.restore();
+  return arr;
 }
 
-function drawPeakGraph(){
-  rows.forEach(row=>{
-    const name=row[0];
-    let start=Number(row[1]);
-    let end=Number(row[2]);
-    let height=Number(row[3]);
-    const areaText=(row[4]||"").trim();
-    const shape=row[6]||"보통";
-    const line=row[7]||"실선";
-
-    if(isNaN(start)||isNaN(end)||isNaN(height)||end<=start) return;
-
-    if(areaText){
-      const area=Number(areaText);
-      const width=end-start;
-      if(!isNaN(area)) height=area*3/(2*width);
-    }
-
-    const center=(start+end)/2;
-    const half=(end-start)/2;
-
-    ctx.save();
-    ctx.strokeStyle="#111";
-    ctx.lineWidth=n("graphWidth");
-    setDash(line);
-    ctx.beginPath();
-
-    for(let i=0;i<=500;i++){
-      const x=start+(end-start)*i/500;
-      const base=Math.max(1-Math.pow((x-center)/half,2),0);
-      let y=height*base;
-
-      if(shape==="좁게") y=height*Math.pow(base,2);
-      if(shape==="넓게") y=height*Math.sqrt(base);
-
-      if(i===0) ctx.moveTo(xMap(x),yMap(y));
-      else ctx.lineTo(xMap(x),yMap(y));
-    }
-
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font="17px Malgun Gothic";
-    ctx.textAlign="center";
-    ctx.textBaseline="bottom";
-    ctx.fillText(name,xMap(center),yMap(height+height*.05));
-    ctx.restore();
-  });
+function buildSilent(){
+  const s = getInputs();
+  data = makeData(s);
+  frame = Math.min(frame, data.length-1);
 }
 
-function drawCurveGraph(){
-  const guide=[];
+function getFinalData(){
+  const s = getInputs();
+  const totalTime = Math.sqrt(2*s.h/s.g);
+  return {
+    t:totalTime,
+    x:s.v*totalTime,
+    y:s.h
+  };
+}
 
-  rows.forEach(row=>{
-    const kind=row[0];
-    const line=row[7]||"실선";
+function getGrid(){
+  const s = getInputs();
+  const final = getFinalData();
 
-    ctx.save();
-    ctx.strokeStyle="#111";
-    ctx.lineWidth=n("graphWidth");
-    setDash(line);
-    ctx.beginPath();
+  let cols = Math.ceil(final.x / s.dx) + 4 + extraCols;
+  let rows = Math.ceil(s.h / s.dy) + 1 + extraRows;
 
-    if(kind==="수평"){
-      const x1=Number(row[1]), x2=Number(row[2]), y=Number(row[3]);
-      if([x1,x2,y].some(isNaN)) return;
-      guide.push([x1,y],[x2,y]);
-      ctx.moveTo(xMap(x1),yMap(y));
-      ctx.lineTo(xMap(x2),yMap(y));
-    }
+  cols = Math.max(cols, 5);
+  rows = Math.max(rows, 5);
 
-    else if(kind==="변화" || kind==="A"){
-      const x1=Number(row[1]), x2=Number(row[2]), y1=Number(row[3]), y2=Number(row[4]);
-      if([x1,x2,y1,y2].some(isNaN)||x2<=x1) return;
-      guide.push([x1,y1],[x2,y2]);
-
-      for(let i=0;i<=300;i++){
-        const t=i/300;
-        const x=x1+(x2-x1)*t;
-        const s=easeInOut(t);
-        const y=y1+(y2-y1)*s;
-        if(i===0) ctx.moveTo(xMap(x),yMap(y));
-        else ctx.lineTo(xMap(x),yMap(y));
-      }
-    }
-
-    else if(kind==="직선"){
-      const x1=Number(row[1]), y1=Number(row[2]), x2=Number(row[3]), y2=Number(row[4]);
-      if([x1,y1,x2,y2].some(isNaN)) return;
-      guide.push([x1,y1],[x2,y2]);
-      ctx.moveTo(xMap(x1),yMap(y1));
-      ctx.lineTo(xMap(x2),yMap(y2));
-    }
-
-    else if(kind==="꺾은선"){
-      const x1=Number(row[1]), y1=Number(row[2]), mx=Number(row[3]), my=Number(row[4]), x2=Number(row[5]), y2=Number(row[6]);
-      if([x1,y1,mx,my,x2,y2].some(isNaN)) return;
-      guide.push([x1,y1],[mx,my],[x2,y2]);
-      ctx.moveTo(xMap(x1),yMap(y1));
-      ctx.lineTo(xMap(mx),yMap(my));
-      ctx.lineTo(xMap(x2),yMap(y2));
-    }
-
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  drawGuideLines(guide);
+  return {cols, rows};
 }
 
 function draw(){
+  if(!data.length) buildSilent();
+
+  const s = getInputs();
+  const grid = getGrid();
+
+  const cell = 48;
+  const left = 70;
+  const top = 58;
+  const rightSpace = 28;
+  const bottomSpace = 94;
+
+  const gridW = grid.cols * cell;
+  const gridH = grid.rows * cell;
+
+  canvas.width = left + gridW + rightSpace;
+  canvas.height = top + gridH + bottomSpace;
+
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="white";
+  ctx.fillStyle = "white";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  if(v("graphType")==="봉우리 곡선 그래프") drawPeakGraph();
-  else drawCurveGraph();
+  drawGrid(left, top, grid.cols, grid.rows, cell);
+  drawSurface(left, top + gridH, gridW, s);
 
-  drawAxes();
+  if(s.viewMode === "all"){
+    drawPoints(0, data.length-1, left, top, cell, s);
+  }else if(s.viewMode === "trail"){
+    drawPoints(0, frame, left, top, cell, s);
+  }else{
+    drawPoints(frame, frame, left, top, cell, s);
+  }
+
+  drawGuide(left, top, cell, s);
+  updateInfo();
 }
 
-function renderTable(){
-  const tbody=document.querySelector("#dataTable tbody");
-  tbody.innerHTML="";
+function drawGrid(x0, y0, cols, rows, cell){
+  ctx.strokeStyle = "#9ca3af";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5,4]);
 
-  rows.forEach((row,r)=>{
-    const tr=document.createElement("tr");
-    if(r===selectedRow) tr.classList.add("selected");
+  for(let c=0;c<=cols;c++){
+    ctx.beginPath();
+    ctx.moveTo(x0+c*cell, y0);
+    ctx.lineTo(x0+c*cell, y0+rows*cell);
+    ctx.stroke();
+  }
 
-    for(let c=0;c<9;c++){
-      const td=document.createElement("td");
-      td.contentEditable=true;
-      td.textContent=row[c] ?? "";
-      td.oninput=()=>{
-        rows[r][c]=td.textContent.trim();
-        draw();
-      };
-      tr.appendChild(td);
+  for(let r=0;r<=rows;r++){
+    ctx.beginPath();
+    ctx.moveTo(x0, y0+r*cell);
+    ctx.lineTo(x0+cols*cell, y0+r*cell);
+    ctx.stroke();
+  }
+
+  ctx.setLineDash([]);
+}
+
+function drawSurface(x0, groundY, gridW, s){
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=2;
+
+  ctx.beginPath();
+  ctx.moveTo(x0-10, groundY);
+  ctx.lineTo(x0+gridW+10, groundY);
+  ctx.stroke();
+
+  const grad = ctx.createLinearGradient(0, groundY, 0, groundY+34);
+  grad.addColorStop(0, "#f9fafb");
+  grad.addColorStop(1, "#d1d5db");
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(x0-10, groundY, gridW+20, 34);
+
+  ctx.fillStyle="#111";
+  ctx.font="26px serif";
+  ctx.textAlign="center";
+  ctx.fillText(s.surfaceText, x0+gridW/2, groundY+25);
+
+  ctx.font="25px serif";
+  ctx.fillText(s.captionText, x0+gridW/2, groundY+70);
+
+  ctx.textAlign="left";
+}
+
+function screenX(x, x0, cell, s){
+  return x0 + cell*3 + (x / s.dx) * cell;
+}
+
+function screenY(y, y0, cell, s){
+  return y0 + (y / s.dy) * cell;
+}
+
+function drawPoints(start, end, x0, y0, cell, s){
+  const aX = x0 + cell;
+  const bX0 = x0 + cell*3;
+
+  ctx.fillStyle="#111";
+  ctx.font="27px serif";
+  ctx.textAlign="center";
+
+  ctx.fillText("A", aX, y0-10);
+  ctx.fillText("B", bX0, y0-10);
+
+  for(let i=start;i<=end;i++){
+    if(i % s.showEvery !== 0 && i !== frame) continue;
+
+    const p = data[i];
+
+    const ax = aX;
+    const ay = screenY(p.y, y0, cell, s);
+
+    const bx = screenX(p.x, x0, cell, s);
+    const by = screenY(p.y, y0, cell, s);
+
+    drawBall(ax, ay, s.aColor);
+    drawBall(bx, by, s.bColor);
+  }
+
+  ctx.textAlign="left";
+}
+
+function drawGuide(x0, y0, cell, s){
+  if(!data.length) return;
+
+  const p = data[frame];
+
+  const bX0 = x0 + cell*3;
+  const bx = screenX(p.x, x0, cell, s);
+  const by = screenY(p.y, y0, cell, s);
+
+  if(s.showGuideLine === "yes"){
+    ctx.strokeStyle="#111";
+    ctx.lineWidth=1.2;
+    ctx.setLineDash([4,4]);
+
+    ctx.beginPath();
+    ctx.moveTo(bx, y0);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(bX0, by);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+  }
+
+  if(s.showGuideText === "yes"){
+    ctx.fillStyle="#111";
+    ctx.font="13px Arial";
+    ctx.fillText(`t=${p.t.toFixed(2)}s`, bx+8, by-8);
+    ctx.fillText(`R=${p.x.toFixed(2)}m`, (bX0+bx)/2-18, by-8);
+    ctx.fillText(`H=${p.y.toFixed(2)}m`, bx+8, (y0+by)/2);
+  }
+}
+
+function drawBall(x, y, style){
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI*2);
+
+  if(style==="black"){
+    ctx.fillStyle="#333";
+    ctx.fill();
+  }else{
+    ctx.fillStyle="white";
+    ctx.fill();
+  }
+
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=2.4;
+  ctx.stroke();
+}
+
+function play(){
+  if(!data.length) build();
+  stop();
+
+  timer = setInterval(()=>{
+    frame++;
+
+    if(frame >= data.length){
+      frame = data.length-1;
+      stop();
     }
 
-    tr.onclick=()=>{
-      selectedRow=r;
-      renderTable();
-    };
+    draw();
+  }, 180);
+}
 
+function stop(){
+  if(timer){
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function nextFrame(){
+  stop();
+  if(!data.length) build();
+  frame = Math.min(frame+1, data.length-1);
+  draw();
+}
+
+function prevFrame(){
+  stop();
+  if(!data.length) build();
+  frame = Math.max(frame-1, 0);
+  draw();
+}
+
+function gridXPlus(){ extraCols++; draw(); }
+function gridXMinus(){ extraCols--; draw(); }
+function gridYPlus(){ extraRows++; draw(); }
+function gridYMinus(){ extraRows--; draw(); }
+
+function makeTable(){
+  const tbody = document.getElementById("table");
+  tbody.innerHTML = "";
+
+  data.forEach((p,i)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td>${p.t.toFixed(2)}</td>
+      <td>${p.y.toFixed(3)}</td>
+      <td>${p.y.toFixed(3)}</td>
+      <td>${p.x.toFixed(3)}</td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-function addRow(row){
-  rows.push(row);
-  renderTable();
-  draw();
+function updateInfo(){
+  if(!data.length) return;
+
+  const s = getInputs();
+  const now = data[frame];
+  const final = getFinalData();
+  const grid = getGrid();
+
+  document.getElementById("info").textContent =
+`현재 시각 t = ${now.t.toFixed(2)} s
+A와 B의 낙하 거리 = ${now.y.toFixed(3)} m
+B의 수평 이동 거리 = ${now.x.toFixed(3)} m
+
+전체 낙하 시간 = ${final.t.toFixed(3)} s
+최종 수평 도달 거리 = ${final.x.toFixed(3)} m
+
+격자 설정
+가로 1칸 dₓ = ${s.dx} m
+세로 1칸 dᵧ = ${s.dy} m
+가로 칸 수 = ${grid.cols}
+세로 칸 수 = ${grid.rows}`;
 }
 
-function addSegment(){
-  const mode=v("segmentType");
-  const x1=Number(v("segStart"));
-  const x2=Number(v("segEnd"));
-  const y1=Number(v("segY1"));
-  const y2=Number(v("segY2"));
-  const line=v("segmentLine");
-  const shape=v("segmentShape");
-
-  if([x1,x2,y1].some(isNaN)){
-    alert("숫자 입력칸을 확인하세요.");
-    return;
-  }
-
-  if(x2<=x1){
-    alert("구간 끝 x는 시작 x보다 커야 합니다.");
-    return;
-  }
-
-  if(mode==="수평"){
-    addRow(["수평",x1,x2,y1,"","","",line,""]);
-  }else if(mode==="완만 변화"){
-    addRow(["변화",x1,x2,y1,y2,"",shape,line,""]);
-  }else if(mode==="직선"){
-    addRow(["직선",x1,y1,x2,y2,"","",line,""]);
-  }else if(mode==="꺾은선"){
-    const mx=v("segMidX").trim()?Number(v("segMidX")):(x1+x2)/2;
-    const my=v("segMidY").trim()?Number(v("segMidY")):y2;
-    addRow(["꺾은선",x1,y1,mx,my,x2,y2,line,""]);
-  }else{
-    addRow(["A",x1,x2,y1,y2,mode,shape,line,""]);
-  }
-}
-
-function deleteSelected(){
-  if(selectedRow===null) return;
-  rows.splice(selectedRow,1);
-  selectedRow=null;
-  renderTable();
-  draw();
-}
-
-function deleteLast(){
-  rows.pop();
-  selectedRow=null;
-  renderTable();
-  draw();
-}
-
-function clearRows(){
-  rows=[];
-  selectedRow=null;
-  renderTable();
-  draw();
-}
-
-function savePNG(){
-  draw();
-  const link=document.createElement("a");
-  link.download="physics_graph.png";
-  link.href=canvas.toDataURL("image/png");
+function saveImage(){
+  const link = document.createElement("a");
+  link.download = "projectile_problem.png";
+  link.href = canvas.toDataURL("image/png");
   link.click();
 }
 
-canvas.addEventListener("mousedown",e=>{
-  if(v("graphType")!=="봉우리 곡선 그래프") return;
-  const rect=canvas.getBoundingClientRect();
-  dragStart=invX(e.clientX-rect.left);
-});
+function resetAll(){
+  stop();
 
-canvas.addEventListener("mouseup",e=>{
-  if(v("graphType")!=="봉우리 곡선 그래프") return;
-  if(dragStart===null) return;
+  frame = 0;
+  extraCols = 0;
+  extraRows = 0;
 
-  const rect=canvas.getBoundingClientRect();
-  const endX=invX(e.clientX-rect.left);
+  document.getElementById("height").value = 0.5;
+  document.getElementById("speed").value = 0.5;
+  document.getElementById("gravity").value = 10;
+  document.getElementById("dt").value = 0.1;
+  document.getElementById("dx").value = 0.05;
+  document.getElementById("dy").value = 0.05;
+  document.getElementById("showEvery").value = 1;
+  document.getElementById("viewMode").value = "all";
+  document.getElementById("surfaceText").value = "행성X 표면";
+  document.getElementById("captionText").value = "(가)";
+  document.getElementById("aColor").value = "black";
+  document.getElementById("bColor").value = "white";
+  document.getElementById("showGuideText").value = "no";
+  document.getElementById("showGuideLine").value = "no";
 
-  const start=Math.min(dragStart,endX);
-  const end=Math.max(dragStart,endX);
-  dragStart=null;
-
-  if(end<=start) return;
-
-  let area=v("peakArea").trim();
-  let height;
-
-  if(area){
-    height=Number(area)*3/(2*(end-start));
-  }else{
-    height=Number(v("peakHeight"));
-  }
-
-  if(isNaN(height)){
-    alert("최댓값 또는 내부 면적을 숫자로 입력하세요.");
-    return;
-  }
-
-  addRow([
-    v("peakName")||"A",
-    start.toFixed(2),
-    end.toFixed(2),
-    height.toFixed(2),
-    area,
-    "",
-    v("peakShape"),
-    v("peakLine"),
-    ""
-  ]);
-});
-
-function changeGraphType(){
-  rows=[];
-  selectedRow=null;
-  renderTable();
-
-  const isPeak=v("graphType")==="봉우리 곡선 그래프";
-
-  document.getElementById("peakBox").classList.toggle("hidden",!isPeak);
-  document.getElementById("segmentBox").classList.toggle("hidden",isPeak);
-
-  if(isPeak){
-    document.getElementById("xLabel").value="시간";
-    document.getElementById("yLabel").value="힘\n의\n\n크\n기";
-    document.getElementById("xMin").value="0";
-    document.getElementById("xMax").value="5";
-    document.getElementById("yMin").value="0";
-    document.getElementById("yMax").value="3";
-    document.getElementById("xTicks").value="0";
-    document.getElementById("yTicks").value="0";
-  }else{
-    document.getElementById("xLabel").value="시간(s)";
-    document.getElementById("yLabel").value="B\n의\n\n운\n동\n량\n\n(kg·m/s)";
-    document.getElementById("xMin").value="0";
-    document.getElementById("xMax").value="5";
-    document.getElementById("yMin").value="0";
-    document.getElementById("yMax").value="25";
-    document.getElementById("xTicks").value="0,2,2.2,3,3.1";
-    document.getElementById("yTicks").value="0,11,12,21";
-  }
-
-  changeSegmentType();
-  draw();
+  build();
 }
 
-function changeSegmentType(){
-  const mode=v("segmentType");
-
-  document.getElementById("segY2Wrap").classList.toggle("hidden",mode==="수평");
-  document.getElementById("segMidXWrap").classList.toggle("hidden",mode!=="꺾은선");
-  document.getElementById("segMidYWrap").classList.toggle("hidden",mode!=="꺾은선");
-
-  const showShape=["완만 변화","감소곡선","증가곡선"].includes(mode);
-  document.getElementById("segShapeWrap").classList.toggle("hidden",!showShape);
-}
-
-document.getElementById("graphType").addEventListener("change",changeGraphType);
-document.getElementById("segmentType").addEventListener("change",changeSegmentType);
-
-document.querySelectorAll("input,textarea,select").forEach(el=>{
-  el.addEventListener("input",draw);
-});
-
-window.onload=changeGraphType;
+window.onload = build;
 </script>
 
 </body>
 </html>
-
-
-<div>
-  <label>B 수평 속력 v (m/s)</label>
-  <input id="speed" type="number" value="0.5" step="0.1">
-</div>
-
-<div>
-  <label>중력 가속도 g (m/s²)</label>
-  <input id="gravity" type="number" value="10" step="0.1">
-</div>
-
-<div>
-  <label>시간 간격 Δt (s)</label>
-  <input id="dt" type="number" value="0.1" step="0.1">
-</div>
-
-<div>
-  <label>가로 1칸 dₓ (m)</label>
-  <input id="dx" type="number" value="0.05" step="0.01">
-</div>
-
-<div>
-  <label>세로 1칸 dᵧ (m)</label>
-  <input id="dy" type="number" value="0.05" step="0.01">
-</div>
-
-<div>
-  <label>보기 간격</label>
-  <select id="showEvery">
-    <option value="1" selected>모든 점 표시</option>
-    <option value="2">2칸마다 표시</option>
-    <option value="5">5칸마다 표시</option>
-    <option value="10">10칸마다 표시</option>
-  </select>
-</div>
-
-<div>
-  <label>그림 모드</label>
-  <select id="viewMode">
-    <option value="current">현재 시각만</option>
-    <option value="trail">지나온 점</option>
-    <option value="all" selected>전체 점</option>
-  </select>
-</div>
-
-<div>
-  <label>표면 이름</label>
-  <input id="surfaceText" value="행성X 표면">
-</div>
-
-<div>
-  <label>아래 표시</label>
-  <input id="captionText" value="(가)">
-</div>
-
-<div>
-  <label>A 색</label>
-  <select id="aColor">
-    <option value="white">흰 공</option>
-    <option value="black" selected>검은 공</option>
-  </select>
-</div>
-
-<div>
-  <label>B 색</label>
-  <select id="bColor">
-    <option value="black">검은 공</option>
-    <option value="white" selected>흰 공</option>
-  </select>
-</div>
-
-<div>
-  <label>R, H 값 표시</label>
-  <select id="showGuideText">
-    <option value="yes">표시</option>
-    <option value="no" selected>숨김</option>
-  </select>
-</div>
-
-<div>
-  <label>R, H 점선 표시</label>
-  <select id="showGuideLine">
-    <option value="yes">표시</option>
-    <option value="no" selected>숨김</option>
-  </select>
-</div>
-<button class="secondary" onclick="gridXPlus()">가로 격자 +</button>
-<button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
-<button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
-<button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
-
-<button class="dark" onclick="saveImage()">PNG 저장</button>
-<button class="warn" onclick="resetAll()">초기화</button>
-
-닫기
