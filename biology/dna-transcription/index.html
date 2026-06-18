@@ -73,6 +73,11 @@ button {
   background: #2563eb;
   color: white;
   font-weight: 700;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #4b5563;
 }
 
 .canvas-wrap {
@@ -117,6 +122,22 @@ th { background: #f3f4f6; }
   color:#1d4ed8;
   font-size:12px;
   font-weight:700;
+}
+
+.seq-box {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.seq-title {
+  font-weight: 800;
+  color: #111827;
 }
 
 @media (max-width: 430px) {
@@ -169,14 +190,32 @@ th { background: #f3f4f6; }
         <label>X1의 T 개수</label>
         <input id="tCount" type="number" min="0" value="5">
       </div>
+
+      <div>
+        <label>염기서열 순서</label>
+        <select id="sequenceMode">
+          <option value="random">랜덤 섞기</option>
+          <option value="fixed">고정 섞기</option>
+          <option value="grouped">입력 순서대로</option>
+        </select>
+      </div>
+
+      <div>
+        <label>랜덤 시드</label>
+        <input id="seed" type="number" value="1">
+      </div>
     </div>
 
     <br>
-    <button onclick="update()">계산하기</button>
+    <div class="grid">
+      <button onclick="update(false)">계산하기</button>
+      <button class="secondary" onclick="shuffleAndUpdate()">염기서열 랜덤 섞기</button>
+    </div>
   </div>
 
   <div class="card">
     <div class="info" id="summary"></div>
+    <div class="seq-box" id="sequenceBox"></div>
   </div>
 
   <div class="card">
@@ -218,20 +257,52 @@ const compRNA = {
   C: "G"
 };
 
-function makeSequence(a, g, c, t) {
+let currentSeed = 1;
+
+function readNumber(id) {
+  return Number(document.getElementById(id).value);
+}
+
+function seededRandom(seed) {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function makeBaseArray(a, g, c, t) {
   let arr = [];
   arr.push(...Array(a).fill("A"));
   arr.push(...Array(g).fill("G"));
   arr.push(...Array(c).fill("C"));
   arr.push(...Array(t).fill("T"));
+  return arr;
+}
 
-  // 보기 좋게 섞기
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor((i * 7 + 3) % arr.length);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+function shuffleArray(arr, mode, seed) {
+  const result = [...arr];
+
+  if (mode === "grouped") return result;
+
+  if (mode === "random") {
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
   }
 
-  return arr;
+  // 고정 섞기: 같은 시드면 같은 염기서열이 나옴
+  let s = seed || 1;
+  for (let i = result.length - 1; i > 0; i--) {
+    s += i * 13 + 7;
+    const j = Math.floor(seededRandom(s) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function makeSequence(a, g, c, t, mode, seed) {
+  const arr = makeBaseArray(a, g, c, t);
+  return shuffleArray(arr, mode, seed);
 }
 
 function countBases(seq, bases) {
@@ -241,23 +312,41 @@ function countBases(seq, bases) {
   return result;
 }
 
-function update() {
-  const total = Number(document.getElementById("total").value);
-  let a = Number(document.getElementById("aCount").value);
-  let g = Number(document.getElementById("gCount").value);
-  let c = Number(document.getElementById("cCount").value);
-  let t = Number(document.getElementById("tCount").value);
+function formatSeq(seq) {
+  return seq.join("");
+}
+
+function shuffleAndUpdate() {
+  const seedInput = document.getElementById("seed");
+  currentSeed = Date.now();
+  seedInput.value = currentSeed;
+  document.getElementById("sequenceMode").value = "random";
+  update(true);
+}
+
+function update(forceRandom=false) {
+  const total = readNumber("total");
+  let a = readNumber("aCount");
+  let g = readNumber("gCount");
+  let c = readNumber("cCount");
+  let t = readNumber("tCount");
   const template = document.getElementById("template").value;
+  const mode = document.getElementById("sequenceMode").value;
+  const seed = readNumber("seed");
 
   const sum = a + g + c + t;
 
   if (sum !== total) {
     document.getElementById("summary").innerHTML =
       `⚠️ X1의 A+G+C+T 개수 합이 총 염기 수와 맞지 않습니다.\n현재 합: ${sum}, 총 염기 수: ${total}`;
+    document.getElementById("sequenceBox").innerHTML = "";
+    document.getElementById("tableBody").innerHTML = "";
+    clearCanvas();
     return;
   }
 
-  const x1 = makeSequence(a, g, c, t);
+  const seqMode = forceRandom ? "random" : mode;
+  const x1 = makeSequence(a, g, c, t, seqMode, seed);
   const x2 = x1.map(b => compDNA[b]);
 
   const templateSeq = template === "x1" ? x1 : x2;
@@ -267,10 +356,23 @@ function update() {
   const x2Count = countBases(x2, ["A","G","C","T"]);
   const rnaCount = countBases(rna, ["A","G","C","U"]);
 
+  const modeText = {
+    random: "랜덤 섞기",
+    fixed: "고정 섞기",
+    grouped: "입력 순서대로"
+  }[seqMode];
+
   document.getElementById("summary").innerHTML =
-    `<span class="badge">주형 가닥: ${template.toUpperCase()}</span>\n` +
+    `<span class="badge">주형 가닥: ${template.toUpperCase()}</span> ` +
+    `<span class="badge">염기서열: ${modeText}</span>\n` +
     `DNA에서 A는 T와, G는 C와 상보적으로 결합합니다.\n` +
     `전사 과정에서 주형 가닥의 A → U, T → A, G → C, C → G로 RNA가 만들어집니다.`;
+
+  document.getElementById("sequenceBox").innerHTML = `
+    <div><span class="seq-title">X1 DNA</span> : ${formatSeq(x1)}</div>
+    <div><span class="seq-title">X2 DNA</span> : ${formatSeq(x2)}</div>
+    <div><span class="seq-title">RNA</span> : ${formatSeq(rna)}</div>
+  `;
 
   document.getElementById("tableBody").innerHTML = `
     <tr>
@@ -300,6 +402,14 @@ function update() {
   `;
 
   draw(x1, x2, rna, template);
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 1000;
+  canvas.height = 330;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
 function draw(x1, x2, rna, template) {
