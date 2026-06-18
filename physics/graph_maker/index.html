@@ -175,6 +175,10 @@ tr.selected td{background:#dbeafe}
               <option>꺾은선</option>
               <option>감소곡선</option>
               <option>증가곡선</option>
+              <option>이차함수 위로볼록</option>
+              <option>이차함수 아래로볼록</option>
+              <option>로그함수 위로볼록</option>
+              <option>로그함수 아래로볼록</option>
             </select>
           </div>
 
@@ -296,17 +300,64 @@ function easeInOut(t){
   return 3*t*t - 2*t*t*t;
 }
 
+function shapePower(shape){
+  if(shape==="좁게") return 3.2;
+  if(shape==="넓게") return 1.45;
+  return 2.15;
+}
+
+function shapeLogK(shape){
+  if(shape==="좁게") return 14;
+  if(shape==="넓게") return 2.4;
+  return 6;
+}
+
+function curveRatio(kind,t,shape){
+  const p=shapePower(shape);
+  const k=shapeLogK(shape);
+
+  if(kind==="이차함수 위로볼록"){
+    return 1-Math.pow(1-t,p);
+  }
+  if(kind==="이차함수 아래로볼록"){
+    return Math.pow(t,p);
+  }
+  if(kind==="로그함수 위로볼록"){
+    return Math.log(1+k*t)/Math.log(1+k);
+  }
+  if(kind==="로그함수 아래로볼록"){
+    return 1-Math.log(1+k*(1-t))/Math.log(1+k);
+  }
+
+  return easeInOut(t);
+}
+
 function setDash(line){
   ctx.setLineDash(line==="점선" ? [8,6] : []);
+}
+
+function axisValues(){
+  const xMin=n("xMin"), xMax=n("xMax");
+  const yMin=n("yMin"), yMax=n("yMax");
+
+  // 0이 범위 안에 있으면 실제 0축으로 이동합니다.
+  // 0이 범위 밖에 있으면 그래프 영역의 왼쪽/아래쪽을 축처럼 씁니다.
+  return {
+    xAxis: (yMin < 0 && yMax > 0) ? 0 : yMin,
+    yAxis: (xMin < 0 && xMax > 0) ? 0 : xMin
+  };
 }
 
 function drawAxes(){
   const axisWidth=n("axisWidth");
   const xMin=n("xMin"), xMax=n("xMax");
   const yMin=n("yMin"), yMax=n("yMax");
+  const {xAxis, yAxis}=axisValues();
 
-  const x0=xMap(xMin), y0=yMap(yMin);
-  const xEnd=xMap(xMax), yEnd=yMap(yMax);
+  const x0=xMap(yAxis);
+  const y0=yMap(xAxis);
+  const xLeft=xMap(xMin), xEnd=xMap(xMax);
+  const yBottom=yMap(yMin), yEnd=yMap(yMax);
 
   ctx.save();
   ctx.strokeStyle="#111";
@@ -314,8 +365,9 @@ function drawAxes(){
   ctx.lineWidth=axisWidth;
   ctx.setLineDash([]);
 
+  // x축
   ctx.beginPath();
-  ctx.moveTo(x0,y0);
+  ctx.moveTo(xLeft,y0);
   ctx.lineTo(xEnd+25,y0);
   ctx.stroke();
 
@@ -326,8 +378,9 @@ function drawAxes(){
   ctx.closePath();
   ctx.fill();
 
+  // y축
   ctx.beginPath();
-  ctx.moveTo(x0,y0);
+  ctx.moveTo(x0,yBottom);
   ctx.lineTo(x0,yEnd-25);
   ctx.stroke();
 
@@ -353,7 +406,8 @@ function drawAxes(){
   let xTicks=parseTicks(v("xTicks"));
   let yTicks=parseTicks(v("yTicks"));
 
-  if(xMin===0 && yMin===0){
+  // 원점 표시는 실제 0축이 둘 다 화면 안에 있을 때만 표시
+  if(xMin<=0 && xMax>=0 && yMin<=0 && yMax>=0){
     xTicks=xTicks.filter(t=>t!==0);
     yTicks=yTicks.filter(t=>t!==0);
     ctx.font="15px Malgun Gothic";
@@ -367,6 +421,7 @@ function drawAxes(){
   ctx.textBaseline="top";
 
   xTicks.forEach(t=>{
+    if(t<xMin || t>xMax) return;
     const x=xMap(t);
     ctx.beginPath();
     ctx.moveTo(x,y0);
@@ -379,6 +434,7 @@ function drawAxes(){
   ctx.textBaseline="middle";
 
   yTicks.forEach(t=>{
+    if(t<yMin || t>yMax) return;
     const y=yMap(t);
     ctx.beginPath();
     ctx.moveTo(x0,y);
@@ -392,6 +448,9 @@ function drawAxes(){
 
 function drawGuideLines(points){
   const used=new Set();
+  const xMin=n("xMin"), xMax=n("xMax");
+  const yMin=n("yMin"), yMax=n("yMax");
+  const {xAxis, yAxis}=axisValues();
 
   ctx.save();
   ctx.strokeStyle="#111";
@@ -400,21 +459,21 @@ function drawGuideLines(points){
   ctx.setLineDash([2,5]);
 
   points.forEach(([x,y])=>{
+    if(x<xMin || x>xMax || y<yMin || y>yMax) return;
     const key=`${x.toFixed(6)},${y.toFixed(6)}`;
     if(used.has(key)) return;
     used.add(key);
 
-    if(x>0 && y>0){
-      ctx.beginPath();
-      ctx.moveTo(xMap(x),yMap(0));
-      ctx.lineTo(xMap(x),yMap(y));
-      ctx.stroke();
+    // 보조 점선은 축과 그래프 점 사이에만 표시
+    ctx.beginPath();
+    ctx.moveTo(xMap(x),yMap(xAxis));
+    ctx.lineTo(xMap(x),yMap(y));
+    ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(xMap(0),yMap(y));
-      ctx.lineTo(xMap(x),yMap(y));
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(xMap(yAxis),yMap(y));
+    ctx.lineTo(xMap(x),yMap(y));
+    ctx.stroke();
   });
 
   ctx.restore();
@@ -490,15 +549,33 @@ function drawCurveGraph(){
       ctx.lineTo(xMap(x2),yMap(y));
     }
 
-    else if(kind==="변화" || kind==="A"){
+    else if([
+      "변화","A","감소곡선","증가곡선",
+      "이차함수 위로볼록","이차함수 아래로볼록",
+      "로그함수 위로볼록","로그함수 아래로볼록"
+    ].includes(kind)){
       const x1=Number(row[1]), x2=Number(row[2]), y1=Number(row[3]), y2=Number(row[4]);
+      const shape=row[6]||"보통";
       if([x1,x2,y1,y2].some(isNaN)||x2<=x1) return;
       guide.push([x1,y1],[x2,y2]);
 
-      for(let i=0;i<=300;i++){
-        const t=i/300;
+      for(let i=0;i<=360;i++){
+        const t=i/360;
         const x=x1+(x2-x1)*t;
-        const s=easeInOut(t);
+        let s;
+
+        if(kind==="감소곡선"){
+          s=1-Math.exp(-4*t);
+          s=s/(1-Math.exp(-4));
+        }else if(kind==="증가곡선"){
+          s=Math.exp(4*(t-1));
+          s=(s-Math.exp(-4))/(1-Math.exp(-4));
+        }else if(kind==="변화" || kind==="A"){
+          s=easeInOut(t);
+        }else{
+          s=curveRatio(kind,t,shape);
+        }
+
         const y=y1+(y2-y1)*s;
         if(i===0) ctx.moveTo(xMap(x),yMap(y));
         else ctx.lineTo(xMap(x),yMap(y));
@@ -604,7 +681,7 @@ function addSegment(){
     const my=v("segMidY").trim()?Number(v("segMidY")):y2;
     addRow(["꺾은선",x1,y1,mx,my,x2,y2,line,""]);
   }else{
-    addRow(["A",x1,x2,y1,y2,mode,shape,line,""]);
+    addRow([mode,x1,x2,y1,y2,"",shape,line,""]);
   }
 }
 
@@ -725,7 +802,11 @@ function changeSegmentType(){
   document.getElementById("segMidXWrap").classList.toggle("hidden",mode!=="꺾은선");
   document.getElementById("segMidYWrap").classList.toggle("hidden",mode!=="꺾은선");
 
-  const showShape=["완만 변화","감소곡선","증가곡선"].includes(mode);
+  const showShape=[
+    "완만 변화","감소곡선","증가곡선",
+    "이차함수 위로볼록","이차함수 아래로볼록",
+    "로그함수 위로볼록","로그함수 아래로볼록"
+  ].includes(mode);
   document.getElementById("segShapeWrap").classList.toggle("hidden",!showShape);
 }
 
