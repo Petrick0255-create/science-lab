@@ -3,676 +3,648 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>1차원 충돌 실험 시뮬레이터</title>
+<title>깔끔한 충돌 그래프 문항 제작기</title>
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f4f7fb;
-  color:#111827;
-}
-header{
-  background:linear-gradient(135deg,#0f172a,#1e3a8a);
-  color:white;
-  padding:14px;
-  text-align:center;
-  font-weight:800;
-  line-height:1.45;
-}
-.container{
-  max-width:1180px;
-  margin:0 auto;
-  padding:10px;
-}
-.card{
-  background:white;
-  border-radius:14px;
-  padding:12px;
-  margin-bottom:10px;
-  box-shadow:0 3px 12px rgba(0,0,0,.08);
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-}
-.object-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-}
-label{
-  font-size:12px;
-  font-weight:700;
-  color:#374151;
-}
-input,select,button{
-  width:100%;
-  min-height:36px;
-  padding:6px;
-  border-radius:8px;
-  border:1px solid #d1d5db;
-  font-size:14px;
-}
-button{
-  border:none;
-  background:#2563eb;
-  color:white;
-  font-weight:800;
-  cursor:pointer;
-}
-button:hover{filter:brightness(.95)}
-button.secondary{background:#475569}
-button.green{background:#15803d}
-button.orange{background:#f97316}
-button.red{background:#dc2626}
-.status{
-  padding:10px;
-  border-radius:10px;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:8px;
-  background:#dcfce7;
-  color:#166534;
-}
-.small{
-  font-size:12px;
-  color:#6b7280;
-  line-height:1.5;
-  margin-top:6px;
-}
-.home{
-  display:inline-block;
-  color:white;
-  text-decoration:none;
-  font-size:13px;
-  margin-top:6px;
-  opacity:.8;
-}
-.canvas-wrap{
-  width:100%;
-  overflow:auto;
-}
-canvas{
-  width:100%;
-  max-width:100%;
-  background:white;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  touch-action:none;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:12px;
-}
-th,td{
-  border:1px solid #d1d5db;
-  padding:6px;
-  text-align:center;
-}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#eef3f8;color:#111}
+header{background:#1f2937;color:white;text-align:center;padding:12px;font-weight:800;font-size:17px}
+.home{display:inline-block;margin-top:6px;color:white;font-size:13px;text-decoration:none;opacity:.85}
+.container{max-width:1250px;margin:0 auto;padding:10px}
+.card{background:white;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+label{font-size:12px;font-weight:800;color:#333}
+input,select,button{width:100%;min-height:34px;padding:6px;font-size:14px;border-radius:8px;border:1px solid #cfd4dc}
+button{border:none;background:#2563eb;color:white;font-weight:800;cursor:pointer}
+button.secondary{background:#4b5563}
+button.dark{background:#111827}
+button.warn{background:#dc2626}
+.canvas-wrap{overflow:auto;background:#f8fafc;border-radius:12px;padding:8px}
+canvas{display:block;margin:0 auto;background:white;border:1px solid #ddd}
+.ok{background:#dcfce7;color:#166534;border-radius:10px;padding:10px;font-weight:800;white-space:pre-line}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #ddd;padding:5px;text-align:center}
 th{background:#f3f4f6}
-.log{
-  height:150px;
-  overflow:auto;
-  white-space:pre-line;
-  border:1px solid #d1d5db;
-  border-radius:10px;
-  padding:8px;
-  font-size:12px;
-  background:#f8fafc;
-}
-.badge{
-  display:inline-block;
-  padding:3px 8px;
-  border-radius:999px;
-  background:#e0f2fe;
-  color:#075985;
-  font-size:12px;
-  font-weight:800;
-}
-@media(max-width:720px){
-  .grid,.object-grid{grid-template-columns:1fr 1fr}
-  canvas{height:520px}
-}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
+
 <body>
+
 <header>
-  1차원 충돌 실험 시뮬레이터<br>
+  ⚛️ 깔끔한 충돌 그래프 문항 제작기<br>
   <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
 </header>
 
 <div class="container">
-  <div class="card grid">
-    <div>
-      <label>물체 개수</label>
-      <select id="objectCount" onchange="refreshObjects()">
-        <option value="2">2개</option>
-        <option value="3" selected>3개</option>
-      </select>
-    </div>
-    <div>
-      <label>반발계수 e</label>
-      <input id="restitution" type="number" value="1" min="0" max="1" step="0.1">
-    </div>
-    <div>
-      <label>전체 시간 s</label>
-      <input id="totalTime" type="number" value="10" min="0.1" step="0.5">
-    </div>
-    <div>
-      <label>시간 간격 dt</label>
-      <input id="dt" type="number" value="0.005" min="0.001" step="0.001">
-    </div>
+
+<div class="card grid">
+  <div><label>A 질량 kg</label><input id="mA" type="number" value="5"></div>
+  <div><label>B 질량 kg</label><input id="mB" type="number" value="2"></div>
+  <div><label>C 질량 kg</label><input id="mC" type="number" value="3"></div>
+  <div><label>A 초기 속력</label><input id="roughVA" type="number" value="4"></div>
+
+  <div><label>B 초기 속력</label><input id="roughVB" type="number" value="0"></div>
+  <div><label>전체 시간(s)</label><input id="totalTime" type="number" value="5" step="0.1"></div>
+  <div><label>슬로우 배속</label><input id="playSpeed" type="number" value="0.35" step="0.05"></div>
+
+  <div>
+    <label>그래프 종류</label>
+    <select id="graphMode">
+      <option value="momentum" selected>운동량 변화</option>
+      <option value="velocity">속도 변화</option>
+      <option value="distance">이동 거리 변화</option>
+    </select>
   </div>
 
-  <div class="card grid">
-    <button onclick="setE(1)">탄성 충돌 e=1</button>
-    <button onclick="setE(0)">완전 비탄성 e=0</button>
-  </div>
+  <div><label>그림 폭</label><input id="canvasWidth" type="number" value="980"></div>
+  <div><label>A 그래프</label><select id="showA"><option value="yes" selected>표시</option><option value="no">숨김</option></select></div>
+  <div><label>B 그래프</label><select id="showB"><option value="yes" selected>표시</option><option value="no">숨김</option></select></div>
+  <div><label>C 그래프</label><select id="showC"><option value="yes" selected>표시</option><option value="no">숨김</option></select></div>
+  <div><label>바닥 글씨</label><input id="surfaceText" value="수평면"></div>
+</div>
 
-  <div class="card">
-    <div class="small">초기 위치는 공을 직접 드래그해도 됩니다.</div>
-    <div id="objectInputs" class="object-grid"></div>
-  </div>
+<div class="card grid">
+  <button onclick="autoExample()">깔끔한 예시 자동 생성</button>
+  <button onclick="play()">▶ 슬로우 재생</button>
+  <button class="secondary" onclick="pause()">일시정지</button>
+  <button class="secondary" onclick="stepNext()">한 단계 후</button>
+  <button class="dark" onclick="saveImage()">PNG 저장</button>
+  <button class="warn" onclick="resetAll()">초기화</button>
+</div>
 
-  <div class="card grid">
-    <button class="green" onclick="runSimulation()">▶ 계산 후 영상 재생</button>
-    <button class="secondary" onclick="togglePlay()">⏸ 일시정지 / 재생</button>
-    <button class="orange" onclick="resetAnimation()">처음부터 재생</button>
-    <button class="secondary" onclick="drawInitial()">초기 배치 보기</button>
-    <button class="secondary" onclick="toggleGrid()">격자 보기 / 숨기기</button>
-    <button class="red" onclick="stopAnimation()">정지</button>
-  </div>
+<div class="card">
+  <div id="summary" class="ok">자동 생성 전입니다.</div>
+</div>
 
-  <div class="card">
-    <div id="status" class="status">초기 배치 화면</div>
-    <div class="canvas-wrap">
-      <canvas id="simCanvas" width="1100" height="720"></canvas>
-    </div>
-    <div class="small">
-      위 그래프: 1차원 위치 / 가운데: 시간에 따른 운동량 / 아래: 시간에 따른 운동에너지
-    </div>
-  </div>
+<div class="card canvas-wrap">
+  <canvas id="canvas" width="980" height="680"></canvas>
+</div>
 
-  <div class="card">
-    <div class="badge">실시간 운동량</div>
-    <table style="margin-top:8px">
-      <thead>
-        <tr><th>구분</th><th>위치 m</th><th>속도 m/s</th><th>운동량 kg·m/s</th><th>운동에너지 J</th></tr>
-      </thead>
-      <tbody id="liveTable"></tbody>
-    </table>
-  </div>
+<div class="card">
+<table>
+<thead>
+<tr>
+  <th>시각</th>
+  <th>A 운동량</th><th>B 운동량</th><th>C 운동량</th>
+  <th>A 속도</th><th>B 속도</th><th>C 속도</th>
+  <th>A 이동거리</th><th>B 이동거리</th><th>C 이동거리</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+</div>
 
-  <div class="card">
-    <div class="badge">충돌 로그</div>
-    <div id="logBox" class="log">아직 실행 전입니다.</div>
-  </div>
 </div>
 
 <script>
-const canvas = document.getElementById("simCanvas");
-const ctx = canvas.getContext("2d");
-const colors = ["#2563eb", "#f97316", "#16a34a"];
-const xMin = 0;
-const xMax = 10;
-let showGrid = true;
-let objects = [];
-let simData = null;
-let currentFrame = 0;
-let playing = false;
-let rafId = null;
-let draggingIndex = null;
-let lastTick = 0;
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-function fmt(x){
-  if(!isFinite(x)) return "-";
-  if(Math.abs(x) < 1e-10) return "0";
-  return Number(x).toFixed(3).replace(/\.?0+$/, "");
+let caseData=null;
+let frames=[];
+let frameIndex=0;
+let timer=null;
+
+function E(id){return document.getElementById(id)}
+function N(id){return Number(E(id).value)}
+function V(id){return E(id).value}
+function fmt(x){return Number(x).toFixed(1).replace(/\.0$/,"")}
+
+function clean(x){
+  return Math.abs(x-Math.round(x))<1e-9;
 }
 
-function setE(v){
-  document.getElementById("restitution").value = v;
+function round1(x){
+  return Math.round(x*10)/10;
 }
 
-function defaultObjects(){
-  return [
-    {m:1, x:2.0, v:2.0},
-    {m:1, x:5.5, v:0.0},
-    {m:1, x:8.0, v:-1.0}
-  ];
+function round2(x){
+  return Math.round(x*100)/100;
 }
 
-function refreshObjects(){
-  const n = Number(document.getElementById("objectCount").value);
-  const old = objects.length ? readObjects(false) : defaultObjects();
-  objects = defaultObjects().slice(0,n).map((d,i)=> old[i] || d);
-  renderObjectInputs();
-  drawInitial();
-}
+function autoExample(){
+  pause();
 
-function renderObjectInputs(){
-  const box = document.getElementById("objectInputs");
-  box.innerHTML = "";
-  objects.forEach((o,i)=>{
-    const div = document.createElement("div");
-    div.className = "card";
-    div.style.boxShadow = "none";
-    div.style.border = "1px solid #e5e7eb";
-    div.innerHTML = `
-      <div style="font-weight:800;margin-bottom:6px;color:${colors[i]}">물체 ${i+1}</div>
-      <label>질량 kg</label>
-      <input id="m${i}" type="number" value="${o.m}" min="0.1" step="0.1" oninput="drawInitial()">
-      <label>초기 위치 m</label>
-      <input id="x${i}" type="number" value="${o.x}" min="0" max="10" step="0.1" oninput="drawInitial()">
-      <label>초기 속도 m/s</label>
-      <input id="v${i}" type="number" value="${o.v}" step="0.1" oninput="drawInitial()">
-    `;
-    box.appendChild(div);
-  });
-}
+  const mA=N("mA"), mB=N("mB"), mC=N("mC");
+  const roughA=N("roughVA");
+  const roughB=N("roughVB");
+  const total=N("totalTime");
 
-function readObjects(throwError=true){
-  const n = Number(document.getElementById("objectCount").value);
-  const arr = [];
-  for(let i=0;i<n;i++){
-    const m = Number(document.getElementById(`m${i}`)?.value ?? defaultObjects()[i].m);
-    const x = Number(document.getElementById(`x${i}`)?.value ?? defaultObjects()[i].x);
-    const v = Number(document.getElementById(`v${i}`)?.value ?? defaultObjects()[i].v);
-    if(throwError && (!isFinite(m) || !isFinite(x) || !isFinite(v) || m <= 0)){
-      alert("질량은 0보다 커야 하고, 위치와 속도는 숫자여야 합니다.");
-      throw new Error("input error");
-    }
-    arr.push({m,x:Math.max(xMin,Math.min(xMax,x)),v});
-  }
-  return arr;
-}
+  let candidates=[];
 
-function getRadius(m){
-  return 0.12 + 0.08 * Math.sqrt(m);
-}
+  for(let vA0=Math.max(1,Math.round(roughA)-3); vA0<=Math.round(roughA)+3; vA0++){
+    for(let vB0=Math.max(0,Math.round(roughB)-2); vB0<=Math.round(roughB)+2; vB0++){
 
-function mapX(x){
-  const left = 70, right = canvas.width - 35;
-  return left + (x - xMin) / (xMax - xMin) * (right - left);
-}
+      if(vA0<=vB0) continue;
 
-function graphY(y, min, max, top, bottom){
-  if(Math.abs(max-min) < 1e-9) return (top+bottom)/2;
-  return bottom - (y-min)/(max-min)*(bottom-top);
-}
+      for(let vA1=0; vA1<vA0; vA1++){
+        const pA0=mA*vA0;
+        const pB0=mB*vB0;
+        const totalAB=pA0+pB0;
 
-function drawGrid(top,bottom,yMin,yMax){
-  if(!showGrid) return;
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.lineWidth = 1;
-  for(let i=0;i<=10;i++){
-    const x = mapX(i);
-    ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,bottom); ctx.stroke();
-  }
-  for(let i=0;i<=4;i++){
-    const y = top + (bottom-top)*i/4;
-    ctx.beginPath(); ctx.moveTo(70,y); ctx.lineTo(canvas.width-35,y); ctx.stroke();
-  }
-  ctx.fillStyle = "#64748b";
-  ctx.font = "12px sans-serif";
-  ctx.fillText(fmt(yMax), 10, top+12);
-  ctx.fillText(fmt(yMin), 10, bottom-4);
-}
+        const pA1=mA*vA1;
+        const pB1=totalAB-pA1;
+        const vB1=pB1/mB;
 
-function clearCanvas(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-}
+        if(!clean(vB1) || vB1<=vB0) continue;
 
-function drawInitial(){
-  stopAnimation(false);
-  simData = null;
-  objects = readObjects(false);
-  clearCanvas();
-  drawTitle("초기 배치 화면 - 공을 마우스로 드래그하세요", 20);
-  drawMotionPanel(objects, null, 45, 215, 0, false);
-  drawEmptyGraph("운동량 그래프", "시간 s", "운동량 kg·m/s", 250, 455);
-  drawEmptyGraph("운동에너지 그래프", "시간 s", "운동에너지 J", 500, 705);
-  document.getElementById("status").textContent = "초기 배치 화면";
-  updateLiveTable(objects, null);
-}
+        for(let vB2=0; vB2<vB1; vB2++){
+          const pB2=mB*vB2;
+          const pC2=pB1-pB2;
+          const vC2=pC2/mC;
 
-function drawTitle(text,y){
-  ctx.fillStyle = "#111827";
-  ctx.font = "bold 18px sans-serif";
-  ctx.fillText(text, 70, y);
-}
+          if(!clean(vC2) || vC2<=0) continue;
 
-function drawMotionPanel(objs, frameData, top, bottom, t, isRunning){
-  drawGrid(top,bottom,-1,1);
-  const axisY = (top+bottom)/2;
-  ctx.strokeStyle = "#111827";
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(70,axisY); ctx.lineTo(canvas.width-35,axisY); ctx.stroke();
-  ctx.fillStyle = "#374151";
-  ctx.font = "12px sans-serif";
-  for(let i=0;i<=10;i++) ctx.fillText(String(i), mapX(i)-4, bottom+16);
-  ctx.fillText("위치 m", canvas.width-90, bottom+16);
+          for(let t1=0.8;t1<=2.0;t1+=0.1){
+            for(let d1 of [0.2,0.3,0.4]){
+              for(let t2=t1+d1+0.6;t2<=Math.min(total-0.5,4.0);t2+=0.1){
+                const d2=0.2;
 
-  objs.forEach((o,i)=>{
-    const x = frameData ? frameData.positions[i] : o.x;
-    const p = frameData ? frameData.momenta[i] : o.m * o.v;
-    const r = 20 + 8*Math.sqrt(o.m);
-    ctx.beginPath();
-    ctx.arc(mapX(x), axisY, r, 0, Math.PI*2);
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-    ctx.strokeStyle = "#111827";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = "#111827";
-    ctx.font = "bold 13px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(`물체 ${i+1}`, mapX(x), axisY-38);
-    ctx.fillStyle = colors[i];
-    ctx.fillText(`p=${fmt(p)}`, mapX(x), axisY+48);
-    ctx.textAlign = "left";
-  });
-  if(isRunning){
-    ctx.fillStyle = "#111827";
-    ctx.font = "bold 15px sans-serif";
-    ctx.fillText(`실시간 충돌 영상  t = ${fmt(t)} s`, 70, top-12);
-  }
-}
+                const xA0=0;
+                const wA=0.5, wB=0.6, wC=0.6;
 
-function drawEmptyGraph(title, xlabel, ylabel, top, bottom){
-  drawGrid(top,bottom,-1,1);
-  ctx.strokeStyle = "#111827";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(70,top,canvas.width-105,bottom-top);
-  ctx.fillStyle = "#111827";
-  ctx.font = "bold 15px sans-serif";
-  ctx.fillText(title, 70, top-10);
-  ctx.font = "12px sans-serif";
-  ctx.fillText(xlabel, canvas.width-95, bottom+18);
-  ctx.save(); ctx.translate(22,(top+bottom)/2); ctx.rotate(-Math.PI/2); ctx.fillText(ylabel,0,0); ctx.restore();
-}
+                const xB0=xA0+wA+(vA0-vB0)*t1;
 
-function getRange(arrays){
-  const values = arrays.flat().filter(Number.isFinite);
-  let min = Math.min(...values), max = Math.max(...values);
-  if(!isFinite(min) || !isFinite(max)){min=-1;max=1;}
-  if(Math.abs(max-min)<1e-9){min-=1;max+=1;}
-  const pad = (max-min)*0.12;
-  return [min-pad,max+pad];
-}
+                const xBAtT2=xB0+vB0*t1+vB1*(t2-(t1+d1));
+                const xC0=xBAtT2+wB;
 
-function drawLineGraph(title, ylabel, top, bottom, times, series, total, frame, collisionTimes){
-  const [yMin,yMax] = getRange([...series,total]);
-  drawGrid(top,bottom,yMin,yMax);
-  ctx.strokeStyle = "#111827";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(70,top,canvas.width-105,bottom-top);
-  ctx.fillStyle = "#111827";
-  ctx.font = "bold 15px sans-serif";
-  ctx.fillText(title, 70, top-10);
-  ctx.font = "12px sans-serif";
-  ctx.fillText("시간 s", canvas.width-95, bottom+18);
-  ctx.save(); ctx.translate(22,(top+bottom)/2); ctx.rotate(-Math.PI/2); ctx.fillText(ylabel,0,0); ctx.restore();
+                const score =
+                  Math.abs(vA0-roughA)*3 +
+                  Math.abs(vB0-roughB)*3 +
+                  Math.abs(t1*10-Math.round(t1*10)) +
+                  Math.abs(t2*10-Math.round(t2*10));
 
-  const xLeft=70, xRight=canvas.width-35;
-  const tMax = times[times.length-1] || 1;
-  const tx = t => xLeft + t/tMax*(xRight-xLeft);
-
-  collisionTimes.forEach(ct=>{
-    const x = tx(ct);
-    ctx.strokeStyle = "#ef4444";
-    ctx.setLineDash([3,4]);
-    ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,bottom); ctx.stroke();
-    ctx.setLineDash([]);
-  });
-
-  series.forEach((ys,i)=> drawSeries(times,ys,tx,y=>graphY(y,yMin,yMax,top,bottom),colors[i],false));
-  drawSeries(times,total,tx,y=>graphY(y,yMin,yMax,top,bottom),"#111827",true);
-
-  const curX = tx(times[frame]);
-  ctx.strokeStyle = "#7c3aed";
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(curX,top); ctx.lineTo(curX,bottom); ctx.stroke();
-}
-
-function drawSeries(times, ys, tx, ty, color, dashed){
-  ctx.strokeStyle = color;
-  ctx.lineWidth = dashed ? 2.2 : 1.8;
-  ctx.setLineDash(dashed ? [7,5] : []);
-  ctx.beginPath();
-  for(let i=0;i<times.length;i++){
-    const x = tx(times[i]);
-    const y = ty(ys[i]);
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  }
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-function runSimulation(){
-  const e = Number(document.getElementById("restitution").value);
-  const totalTime = Number(document.getElementById("totalTime").value);
-  const dt = Number(document.getElementById("dt").value);
-  if(e < 0 || e > 1 || totalTime <= 0 || dt <= 0){
-    alert("반발계수는 0~1, 시간 값은 0보다 크게 입력해야 합니다.");
-    return;
-  }
-  objects = readObjects(true);
-  const n = objects.length;
-  let positions = objects.map(o=>o.x);
-  let velocities = objects.map(o=>o.v);
-  const masses = objects.map(o=>o.m);
-  const radii = masses.map(getRadius);
-  const times = [];
-  const posHistory = [];
-  const velHistory = [];
-  const momentumHistory = [];
-  const energyHistory = [];
-  const collisions = [];
-
-  const steps = Math.min(20000, Math.floor(totalTime/dt));
-  for(let step=0; step<=steps; step++){
-    const t = step*dt;
-    positions = positions.map((x,i)=> x + velocities[i]*dt);
-
-    for(let i=0;i<n;i++){
-      if(positions[i] - radii[i] < xMin){
-        positions[i] = xMin + radii[i];
-        velocities[i] *= -1;
-      }
-      if(positions[i] + radii[i] > xMax){
-        positions[i] = xMax - radii[i];
-        velocities[i] *= -1;
-      }
-    }
-
-    for(let i=0;i<n;i++){
-      for(let j=i+1;j<n;j++){
-        const minDist = radii[i]+radii[j];
-        const dist = Math.abs(positions[i]-positions[j]);
-        const approaching = (positions[i] < positions[j] && velocities[i] > velocities[j]) ||
-                            (positions[i] > positions[j] && velocities[i] < velocities[j]);
-        if(dist <= minDist && approaching){
-          const before1 = velocities[i], before2 = velocities[j];
-          const m1=masses[i], m2=masses[j], u1=velocities[i], u2=velocities[j];
-          const v1 = ((m1 - e*m2)*u1 + (1+e)*m2*u2)/(m1+m2);
-          const v2 = ((m2 - e*m1)*u2 + (1+e)*m1*u1)/(m1+m2);
-          velocities[i] = v1; velocities[j] = v2;
-          const cx = (positions[i]+positions[j])/2;
-          collisions.push({time:t,x:cx,objects:[i+1,j+1],before:[before1,before2],after:[v1,v2]});
-          const overlap = minDist-dist;
-          if(overlap > 0){
-            const correction = overlap/2 + 0.001;
-            if(positions[i] < positions[j]){positions[i]-=correction; positions[j]+=correction;}
-            else{positions[i]+=correction; positions[j]-=correction;}
+                candidates.push({
+                  score,mA,mB,mC,
+                  w:{A:wA,B:wB,C:wC},
+                  x0:{A:xA0,B:xB0,C:xC0},
+                  v0:{A:vA0,B:vB0,C:0},
+                  t1:round1(t1),
+                  d1,
+                  t2:round1(t2),
+                  d2,
+                  p:{
+                    A0:pA0,
+                    A1:pA1,
+                    B0:pB0,
+                    B1:pB1,
+                    B2:pB2,
+                    C0:0,
+                    C2:pC2
+                  },
+                  v:{
+                    A0:vA0,
+                    A1:vA1,
+                    B0:vB0,
+                    B1:vB1,
+                    B2:vB2,
+                    C0:0,
+                    C2:vC2
+                  },
+                  J1:pA1-pA0,
+                  J2:pB2-pB1
+                });
+              }
+            }
           }
         }
       }
     }
-
-    times.push(t);
-    posHistory.push([...positions]);
-    velHistory.push([...velocities]);
-    momentumHistory.push(velocities.map((v,i)=>masses[i]*v));
-    energyHistory.push(velocities.map((v,i)=>0.5*masses[i]*v*v));
   }
 
-  const totalMomentum = momentumHistory.map(row=>row.reduce((a,b)=>a+b,0));
-  const totalEnergy = energyHistory.map(row=>row.reduce((a,b)=>a+b,0));
-  simData = {times,posHistory,velHistory,momentumHistory,energyHistory,totalMomentum,totalEnergy,collisions,masses};
-  currentFrame = 0;
-  writeLog(collisions);
-  playing = true;
-  lastTick = 0;
-  document.getElementById("status").textContent = "시뮬레이션 재생 중";
-  animate();
+  if(!candidates.length){
+    alert("깔끔한 예시를 못 찾았습니다. A 속력을 키우거나, B 속력을 낮추거나, 질량을 2~5 자연수로 바꿔보세요.");
+    return;
+  }
+
+  candidates.sort((a,b)=>a.score-b.score);
+  caseData=candidates[0];
+
+  buildFrames();
+  frameIndex=0;
+  drawFrame();
+  makeTable();
+  writeSummary();
+}
+
+function momentumAt(t,c){
+  let pA=c.p.A0;
+  let pB=c.p.B0;
+  let pC=c.p.C0;
+
+  if(t>=c.t1 && t<=c.t1+c.d1){
+    const r=(t-c.t1)/c.d1;
+    pA=c.p.A0+(c.p.A1-c.p.A0)*r;
+    pB=c.p.B0+(c.p.B1-c.p.B0)*r;
+  }else if(t>c.t1+c.d1){
+    pA=c.p.A1;
+    pB=c.p.B1;
+  }
+
+  if(t>=c.t2 && t<=c.t2+c.d2){
+    const r=(t-c.t2)/c.d2;
+    pB=c.p.B1+(c.p.B2-c.p.B1)*r;
+    pC=c.p.C0+(c.p.C2-c.p.C0)*r;
+  }else if(t>c.t2+c.d2){
+    pB=c.p.B2;
+    pC=c.p.C2;
+  }
+
+  return {A:pA,B:pB,C:pC};
+}
+
+function buildFrames(){
+  if(!caseData) return;
+
+  const c=caseData;
+  frames=[];
+
+  const dt=0.01;
+  let x={A:c.x0.A,B:c.x0.B,C:c.x0.C};
+
+  for(let t=0;t<=N("totalTime")+1e-9;t+=dt){
+    const p=momentumAt(t,c);
+    const v={
+      A:p.A/c.mA,
+      B:p.B/c.mB,
+      C:p.C/c.mC
+    };
+
+    if(frames.length){
+      const pv=frames[frames.length-1].v;
+      x.A+=pv.A*dt;
+      x.B+=pv.B*dt;
+      x.C+=pv.C*dt;
+    }
+
+    frames.push({
+      t:round2(t),
+      p:{...p},
+      v:{...v},
+      x:{...x},
+      d:{
+        A:x.A-c.x0.A,
+        B:x.B-c.x0.B,
+        C:x.C-c.x0.C
+      }
+    });
+  }
+}
+
+function writeSummary(){
+  const c=caseData;
+
+  E("summary").textContent =
+`깔끔한 예시 생성 완료
+
+질량
+A=${c.mA}kg, B=${c.mB}kg, C=${c.mC}kg
+
+초기 속도
+A=${fmt(c.v.A0)}m/s, B=${fmt(c.v.B0)}m/s, C=0m/s
+
+A-B 충돌
+시간: ${fmt(c.t1)}s ~ ${fmt(c.t1+c.d1)}s
+A가 받은 충격량: ${fmt(c.J1)}N·s
+B가 받은 충격량: ${fmt(-c.J1)}N·s
+운동량: A ${fmt(c.p.A0)} → ${fmt(c.p.A1)}, B ${fmt(c.p.B0)} → ${fmt(c.p.B1)}
+
+B-C 충돌
+시간: ${fmt(c.t2)}s ~ ${fmt(c.t2+c.d2)}s
+B가 받은 충격량: ${fmt(c.J2)}N·s
+C가 받은 충격량: ${fmt(-c.J2)}N·s
+운동량: B ${fmt(c.p.B1)} → ${fmt(c.p.B2)}, C 0 → ${fmt(c.p.C2)}
+
+그래프의 꺾이는 시각은 모두 소수점 첫째 자리로 떨어집니다.
+운동량과 속도 값은 정수로 떨어집니다.`;
 }
 
 function drawFrame(){
-  if(!simData){drawInitial(); return;}
-  clearCanvas();
-  const t = simData.times[currentFrame];
-  const frameData = {
-    positions: simData.posHistory[currentFrame],
-    velocities: simData.velHistory[currentFrame],
-    momenta: simData.momentumHistory[currentFrame],
-    energies: simData.energyHistory[currentFrame]
-  };
-  drawMotionPanel(objects, frameData, 45, 215, t, true);
-  const seriesP = transpose(simData.momentumHistory);
-  const seriesE = transpose(simData.energyHistory);
-  const cTimes = simData.collisions.map(c=>c.time);
-  drawLineGraph("시간에 따른 운동량 변화", "운동량 kg·m/s", 250, 455, simData.times, seriesP, simData.totalMomentum, currentFrame, cTimes);
-  drawLineGraph("시간에 따른 운동에너지 변화", "운동에너지 J", 500, 705, simData.times, seriesE, simData.totalEnergy, currentFrame, cTimes);
-  updateLiveTable(objects, frameData);
+  if(!caseData) return;
+
+  const c=caseData;
+  const f=frames[frameIndex] || frames[0];
+
+  canvas.width=Math.max(760,N("canvasWidth"));
+  canvas.height=680;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="white";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawScene(c,f);
+  drawGraph(c,f);
 }
 
-function transpose(rows){
-  if(!rows.length) return [];
-  return rows[0].map((_,i)=>rows.map(r=>r[i]));
+function maxSceneX(){
+  const c=caseData;
+  return Math.max(
+    ...frames.map(f=>Math.max(f.x.A+c.w.A,f.x.B+c.w.B,f.x.C+c.w.C)),
+    10
+  );
 }
 
-function animate(ts=0){
-  if(!playing || !simData) return;
-  if(!lastTick || ts-lastTick > 20){
-    const total = simData.times.length;
-    const frameStep = Math.max(1, Math.floor(total/500));
-    currentFrame += frameStep;
-    if(currentFrame >= total){
-      currentFrame = total-1;
-      playing = false;
-      document.getElementById("status").textContent = "재생 완료";
+function mapSceneX(x){
+  const left=70,right=canvas.width-45;
+  return left+x/maxSceneX()*(right-left);
+}
+
+function drawScene(c,f){
+  const groundY=230;
+
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(35,groundY);
+  ctx.lineTo(canvas.width-35,groundY);
+  ctx.stroke();
+
+  drawBlock("A",c.mA,c.w.A,f.x.A,f.v.A,groundY);
+  drawBlock("B",c.mB,c.w.B,f.x.B,f.v.B,groundY);
+  drawBlock("C",c.mC,c.w.C,f.x.C,f.v.C,groundY);
+
+  ctx.fillStyle="#111";
+  ctx.font="bold 24px Arial";
+  ctx.textAlign="left";
+  ctx.fillText(`t = ${fmt(f.t)} s`,40,42);
+
+  ctx.font="bold 15px Arial";
+  ctx.fillText(stateText(f.t,c),40,72);
+
+  ctx.font="16px serif";
+  ctx.fillText(V("surfaceText"),40,groundY+28);
+}
+
+function stateText(t,c){
+  if(t>=c.t1 && t<=c.t1+c.d1) return "A-B 충돌 중";
+  if(t>=c.t2 && t<=c.t2+c.d2) return "B-C 충돌 중";
+  return "등속 운동 중";
+}
+
+function drawBlock(name,m,w,x,v,groundY){
+  const px=mapSceneX(x);
+  const bw=mapSceneX(x+w)-mapSceneX(x);
+  const bh=name==="A"?52:66;
+  const y=groundY-bh;
+
+  ctx.fillStyle="#e8edf2";
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=1.4;
+  ctx.fillRect(px,y,bw,bh);
+  ctx.strokeRect(px,y,bw,bh);
+
+  ctx.fillStyle="#111";
+  ctx.font="15px serif";
+  ctx.textAlign="center";
+  ctx.fillText(name,px+bw/2,y-14);
+  ctx.fillText(`${fmt(m)} kg`,px+bw/2,y+bh/2+5);
+
+  if(Math.abs(v)>0.001){
+    const dir=v>0?1:-1;
+    const ay=y+bh/2;
+    const x1=dir>0?px+bw+10:px-10;
+    const x2=x1+dir*45;
+    drawArrow(x1,ay,x2,ay);
+    ctx.font="13px serif";
+    ctx.fillText(`v=${fmt(v)}`,(x1+x2)/2,ay-10);
+  }else{
+    ctx.font="15px serif";
+    ctx.fillText("정지",px+bw/2,groundY+26);
+  }
+}
+
+function drawArrow(x1,y1,x2,y2){
+  const h=9;
+  const a=Math.atan2(y2-y1,x2-x1);
+
+  ctx.strokeStyle="#111";
+  ctx.fillStyle="#111";
+  ctx.lineWidth=3;
+
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-h*Math.cos(a-Math.PI/6),y2-h*Math.sin(a-Math.PI/6));
+  ctx.lineTo(x2-h*Math.cos(a+Math.PI/6),y2-h*Math.sin(a+Math.PI/6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawGraph(c,current){
+  const mode=V("graphMode");
+  const keys=["A","B","C"].filter(k=>V("show"+k)==="yes");
+
+  const top=330,bottom=635,left=70,right=canvas.width-55;
+  const tx=t=>left+t/N("totalTime")*(right-left);
+
+  let vals=[];
+  frames.forEach(f=>{
+    keys.forEach(k=>vals.push(getValue(f,k,mode)));
+  });
+
+  let min=Math.min(0,...vals);
+  let max=Math.max(...vals);
+
+  min=Math.floor(min);
+  max=Math.ceil(max);
+
+  if(max-min<1){
+    max+=1;
+    min-=1;
+  }
+
+  const ty=y=>bottom-(y-min)/(max-min)*(bottom-top);
+
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=1.5;
+  ctx.strokeRect(left,top,right-left,bottom-top);
+
+  [c.t1,c.t1+c.d1,c.t2,c.t2+c.d2].forEach(t=>{
+    ctx.strokeStyle="#aaa";
+    ctx.setLineDash([3,4]);
+    ctx.beginPath();
+    ctx.moveTo(tx(t),top);
+    ctx.lineTo(tx(t),bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  for(let yv=min; yv<=max; yv++){
+    const y=ty(yv);
+
+    ctx.strokeStyle="#d1d5db";
+    ctx.setLineDash([3,4]);
+    ctx.beginPath();
+    ctx.moveTo(left,y);
+    ctx.lineTo(right,y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle="#111";
+    ctx.font="12px Arial";
+    ctx.textAlign="right";
+    ctx.fillText(String(yv),left-8,y+4);
+  }
+
+  const colors={A:"#111",B:"#2563eb",C:"#dc2626"};
+
+  keys.forEach(k=>{
+    ctx.strokeStyle=colors[k];
+    ctx.lineWidth=2.4;
+    ctx.beginPath();
+
+    frames.forEach((f,i)=>{
+      const x=tx(f.t);
+      const y=ty(getValue(f,k,mode));
+
+      if(i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    });
+
+    ctx.stroke();
+
+    ctx.fillStyle=colors[k];
+    ctx.font="bold 14px Arial";
+    ctx.textAlign="left";
+    ctx.fillText(k,right-35,ty(getValue(current,k,mode)));
+  });
+
+  const cx=tx(current.t);
+  ctx.strokeStyle="#7c3aed";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cx,top);
+  ctx.lineTo(cx,bottom);
+  ctx.stroke();
+
+  ctx.fillStyle="#111";
+  ctx.font="bold 16px Arial";
+  ctx.textAlign="left";
+  ctx.fillText(graphTitle(mode),left,top-14);
+
+  ctx.font="12px Arial";
+  ctx.fillText("시간(s)",right-48,bottom+22);
+
+  [c.t1,c.t1+c.d1,c.t2,c.t2+c.d2].forEach(t=>{
+    ctx.fillText(fmt(t),tx(t)-8,bottom+17);
+  });
+}
+
+function getValue(f,k,mode){
+  if(mode==="momentum") return f.p[k];
+  if(mode==="velocity") return f.v[k];
+  return f.d[k];
+}
+
+function graphTitle(mode){
+  if(mode==="momentum") return "운동량-시간 그래프";
+  if(mode==="velocity") return "속도-시간 그래프";
+  return "이동 거리-시간 그래프";
+}
+
+function play(){
+  if(!caseData) autoExample();
+  pause();
+
+  const speed=N("playSpeed") || 0.35;
+
+  timer=setInterval(()=>{
+    frameIndex++;
+
+    if(frameIndex>=frames.length){
+      frameIndex=frames.length-1;
+      pause();
     }
+
     drawFrame();
-    lastTick = ts;
+  },20/speed);
+}
+
+function pause(){
+  if(timer){
+    clearInterval(timer);
+    timer=null;
   }
-  rafId = requestAnimationFrame(animate);
 }
 
-function togglePlay(){
-  if(!simData) return;
-  playing = !playing;
-  document.getElementById("status").textContent = playing ? "시뮬레이션 재생 중" : "일시정지";
-  if(playing){ lastTick = 0; animate(); }
+function stepNext(){
+  if(!caseData) autoExample();
+
+  frameIndex=Math.min(frameIndex+5,frames.length-1);
+  drawFrame();
 }
 
-function resetAnimation(){
-  if(!simData) return;
-  currentFrame = 0;
-  playing = true;
-  lastTick = 0;
-  document.getElementById("status").textContent = "처음부터 재생";
-  animate();
-}
+function makeTable(){
+  const tbody=E("table");
+  tbody.innerHTML="";
 
-function stopAnimation(update=true){
-  playing = false;
-  if(rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-  if(update) document.getElementById("status").textContent = "정지";
-}
-
-function toggleGrid(){
-  showGrid = !showGrid;
-  if(simData) drawFrame(); else drawInitial();
-}
-
-function updateLiveTable(objs, frameData){
-  const rows = objs.map((o,i)=>{
-    const x = frameData ? frameData.positions[i] : o.x;
-    const v = frameData ? frameData.velocities[i] : o.v;
-    const p = frameData ? frameData.momenta[i] : o.m*o.v;
-    const ke = frameData ? frameData.energies[i] : 0.5*o.m*o.v*o.v;
-    return `<tr><td>물체 ${i+1}</td><td>${fmt(x)}</td><td>${fmt(v)}</td><td>${fmt(p)}</td><td>${fmt(ke)}</td></tr>`;
+  frames.filter((_,i)=>i%50===0).forEach(f=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${fmt(f.t)}</td>
+      <td>${fmt(f.p.A)}</td>
+      <td>${fmt(f.p.B)}</td>
+      <td>${fmt(f.p.C)}</td>
+      <td>${fmt(f.v.A)}</td>
+      <td>${fmt(f.v.B)}</td>
+      <td>${fmt(f.v.C)}</td>
+      <td>${fmt(f.d.A)}</td>
+      <td>${fmt(f.d.B)}</td>
+      <td>${fmt(f.d.C)}</td>
+    `;
+    tbody.appendChild(tr);
   });
-  if(frameData){
-    const totalP = frameData.momenta.reduce((a,b)=>a+b,0);
-    const totalE = frameData.energies.reduce((a,b)=>a+b,0);
-    rows.push(`<tr><td>전체</td><td>-</td><td>-</td><td>${fmt(totalP)}</td><td>${fmt(totalE)}</td></tr>`);
-  }
-  document.getElementById("liveTable").innerHTML = rows.join("");
 }
 
-function writeLog(collisions){
-  const box = document.getElementById("logBox");
-  if(!collisions.length){
-    box.textContent = "충돌 없음";
-    return;
-  }
-  box.textContent = collisions.map(c=>{
-    const [o1,o2] = c.objects;
-    return `${fmt(c.time)}s, x=${fmt(c.x)}m\n물체 ${o1} ↔ 물체 ${o2}\n충돌 전: ${fmt(c.before[0])}, ${fmt(c.before[1])} m/s\n충돌 후: ${fmt(c.after[0])}, ${fmt(c.after[1])} m/s\n----------------------`;
-  }).join("\n");
+function saveImage(){
+  drawFrame();
+
+  const a=document.createElement("a");
+  a.download="clean_collision_graph.png";
+  a.href=canvas.toDataURL("image/png");
+  a.click();
 }
 
-function canvasToDataX(clientX){
-  const rect = canvas.getBoundingClientRect();
-  const px = (clientX - rect.left) * canvas.width / rect.width;
-  const left = 70, right = canvas.width - 35;
-  return xMin + (px-left)/(right-left)*(xMax-xMin);
+function resetAll(){
+  pause();
+
+  E("mA").value=5;
+  E("mB").value=2;
+  E("mC").value=3;
+  E("roughVA").value=4;
+  E("roughVB").value=0;
+  E("totalTime").value=5;
+  E("playSpeed").value=0.35;
+  E("graphMode").value="momentum";
+  E("showA").value="yes";
+  E("showB").value="yes";
+  E("showC").value="yes";
+  E("canvasWidth").value=980;
+  E("surfaceText").value="수평면";
+
+  autoExample();
 }
 
-function pointerDown(e){
-  if(simData) return;
-  const rect = canvas.getBoundingClientRect();
-  const y = (e.clientY - rect.top) * canvas.height / rect.height;
-  if(y < 45 || y > 215) return;
-  const xData = canvasToDataX(e.clientX);
-  objects = readObjects(false);
-  let best = 0, bestD = Infinity;
-  objects.forEach((o,i)=>{
-    const d = Math.abs(o.x - xData);
-    if(d < bestD){ bestD=d; best=i; }
+document.querySelectorAll("input,select").forEach(x=>{
+  x.addEventListener("input",()=>{
+    if(caseData){
+      autoExample();
+    }
   });
-  if(bestD < 0.45){
-    draggingIndex = best;
-    canvas.setPointerCapture(e.pointerId);
-  }
-}
 
-function pointerMove(e){
-  if(draggingIndex === null) return;
-  const x = Math.max(xMin, Math.min(xMax, canvasToDataX(e.clientX)));
-  document.getElementById(`x${draggingIndex}`).value = x.toFixed(2);
-  objects[draggingIndex].x = x;
-  drawInitial();
-}
+  x.addEventListener("change",()=>{
+    if(caseData){
+      autoExample();
+    }
+  });
+});
 
-function pointerUp(e){
-  draggingIndex = null;
-}
-
-canvas.addEventListener("pointerdown", pointerDown);
-canvas.addEventListener("pointermove", pointerMove);
-canvas.addEventListener("pointerup", pointerUp);
-canvas.addEventListener("pointercancel", pointerUp);
-
-refreshObjects();
+resetAll();
 </script>
+
 </body>
 </html>
