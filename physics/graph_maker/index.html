@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>수능 물리 그래프 생성기</title>
+<style>
+body {
+  margin: 0;
+  font-family: "Malgun Gothic", Arial, sans-serif;
+  background: #f4f4f4;
+}
+.app {
+  display: flex;
+  height: 100vh;
+}
+.panel {
+  width: 430px;
+  padding: 14px;
+  background: white;
+  overflow-y: auto;
+  box-sizing: border-box;
+  border-right: 1px solid #ccc;
+}
+.canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+canvas {
+  background: white;
+  border: 1px solid #ccc;
+}
+fieldset {
+  margin-bottom: 12px;
+  border: 1px solid #bbb;
+}
+legend {
+  font-weight: bold;
+}
+label {
+  display: block;
+  margin-top: 7px;
+  font-size: 14px;
+}
+input, select, textarea, button {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 3px;
+  padding: 6px;
+  font-family: inherit;
+}
+textarea {
+  height: 72px;
+}
+button {
+  cursor: pointer;
+  margin-top: 8px;
+}
+.row {
+  display: flex;
+  gap: 6px;
+}
+.row > * {
+  flex: 1;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 4px;
+  text-align: center;
+}
+tr.selected {
+  background: #d7ebff;
+}
+.small {
+  font-size: 12px;
+  color: #666;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="panel">
+
+    <fieldset>
+      <legend>그래프 종류</legend>
+      <select id="graphType">
+        <option>봉우리 곡선 그래프</option>
+        <option>구간 그래프</option>
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend>축 설정</legend>
+      <label>x축 제목</label>
+      <input id="xLabel" value="시간">
+
+      <label>y축 제목</label>
+      <textarea id="yLabel">힘
+의
+
+크
+기</textarea>
+
+      <div class="row">
+        <label>x최소<input id="xMin" value="0"></label>
+        <label>x최대<input id="xMax" value="5"></label>
+      </div>
+
+      <div class="row">
+        <label>y최소<input id="yMin" value="0"></label>
+        <label>y최대<input id="yMax" value="3"></label>
+      </div>
+
+      <label>x눈금</label>
+      <input id="xTicks" value="0">
+
+      <label>y눈금</label>
+      <input id="yTicks" value="0">
+    </fieldset>
+
+    <fieldset>
+      <legend>스타일</legend>
+      <label>그래프 굵기</label>
+      <input id="graphWidth" value="2.2">
+
+      <label>축 굵기</label>
+      <input id="axisWidth" value="1.3">
+
+      <label>점선 굵기</label>
+      <input id="guideWidth" value="0.9">
+    </fieldset>
+
+    <fieldset id="peakBox">
+      <legend>봉우리 곡선 설정</legend>
+
+      <label>이름</label>
+      <input id="peakName" value="A">
+
+      <label>최댓값</label>
+      <input id="peakHeight" value="2.4">
+
+      <label>내부 면적</label>
+      <input id="peakArea">
+
+      <label>모양</label>
+      <select id="peakShape">
+        <option>좁게</option>
+        <option selected>보통</option>
+        <option>넓게</option>
+      </select>
+
+      <label>선</label>
+      <select id="peakLine">
+        <option>실선</option>
+        <option>점선</option>
+      </select>
+
+      <div class="small">그래프에서 드래그하면 시작 x~끝 x가 입력됩니다.</div>
+    </fieldset>
+
+    <fieldset id="segmentBox">
+      <legend>구간 그래프 설정</legend>
+
+      <label>종류</label>
+      <select id="segmentType">
+        <option>수평</option>
+        <option>완만 변화</option>
+        <option>직선</option>
+        <option>꺾은선</option>
+        <option>감소곡선</option>
+        <option>증가곡선</option>
+      </select>
+
+      <div class="row">
+        <label>시작 x<input id="segStart" value="0"></label>
+        <label>끝 x<input id="segEnd" value="2"></label>
+      </div>
+
+      <div class="row">
+        <label>시작 y<input id="segY1" value="12"></label>
+        <label id="segY2Wrap">끝 y<input id="segY2" value="21"></label>
+      </div>
+
+      <div class="row" id="midWrap">
+        <label>중간 x<input id="segMidX"></label>
+        <label>중간 y<input id="segMidY"></label>
+      </div>
+
+      <label id="segShapeWrap">모양
+        <select id="segmentShape">
+          <option>좁게</option>
+          <option selected>보통</option>
+          <option>넓게</option>
+        </select>
+      </label>
+
+      <label>선</label>
+      <select id="segmentLine">
+        <option>실선</option>
+        <option>점선</option>
+      </select>
+
+      <button onclick="addSegment()">구간 추가</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>데이터 목록</legend>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>종류/이름</th><th>x1</th><th>x2/y1</th><th>y1/x2</th>
+            <th>y2/면적</th><th>그래프</th><th>모양</th><th>선</th><th>비고</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="row">
+        <button onclick="deleteSelected()">선택 행 삭제</button>
+        <button onclick="deleteLast()">마지막 행 삭제</button>
+      </div>
+      <button onclick="clearRows()">전체 초기화</button>
+      <button onclick="draw()">미리보기</button>
+      <button onclick="savePNG()">PNG 저장</button>
+    </fieldset>
+
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="900" height="620"></canvas>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let rows = [];
+let selectedRow = null;
+let dragStart = null;
+
+const plot = {
+  left: 160,
+  right: 90,
+  top: 70,
+  bottom: 110
+};
+
+function v(id) {
+  return document.getElementById(id).value;
+}
+
+function num(id) {
+  return parseFloat(v(id));
+}
+
+function parseTicks(text) {
+  if (!text.trim()) return [];
+  return text.split(",").map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+}
+
+function xMap(x) {
+  const xMin = num("xMin"), xMax = num("xMax");
+  return plot.left + (x - xMin) / (xMax - xMin) * (canvas.width - plot.left - plot.right);
+}
+
+function yMap(y) {
+  const yMin = num("yMin"), yMax = num("yMax");
+  return canvas.height - plot.bottom - (y - yMin) / (yMax - yMin) * (canvas.height - plot.top - plot.bottom);
+}
+
+function invX(px) {
+  const xMin = num("xMin"), xMax = num("xMax");
+  return xMin + (px - plot.left) / (canvas.width - plot.left - plot.right) * (xMax - xMin);
+}
+
+function easeInOut(t) {
+  return 3 * t * t - 2 * t * t * t;
+}
+
+function dash(line) {
+  ctx.setLineDash(line === "점선" ? [8, 6] : []);
+}
+
+function drawAxes() {
+  const axisWidth = num("axisWidth");
+  const xMin = num("xMin"), xMax = num("xMax");
+  const yMin = num("yMin"), yMax = num("yMax");
+
+  const x0 = xMap(xMin);
+  const y0 = yMap(yMin);
+  const xEnd = xMap(xMax);
+  const yEnd = yMap(yMax);
+
+  ctx.save();
+  ctx.strokeStyle = "black";
+  ctx.fillStyle = "black";
+  ctx.lineWidth = axisWidth;
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(xEnd + 25, y0);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(xEnd + 25, y0);
+  ctx.lineTo(xEnd + 14, y0 - 5);
+  ctx.lineTo(xEnd + 14, y0 + 5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x0, yEnd - 25);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x0, yEnd - 25);
+  ctx.lineTo(x0 - 5, yEnd - 14);
+  ctx.lineTo(x0 + 5, yEnd - 14);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.font = "17px Malgun Gothic";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText(v("xLabel"), xEnd + 28, y0 + 18);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  const lines = v("yLabel").split("\n");
+  lines.forEach((line, i) => {
+    ctx.fillText(line, x0 - 80, yEnd - 40 + i * 18);
+  });
+
+  let xTicks = parseTicks(v("xTicks"));
+  let yTicks = parseTicks(v("yTicks"));
+
+  if (xMin === 0 && yMin === 0) {
+    xTicks = xTicks.filter(t => t !== 0);
+    yTicks = yTicks.filter(t => t !== 0);
+
+    ctx.font = "15px Malgun Gothic";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillText("0", x0 - 8, y0 + 8);
+  }
+
+  ctx.font = "15px Malgun Gothic";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  xTicks.forEach(t => {
+    const x = xMap(t);
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y0 + 6);
+    ctx.stroke();
+    ctx.fillText(String(t), x, y0 + 10);
+  });
+
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+
+  yTicks.forEach(t => {
+    const y = yMap(t);
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x0 - 6, y);
+    ctx.stroke();
+    ctx.fillText(String(t), x0 - 10, y);
+  });
+
+  ctx.restore();
+}
+
+function drawGuideLines(points) {
+  const used = new Set();
+  ctx.save();
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = num("guideWidth");
+  ctx.globalAlpha = 0.6;
+  ctx.setLineDash([2, 5]);
+
+  points.forEach(([x, y]) => {
+    const key = `${x.toFixed(6)},${y.toFixed(6)}`;
+    if (used.has(key)) return;
+    used.add(key);
+
+    if (x > 0 && y > 0) {
+      ctx.beginPath();
+      ctx.moveTo(xMap(x), yMap(0));
+      ctx.lineTo(xMap(x), yMap(y));
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(xMap(0), yMap(y));
+      ctx.lineTo(xMap(x), yMap(y));
+      ctx.stroke();
+    }
+  });
+
+  ctx.restore();
+}
+
+function drawCurveGraph() {
+  const guide = [];
+
+  rows.forEach(row => {
+    const kind = row[0];
+    const line = row[7] || "실선";
+
+    ctx.save();
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = num("graphWidth");
+    dash(line);
+    ctx.beginPath();
+
+    try {
+      if (kind === "수평") {
+        const x1 = +row[1], x2 = +row[2], y = +row[3];
+        guide.push([x1, y], [x2, y]);
+        ctx.moveTo(xMap(x1), yMap(y));
+        ctx.lineTo(xMap(x2), yMap(y));
+      }
+
+      else if (kind === "변화" || kind === "A") {
+        const x1 = +row[1], x2 = +row[2], y1 = +row[3], y2 = +row[4];
+        if (x2 <= x1) return;
+        guide.push([x1, y1], [x2, y2]);
+
+        for (let i = 0; i <= 300; i++) {
+          const t = i / 300;
+          const x = x1 + (x2 - x1) * t;
+          const s = easeInOut(t);
+          const y = y1 + (y2 - y1) * s;
+          if (i === 0) ctx.moveTo(xMap(x), yMap(y));
+          else ctx.lineTo(xMap(x), yMap(y));
+        }
+      }
+
+      else if (kind === "직선") {
+        const x1 = +row[1], y1 = +row[2], x2 = +row[3], y2 = +row[4];
+        guide.push([x1, y1], [x2, y2]);
+        ctx.moveTo(xMap(x1), yMap(y1));
+        ctx.lineTo(xMap(x2), yMap(y2));
+      }
+
+      else if (kind === "꺾은선") {
+        const x1 = +row[1], y1 = +row[2], mx = +row[3], my = +row[4], x2 = +row[5], y2 = +row[6];
+        guide.push([x1, y1], [mx, my], [x2, y2]);
+        ctx.moveTo(xMap(x1), yMap(y1));
+        ctx.lineTo(xMap(mx), yMap(my));
+        ctx.lineTo(xMap(x2), yMap(y2));
+      }
+
+      ctx.stroke();
+    } catch {}
+
+    ctx.restore();
+  });
+
+  drawGuideLines(guide);
+}
+
+function drawPeakGraph() {
+  rows.forEach(row => {
+    const name = row[0];
+    let start = +row[1];
+    let end = +row[2];
+    let height = +row[3];
+    const areaText = row[4];
+    const shape = row[6] || "보통";
+    const line = row[7] || "실선";
+
+    if (end <= start) return;
+
+    if (areaText) {
+      const area = +areaText;
+      const width = end - start;
+      if (!isNaN(area)) height = area * 3 / (2 * width);
+    }
+
+    const center = (start + end) / 2;
+    const half = (end - start) / 2;
+
+    ctx.save();
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = num("graphWidth");
+    dash(line);
+    ctx.beginPath();
+
+    for (let i = 0; i <= 500; i++) {
+      const x = start + (end - start) * i / 500;
+      let base = Math.max(1 - Math.pow((x - center) / half, 2), 0);
+      let y;
+
+      if (shape === "좁게") y = height * Math.pow(base, 2);
+      else if (shape === "넓게") y = height * Math.sqrt(base);
+      else y = height * base;
+
+      if (i === 0) ctx.moveTo(xMap(x), yMap(y));
+      else ctx.lineTo(xMap(x), yMap(y));
+    }
+
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = "17px Malgun Gothic";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(name, xMap(center), yMap(height + height * 0.05));
+    ctx.restore();
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (v("graphType") === "봉우리 곡선 그래프") {
+    drawPeakGraph();
+  } else {
+    drawCurveGraph();
+  }
+
+  drawAxes();
+}
+
+function renderTable() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+
+  rows.forEach((row, r) => {
+    const tr = document.createElement("tr");
+    if (r === selectedRow) tr.classList.add("selected");
+
+    for (let c = 0; c < 9; c++) {
+      const td = document.createElement("td");
+      td.contentEditable = true;
+      td.textContent = row[c] ?? "";
+      td.oninput = () => {
+        rows[r][c] = td.textContent.trim();
+        draw();
+      };
+      tr.appendChild(td);
+    }
+
+    tr.onclick = () => {
+      selectedRow = r;
+      renderTable();
+    };
+
+    tbody.appendChild(tr);
+  });
+}
+
+function addRow(row) {
+  rows.push(row);
+  renderTable();
+  draw();
+}
+
+function addSegment() {
+  const mode = v("segmentType");
+  const x1 = +v("segStart");
+  const x2 = +v("segEnd");
+  const y1 = +v("segY1");
+  const y2 = +v("segY2");
+  const line = v("segmentLine");
+  const shape = v("segmentShape");
+
+  if (x2 <= x1) {
+    alert("구간 끝 x는 시작 x보다 커야 합니다.");
+    return;
+  }
+
+  if (mode === "수평") {
+    addRow(["수평", x1, x2, y1, "", "", "", line, ""]);
+  } else if (mode === "완만 변화") {
+    addRow(["변화", x1, x2, y1, y2, "", shape, line, ""]);
+  } else if (mode === "직선") {
+    addRow(["직선", x1, y1, x2, y2, "", "", line, ""]);
+  } else if (mode === "꺾은선") {
+    const mx = v("segMidX").trim() ? +v("segMidX") : (x1 + x2) / 2;
+    const my = v("segMidY").trim() ? +v("segMidY") : y2;
+    addRow(["꺾은선", x1, y1, mx, my, x2, y2, line, ""]);
+  } else {
+    addRow(["A", x1, x2, y1, y2, mode, shape, line, ""]);
+  }
+}
+
+function deleteSelected() {
+  if (selectedRow === null) return;
+  rows.splice(selectedRow, 1);
+  selectedRow = null;
+  renderTable();
+  draw();
+}
+
+function deleteLast() {
+  rows.pop();
+  selectedRow = null;
+  renderTable();
+  draw();
+}
+
+function clearRows() {
+  rows = [];
+  selectedRow = null;
+  renderTable();
+  draw();
+}
+
+function savePNG() {
+  draw();
+  const a = document.createElement("a");
+  a.download = "graph.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
+
+canvas.addEventListener("mousedown", e => {
+  if (v("graphType") !== "봉우리 곡선 그래프") return;
+  const rect = canvas.getBoundingClientRect();
+  dragStart = invX(e.clientX - rect.left);
+});
+
+canvas.addEventListener("mouseup", e => {
+  if (v("graphType") !== "봉우리 곡선 그래프") return;
+  if (dragStart === null) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const endX = invX(e.clientX - rect.left);
+
+  const start = Math.min(dragStart, endX);
+  const end = Math.max(dragStart, endX);
+  dragStart = null;
+
+  if (end <= start) return;
+
+  let height;
+  let area = v("peakArea").trim();
+
+  if (area) {
+    height = (+area) * 3 / (2 * (end - start));
+  } else {
+    height = +v("peakHeight");
+  }
+
+  addRow([
+    v("peakName") || "A",
+    start.toFixed(2),
+    end.toFixed(2),
+    height.toFixed(2),
+    area,
+    "",
+    v("peakShape"),
+    v("peakLine"),
+    ""
+  ]);
+});
+
+function changeGraphType() {
+  rows = [];
+  selectedRow = null;
+  renderTable();
+
+  const isPeak = v("graphType") === "봉우리 곡선 그래프";
+
+  document.getElementById("peakBox").style.display = isPeak ? "block" : "none";
+  document.getElementById("segmentBox").style.display = isPeak ? "none" : "block";
+
+  if (isPeak) {
+    document.getElementById("xLabel").value = "시간";
+    document.getElementById("yLabel").value = "힘\n의\n\n크\n기";
+    document.getElementById("xMin").value = "0";
+    document.getElementById("xMax").value = "5";
+    document.getElementById("yMin").value = "0";
+    document.getElementById("yMax").value = "3";
+    document.getElementById("xTicks").value = "0";
+    document.getElementById("yTicks").value = "0";
+  } else {
+    document.getElementById("xLabel").value = "시간(s)";
+    document.getElementById("yLabel").value = "B\n의\n\n운\n동\n량\n\n(kg·m/s)";
+    document.getElementById("xMin").value = "0";
+    document.getElementById("xMax").value = "5";
+    document.getElementById("yMin").value = "0";
+    document.getElementById("yMax").value = "25";
+    document.getElementById("xTicks").value = "0,2,2.2,3,3.1";
+    document.getElementById("yTicks").value = "0,11,12,21";
+  }
+
+  changeSegmentType();
+  draw();
+}
+
+function changeSegmentType() {
+  const mode = v("segmentType");
+
+  document.getElementById("segY2Wrap").style.display =
+    mode === "수평" ? "none" : "block";
+
+  document.getElementById("midWrap").style.display =
+    mode === "꺾은선" ? "flex" : "none";
+
+  document.getElementById("segShapeWrap").style.display =
+    ["완만 변화", "감소곡선", "증가곡선"].includes(mode) ? "block" : "none";
+}
+
+document.getElementById("graphType").onchange = changeGraphType;
+document.getElementById("segmentType").onchange = changeSegmentType;
+
+document.querySelectorAll("input, textarea, select").forEach(el => {
+  el.addEventListener("input", draw);
+});
+
+changeGraphType();
+</script>
+
+</body>
+</html>
