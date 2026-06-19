@@ -193,8 +193,8 @@ tr.selected td{background:#dbeafe}
           <div>
             <label>모양</label>
             <select id="peakShape">
-              <option>좁게</option>
-              <option selected>보통</option>
+              <option selected>좁게</option>
+              <option>보통</option>
               <option>넓게</option>
             </select>
           </div>
@@ -311,8 +311,8 @@ tr.selected td{background:#dbeafe}
           <div id="segShapeWrap">
             <label>모양</label>
             <select id="segmentShape">
-              <option>좁게</option>
-              <option selected>보통</option>
+              <option selected>좁게</option>
+              <option>보통</option>
               <option>넓게</option>
             </select>
           </div>
@@ -524,13 +524,15 @@ function drawAxes(){
   ctx.lineTo(xEnd+25,y0);
   ctx.stroke();
 
+  const aw = n("axisWidth");
+  
   ctx.beginPath();
-  ctx.moveTo(xEnd+25,y0);
-  ctx.lineTo(xEnd+13,y0-5);
-  ctx.lineTo(xEnd+13,y0+5);
+  ctx.moveTo(xEnd + aw*8, y0);
+  ctx.lineTo(xEnd + aw*4, y0 - aw*2);
+  ctx.lineTo(xEnd + aw*4, y0 + aw*2);
   ctx.closePath();
   ctx.fill();
-
+  
   // y축
   ctx.beginPath();
   ctx.moveTo(x0,yBottom);
@@ -538,9 +540,18 @@ function drawAxes(){
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(x0,yEnd-25);
-  ctx.lineTo(x0-5,yEnd-13);
-  ctx.lineTo(x0+5,yEnd-13);
+  ctx.moveTo(x0, yEnd-aw*8);
+  
+  ctx.lineTo(
+    x0-aw*2,
+    yEnd-aw*4
+  );
+  
+  ctx.lineTo(
+    x0+aw*2,
+    yEnd-aw*4
+  );
+  
   ctx.closePath();
   ctx.fill();
 
