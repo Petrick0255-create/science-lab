@@ -148,25 +148,55 @@ function chemistryAt(acidVol,baseVol){
 function equivalenceAcidVolume(){
   const total=n('totalVolume'), av=acid().valence, bv=base().valence;
   const ac=n('acidChunks'), bc=n('baseChunks');
-  // av*ac*Va/10 = bv*bc*(T-Va)/10
+  // 온도 그래프용: 총 부피가 일정할 때 av*ac*Va/10 = bv*bc*(T-Va)/10
   const denom=av*ac+bv*bc;
   if(denom<=0)return total/2;
   return total*bv*bc/denom;
 }
+function equivalenceAddedVolume(){
+  const T=n('totalVolume'), av=acid().valence, bv=base().valence;
+  const ac=n('acidChunks'), bc=n('baseChunks');
+  // 이온 수 그래프용: 한 용액 T mL에 다른 용액을 x mL 넣는 상황
+  if(v('direction')==='baseToAcid'){
+    // 산 T mL에 염기 x mL 첨가
+    return (av*ac*T)/(bv*bc);
+  }else{
+    // 염기 T mL에 산 x mL 첨가
+    return (bv*bc*T)/(av*ac);
+  }
+}
+function ionsForAddition(addedVol){
+  const T=n('totalVolume'), av=acid().valence, bv=base().valence;
+  const ac=n('acidChunks'), bc=n('baseChunks');
+  let acidUnits, baseUnits;
+
+  if(v('direction')==='baseToAcid'){
+    acidUnits=ac*T/10;        // 처음 비커 안 산은 고정
+    baseUnits=bc*addedVol/10; // 넣은 염기만 증가
+  }else{
+    baseUnits=bc*T/10;        // 처음 비커 안 염기는 고정
+    acidUnits=ac*addedVol/10; // 넣은 산만 증가
+  }
+
+  const H=av*acidUnits;
+  const OH=bv*baseUnits;
+  const excessH=Math.max(H-OH,0);
+  const excessOH=Math.max(OH-H,0);
+
+  // 구경꾼 이온: 산 음이온은 산 화학식 단위 수만큼, 염기 양이온은 염기 화학식 단위 수만큼 존재
+  const cation=baseUnits+excessH;
+  const anion=acidUnits+excessOH;
+  const total=cation+anion;
+  return {cation,anion,total};
+}
 function graphData(type){
-  const eq=equivalenceAcidVolume(), rows=[];
+  const rows=[];
+  const maxAdded=n('totalVolume');
   for(let i=0;i<=100;i++){
-    const acidVol=n('totalVolume')*i/100;
-    const baseVol=n('totalVolume')-acidVol;
-    const c=chemistryAt(acidVol,baseVol);
-    let cation,anion,total;
-    const spectatorCation=c.baseUnits;
-    const spectatorAnion=c.acidUnits;
-    cation=spectatorCation+c.excessH;
-    anion=spectatorAnion+c.excessOH;
-    total=cation+anion;
-    let y=type==='total'?total:type==='cation'?cation:anion;
-    rows.push([acidVol,y]);
+    const addedVol=maxAdded*i/100;
+    const c=ionsForAddition(addedVol);
+    const y=type==='total'?c.total:type==='cation'?c.cation:c.anion;
+    rows.push([addedVol,y]);
   }
   return rows;
 }
@@ -177,7 +207,7 @@ function simpleYMax(type){
 }
 function drawSimpleGraph(canvas,title,type){
   const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,left=82,right=36,top=40,bottom=60,gx0=left,gy0=H-bottom,gx1=W-right,gy1=top;
-  const total=n('totalVolume'), eq=equivalenceAcidVolume(), ymax=simpleYMax(type);
+  const total=n('totalVolume'), eq=equivalenceAddedVolume(), ymax=simpleYMax(type);
   ctx.clearRect(0,0,W,H);ctx.fillStyle='white';ctx.fillRect(0,0,W,H);
   function xm(x){return gx0+x/total*(gx1-gx0)}function ym(y){return gy0-y/ymax*(gy0-gy1)}
   drawAxesBasic(ctx,gx0,gy0,gx1,gy1,title);
@@ -265,7 +295,7 @@ function drawBottomVolumeLabels(ctx,rows,gx0,gy0,gx1,acidLabel,baseLabel){
   ctx.restore();
 }
 function formatNum(x){return Math.abs(x-Math.round(x))<1e-9?String(Math.round(x)):String(Math.round(x*10)/10)}
-function drawAll(){drawBeakers();drawSimpleGraph(cv.total,'전체','total');drawSimpleGraph(cv.cation,'양이온','cation');drawSimpleGraph(cv.anion,'음이온','anion');drawTemperatureGraph(cv.temp);const dir=v('direction')==='baseToAcid'?`${base().formula} 용액을 ${acid().formula} 용액에 넣는 경우`:`${acid().formula} 용액을 ${base().formula} 용액에 넣는 경우`;const eq=formatNum(equivalenceAcidVolume());summary.innerHTML=`<b>${dir}</b><br>산 ${n('acidChunks')}덩어리/10 mL, 염기 ${n('baseChunks')}덩어리/10 mL 기준입니다.<br>중화점은 산 수용액 ${eq} mL 지점입니다. 오른쪽 비커는 결과 보기에서 남은 이온을 표시합니다.`}
+function drawAll(){drawBeakers();drawSimpleGraph(cv.total,'전체','total');drawSimpleGraph(cv.cation,'양이온','cation');drawSimpleGraph(cv.anion,'음이온','anion');drawTemperatureGraph(cv.temp);const dir=v('direction')==='baseToAcid'?`${base().formula} 용액을 ${acid().formula} 용액에 넣는 경우`:`${acid().formula} 용액을 ${base().formula} 용액에 넣는 경우`;const addEq=formatNum(equivalenceAddedVolume());const mixEq=formatNum(equivalenceAcidVolume());summary.innerHTML=`<b>${dir}</b><br>산 ${n('acidChunks')}덩어리/10 mL, 염기 ${n('baseChunks')}덩어리/10 mL 기준입니다.<br>이온 수 그래프의 중화점은 넣는 용액 ${addEq} mL 지점입니다. 온도 그래프의 중화점은 산 수용액 ${mixEq} mL 지점입니다.`}
 function resetDefault(){acidPreset.value='HCl';basePreset.value='NaOH';direction.value='baseToAcid';state.value='eq';resultView.value='hide';acidChunks.value='3';baseChunks.value='3';totalVolume.value='12';pointCount.value='5';baseTemp.value='24';tempRise.value='4';axisWidth.value='2';dashWidth.value='1.2';graphWidth.value='2.5';graphStyle.value='line';drawAll()}
 function setImageExample(){acidPreset.value='HCl';basePreset.value='NaOH';direction.value='baseToAcid';state.value='eq';resultView.value='hide';acidChunks.value='3';baseChunks.value='3';totalVolume.value='12';pointCount.value='5';baseTemp.value='24';tempRise.value='4';drawAll()}
 function savePNG(){drawAll();const out=document.createElement('canvas');out.width=1160;out.height=920;const c=out.getContext('2d');c.fillStyle='white';c.fillRect(0,0,out.width,out.height);c.font='30px Malgun Gothic';c.fillStyle='#111';c.textAlign='center';c.fillText('중화반응 그래프',580,40);c.font='19px Malgun Gothic';c.fillText('전체 이온 수',290,78);c.fillText('양이온 수',870,78);c.fillText('음이온 수',290,482);c.fillText('혼합 용액의 최고 온도',870,482);c.drawImage(cv.total,30,98,520,340);c.drawImage(cv.cation,610,98,520,340);c.drawImage(cv.anion,30,502,520,340);c.drawImage(cv.temp,610,502,520,390);const a=document.createElement('a');a.download='neutralization_graph_v5_2.png';a.href=out.toDataURL('image/png');a.click()}
