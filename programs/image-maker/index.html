@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>이미지 제작기 | J&B LAB</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <div class="brand">J&B</div>
+  <div class="badge">LAB</div>
+  <div class="title">이미지 제작기</div>
+  <a class="home" href="../../index.html">메인으로</a>
+</header>
+
+<main class="layout">
+
+  <aside class="sidebar">
+    <h2>이미지 목록</h2>
+
+    <input id="searchInput" type="text" placeholder="이미지 검색">
+
+    <div id="imageList" class="image-list"></div>
+  </aside>
+
+  <section class="workspace">
+
+    <div class="toolbar">
+      <button id="addRectBtn">사각형</button>
+      <button id="addCircleBtn">원</button>
+      <button id="addLineBtn">선</button>
+      <button id="addTextBtn">텍스트</button>
+
+      <button id="grayBtn">회색조</button>
+      <button id="colorBtn">원본색</button>
+
+      <button id="frontBtn">앞으로</button>
+      <button id="backBtn">뒤로</button>
+      <button id="deleteBtn">삭제</button>
+
+      <button id="saveBtn" class="save">PNG 저장</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="canvas" width="900" height="620"></canvas>
+    </div>
+
+  </section>
+
+  <aside class="rightbar">
+    <h2>색상</h2>
+
+    <button class="color red" data-color="#ef4444">빨강</button>
+    <button class="color blue" data-color="#2563eb">파랑</button>
+    <button class="color black" data-color="#111827">검정</button>
+    <button class="color white" data-color="#ffffff">흰색</button>
+
+    <h2>캔버스</h2>
+    <button id="clearBtn">전체 지우기</button>
+  </aside>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
