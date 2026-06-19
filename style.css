@@ -45,6 +45,11 @@ header {
 }
 
 .hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
   padding: 36px 0 28px;
 }
 
@@ -71,6 +76,94 @@ header {
   font-weight: 900;
   text-align: center;
 }
+
+/* 프로그램 카드 */
+
+.program-item {
+  position: relative;
+  width: 170px;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.program-card {
+  width: 170px;
+  min-height: 82px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(45,45,75,.96), rgba(22,24,45,.96));
+  border: 1px solid rgba(120,170,255,.75);
+  cursor: pointer;
+  transition: .25s;
+}
+
+.program-card:hover {
+  transform: translateY(-4px);
+  border-color: #6aa8ff;
+  box-shadow: 0 8px 25px rgba(80,130,255,.25);
+}
+
+.program-card .icon {
+  font-size: 18px;
+  margin-bottom: 3px;
+}
+
+.program-card h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  color: #fff;
+}
+
+.program-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #dce6ff;
+}
+
+/* 프로그램 드롭다운: 카드 왼쪽, 세로 가운데 정렬 */
+.program-dropdown {
+  position: absolute;
+  right: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 170px;
+
+  opacity: 0;
+  visibility: hidden;
+
+  background: #081325;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: .2s;
+}
+
+.program-item:hover .program-dropdown {
+  opacity: 1;
+  visibility: visible;
+}
+
+.program-dropdown a {
+  display: block;
+  padding: 11px 14px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.program-dropdown a:last-child {
+  border-bottom: none;
+}
+
+.program-dropdown a:hover {
+  background: rgba(255,255,255,.08);
+}
+
+/* 실험 카테고리 */
 
 .category-menu {
   display: grid;
@@ -189,6 +282,17 @@ footer {
 }
 
 @media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+  }
+
+  .program-dropdown {
+    right: auto;
+    left: 0;
+    top: calc(100% + 8px);
+    transform: none;
+  }
+
   .category-menu {
     grid-template-columns: repeat(2, 1fr);
   }
