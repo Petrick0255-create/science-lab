@@ -103,22 +103,42 @@ tr.selected td{background:#dbeafe}
 
     <div>
       <label>그래프 굵기</label>
-      <input id="graphWidth" value="4">
+      <input id="graphWidth" value="5">
     </div>
 
     <div>
       <label>축 굵기</label>
-      <input id="axisWidth" value="3">
+      <input id="axisWidth" value="4">
     </div>
 
     <div>
       <label>점선 굵기</label>
-      <input id="guideWidth" value="2.5">
+      <input id="guideWidth" value="3">
     </div>
 
     <div>
       <label>점 크기</label>
-      <input id="pointSize" value="5">
+      <input id="pointSize" value="7.5">
+    </div>
+
+    <div>
+      <label>축 제목 글자 크기</label>
+      <input id="axisLabelFontSize" value="35">
+    </div>
+
+    <div>
+      <label>눈금 숫자 글자 크기</label>
+      <input id="tickFontSize" value="35">
+    </div>
+
+    <div>
+      <label>점 이름 글자 크기</label>
+      <input id="pointLabelFontSize" value="35">
+    </div>
+
+    <div>
+      <label>그래프 이름 글자 크기</label>
+      <input id="graphLabelFontSize" value="35">
     </div>
   </div>
 
@@ -314,7 +334,7 @@ let rows = [];
 let selectedRow = null;
 let dragStart = null;
 
-const plot = { left:160, right:90, top:70, bottom:110 };
+let plot = { left:150, right:120, top:90, bottom:130 };
 
 function v(id){ return document.getElementById(id).value; }
 function n(id){ return Number(document.getElementById(id).value); }
@@ -324,19 +344,100 @@ function parseTicks(text){
   return text.split(",").map(x=>Number(x.trim())).filter(x=>!isNaN(x));
 }
 
+function safeNum(id, fallback){
+  const value=Number(v(id));
+  return isNaN(value) ? fallback : value;
+}
+
+function fitPlot(){
+  // 미리보기 화면에서 항상 전체가 보이도록 캔버스 크기는 고정합니다.
+  canvas.width = 900;
+  canvas.height = 620;
+
+  const axisFont=safeNum("axisLabelFontSize",35);
+  const tickFont=safeNum("tickFontSize",35);
+  const pointFont=safeNum("pointLabelFontSize",35);
+  const graphFont=safeNum("graphLabelFontSize",35);
+  const pointSize=safeNum("pointSize",7.5);
+
+  const yLines=v("yLabel").split("\n");
+  const yLineCount=yLines.length;
+
+  // 큰 글자를 넣어도 화면 밖으로 나가지 않게 하는 고정 캔버스용 여백입니다.
+  // 여백을 키우되, 그래프 영역이 사라지지 않도록 상한을 둡니다.
+  let left = Math.max(145, axisFont*2.4 + tickFont*1.1);
+  let right = Math.max(145, pointFont*2.6 + axisFont*1.2 + pointSize*2);
+  let top = Math.max(95, Math.max(pointFont, graphFont)*1.9 + pointSize*2);
+  let bottom = Math.max(135, tickFont*2.1 + axisFont*1.5);
+
+  // y축 제목이 여러 줄이면 왼쪽 여백을 조금 더 줍니다.
+  left += Math.min(50, yLineCount*5);
+
+  // 너무 큰 폰트를 넣어도 그래프 영역 최소 크기는 확보합니다.
+  const maxLeft = 250;
+  const maxRight = 220;
+  const maxTop = 160;
+  const maxBottom = 190;
+
+  plot = {
+    left: Math.min(left,maxLeft),
+    right: Math.min(right,maxRight),
+    top: Math.min(top,maxTop),
+    bottom: Math.min(bottom,maxBottom)
+  };
+}
+
+function plotArea(){
+  const xMin=n("xMin"), xMax=n("xMax");
+  const yMin=n("yMin"), yMax=n("yMax");
+
+  const baseW=canvas.width-plot.left-plot.right;
+  const baseH=canvas.height-plot.top-plot.bottom;
+
+  if(v("graphType")==="점 그래프"){
+    const dx=Math.max(1e-9,xMax-xMin);
+    const dy=Math.max(1e-9,yMax-yMin);
+    const scale=Math.min(baseW/dx, baseH/dy);
+    const w=dx*scale;
+    const h=dy*scale;
+    return {
+      left: plot.left + (baseW-w)/2,
+      right: plot.left + (baseW-w)/2 + w,
+      top: plot.top + (baseH-h)/2,
+      bottom: plot.top + (baseH-h)/2 + h,
+      scale
+    };
+  }
+
+  return {
+    left: plot.left,
+    right: canvas.width-plot.right,
+    top: plot.top,
+    bottom: canvas.height-plot.bottom,
+    scale:null
+  };
+}
+
 function xMap(x){
   const xMin=n("xMin"), xMax=n("xMax");
-  return plot.left + (x-xMin)/(xMax-xMin)*(canvas.width-plot.left-plot.right);
+  const a=plotArea();
+  return a.left + (x-xMin)/(xMax-xMin)*(a.right-a.left);
 }
 
 function yMap(y){
   const yMin=n("yMin"), yMax=n("yMax");
-  return canvas.height-plot.bottom - (y-yMin)/(yMax-yMin)*(canvas.height-plot.top-plot.bottom);
+  const a=plotArea();
+  return a.bottom - (y-yMin)/(yMax-yMin)*(a.bottom-a.top);
 }
 
 function invX(px){
   const xMin=n("xMin"), xMax=n("xMax");
-  return xMin + (px-plot.left)/(canvas.width-plot.left-plot.right)*(xMax-xMin);
+  const a=plotArea();
+  return xMin + (px-a.left)/(a.right-a.left)*(xMax-xMin);
+}
+
+function font(sizeId, family="Malgun Gothic"){
+  return `${n(sizeId)}px ${family}`;
 }
 
 function easeInOut(t){
@@ -434,16 +535,27 @@ function drawAxes(){
   ctx.closePath();
   ctx.fill();
 
-  ctx.font="17px Malgun Gothic";
+  ctx.font=font("axisLabelFontSize");
   ctx.textAlign="left";
   ctx.textBaseline="top";
-  ctx.fillText(v("xLabel"), xEnd+30, y0+18);
+  const xLabel=v("xLabel");
+  const xLabelW=ctx.measureText(xLabel).width;
+  let xLabelX=xEnd+30;
+  let xLabelY=y0+18;
+  if(xLabelX+xLabelW>canvas.width-12) xLabelX=canvas.width-xLabelW-12;
+  if(xLabelY+n("axisLabelFontSize")>canvas.height-8) xLabelY=y0-n("axisLabelFontSize")-18;
+  ctx.fillText(xLabel, xLabelX, xLabelY);
 
   ctx.textAlign="center";
   ctx.textBaseline="bottom";
   const yLines=v("yLabel").split("\n");
+  const yStep=n("axisLabelFontSize")+1;
+  const yTotal=yLines.length*yStep;
+  let yStart=yEnd-40;
+  if(yStart+yTotal>canvas.height-10) yStart=canvas.height-yTotal-10;
+  if(yStart<10) yStart=10;
   yLines.forEach((line,i)=>{
-    ctx.fillText(line, x0-82, yEnd-40+i*18);
+    ctx.fillText(line, Math.max(22,x0-82), yStart+i*yStep);
   });
 
   let xTicks=parseTicks(v("xTicks"));
@@ -453,13 +565,13 @@ function drawAxes(){
   if(xMin<=0 && xMax>=0 && yMin<=0 && yMax>=0){
     xTicks=xTicks.filter(t=>t!==0);
     yTicks=yTicks.filter(t=>t!==0);
-    ctx.font="15px Malgun Gothic";
+    ctx.font=font("tickFontSize");
     ctx.textAlign="right";
     ctx.textBaseline="top";
     ctx.fillText("0", x0-8, y0+8);
   }
 
-  ctx.font="15px Malgun Gothic";
+  ctx.font=font("tickFontSize");
   ctx.textAlign="center";
   ctx.textBaseline="top";
 
@@ -563,10 +675,15 @@ function drawPeakGraph(){
 
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font="17px Malgun Gothic";
+    ctx.font=font("graphLabelFontSize");
     ctx.textAlign="center";
     ctx.textBaseline="bottom";
-    ctx.fillText(name,xMap(center),yMap(height+height*.05));
+    let labelY=yMap(height+height*.05);
+    if(labelY<n("graphLabelFontSize")+8){
+      ctx.textBaseline="top";
+      labelY=yMap(height)-n("graphLabelFontSize")*0.15;
+    }
+    ctx.fillText(name,xMap(center),labelY);
     ctx.restore();
   });
 }
@@ -606,15 +723,30 @@ function drawPointGraph(){
     );
     ctx.fill();
 
-    ctx.font="26px Cambria";
-    ctx.textAlign="left";
+    ctx.font=font("pointLabelFontSize","Cambria");
     ctx.textBaseline="middle";
 
-    ctx.fillText(
-      name,
-      xMap(x)+10,
-      yMap(y)-8
-    );
+    const px=xMap(x);
+    const py=yMap(y);
+    const labelW=ctx.measureText(name).width;
+    const labelH=n("pointLabelFontSize");
+    let tx=px+12;
+    let ty=py-10;
+    ctx.textAlign="left";
+
+    // 오른쪽/위/아래 끝에 걸리면 자동으로 그래프 안쪽으로 이동
+    if(tx+labelW>canvas.width-10){
+      tx=px-12;
+      ctx.textAlign="right";
+    }
+    if(ty-labelH/2<10){
+      ty=py+labelH*0.75;
+    }
+    if(ty+labelH/2>canvas.height-10){
+      ty=py-labelH*0.75;
+    }
+
+    ctx.fillText(name,tx,ty);
 
     ctx.restore();
 
@@ -703,6 +835,7 @@ function drawCurveGraph(){
 }
 
 function draw(){
+  fitPlot();
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle="white";
   ctx.fillRect(0,0,canvas.width,canvas.height);
