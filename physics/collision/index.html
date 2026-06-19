@@ -133,7 +133,7 @@ function autoExample(){
   let candidates=[];
 
   for(let vA0=Math.max(1,Math.round(roughA)-3); vA0<=Math.round(roughA)+3; vA0++){
-    for(let vB0=Math.max(0,Math.round(roughB)-2); vB0<=Math.round(roughB)+2; vB0++){
+    for(let vB0=Math.round(roughB)-3; vB0<=Math.round(roughB)+3; vB0++){
 
       if(vA0<=vB0) continue;
 
@@ -359,9 +359,13 @@ function drawScene(c,f){
   ctx.lineTo(canvas.width-35,groundY);
   ctx.stroke();
 
-  drawBlock("A",c.mA,c.w.A,f.x.A,f.v.A,groundY);
-  drawBlock("B",c.mB,c.w.B,f.x.B,f.v.B,groundY);
-  drawBlock("C",c.mC,c.w.C,f.x.C,f.v.C,groundY);
+  const squash = getSquashByCollisionTime(c,f.t);
+
+  const visualX = getVisualBlockX(c,f);
+
+  drawBlock("A",c.mA,c.w.A,visualX.A,f.v.A,groundY,squash.A);
+  drawBlock("B",c.mB,c.w.B,visualX.B,f.v.B,groundY,squash.B);
+  drawBlock("C",c.mC,c.w.C,visualX.C,f.v.C,groundY,squash.C);
 
   ctx.fillStyle="#111";
   ctx.font="bold 24px Arial";
@@ -381,35 +385,85 @@ function stateText(t,c){
   return "등속 운동 중";
 }
 
-function drawBlock(name,m,w,x,v,groundY){
+function getSquashByCollisionTime(c,t){
+  const squash={A:0,B:0,C:0};
+
+  function smoothSquash(t,start,duration){
+    if(t<start || t>start+duration) return 0;
+
+    const r=(t-start)/duration;
+
+    // 0 → 1 → 0
+    return Math.sin(Math.PI*r);
+  }
+
+  const sAB=smoothSquash(t,c.t1,c.d1);
+  squash.A=Math.max(squash.A,sAB);
+  squash.B=Math.max(squash.B,sAB);
+
+  const sBC=smoothSquash(t,c.t2,c.d2);
+  squash.B=Math.max(squash.B,sBC);
+  squash.C=Math.max(squash.C,sBC);
+
+  return squash;
+}
+
+function getVisualBlockX(c,f){
+  const size=46;
+  const unitPerPixel=maxSceneX()/(canvas.width-115);
+  const blockGap=size*unitPerPixel;
+
+  let xA=f.x.A;
+  let xB=f.x.B;
+  let xC=f.x.C;
+
+  // A가 B를 뚫지 못하게
+  if(xA+blockGap>xB){
+    xA=xB-blockGap;
+  }
+
+  // B가 C를 뚫지 못하게
+  if(xB+blockGap>xC){
+    xB=xC-blockGap;
+  }
+
+  return {A:xA,B:xB,C:xC};
+}
+
+function drawBlock(name,m,w,x,v,groundY,squish=0){
   const px=mapSceneX(x);
-  const bw=mapSceneX(x+w)-mapSceneX(x);
-  const bh=name==="A"?52:66;
+
+  const size=40;
+
+  const bw=size*(1-0.28*squish);
+  const bh=size*(1+0.18*squish);
+
   const y=groundY-bh;
+  const drawX=px+(size-bw)/2;
 
   ctx.fillStyle="#e8edf2";
   ctx.strokeStyle="#111";
   ctx.lineWidth=1.4;
-  ctx.fillRect(px,y,bw,bh);
-  ctx.strokeRect(px,y,bw,bh);
+  ctx.fillRect(drawX,y,bw,bh);
+  ctx.strokeRect(drawX,y,bw,bh);
 
   ctx.fillStyle="#111";
   ctx.font="15px serif";
   ctx.textAlign="center";
-  ctx.fillText(name,px+bw/2,y-14);
-  ctx.fillText(`${fmt(m)} kg`,px+bw/2,y+bh/2+5);
+  ctx.fillText(name,drawX+bw/2,y-14);
+  ctx.fillText(`${fmt(m)} kg`,drawX+bw/2,y+bh/2+5);
 
   if(Math.abs(v)>0.001){
     const dir=v>0?1:-1;
     const ay=y+bh/2;
-    const x1=dir>0?px+bw+10:px-10;
+    const x1=dir>0?drawX+bw+10:drawX-10;
     const x2=x1+dir*45;
     drawArrow(x1,ay,x2,ay);
     ctx.font="13px serif";
     ctx.fillText(`v=${fmt(v)}`,(x1+x2)/2,ay-10);
   }else{
     ctx.font="15px serif";
-    ctx.fillText("정지",px+bw/2,groundY+26);
+    ctx.fillText("정지",drawX+bw/2,groundY+26);
   }
 }
 
