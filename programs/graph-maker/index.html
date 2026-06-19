@@ -53,6 +53,7 @@ tr.selected td{background:#dbeafe}
       <select id="graphType">
         <option>봉우리 곡선 그래프</option>
         <option>구간 그래프</option>
+        <option>점 그래프</option>
       </select>
     </div>
 
@@ -114,6 +115,11 @@ tr.selected td{background:#dbeafe}
       <label>점선 굵기</label>
       <input id="guideWidth" value="2.5">
     </div>
+
+    <div>
+      <label>점 크기</label>
+      <input id="pointSize" value="5">
+    </div>
   </div>
 
   <div class="grid2">
@@ -160,6 +166,43 @@ tr.selected td{background:#dbeafe}
         <div class="small" style="margin-top:8px">
           그래프 영역에서 드래그하면 시작 x~끝 x가 자동으로 추가됩니다.
         </div>
+      </div>
+
+      <div class="card hidden" id="pointBox">
+      
+        <div class="section-title">점 그래프 설정</div>
+      
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+      
+          <div>
+            <label>점 이름</label>
+            <input id="pointName" value="A">
+          </div>
+      
+          <div>
+            <label>색상</label>
+            <select id="pointColor">
+              <option>검정</option>
+              <option>파랑</option>
+            </select>
+          </div>
+      
+          <div>
+            <label>X</label>
+            <input id="pointX" value="1">
+          </div>
+      
+          <div>
+            <label>Y</label>
+            <input id="pointY" value="1">
+          </div>
+      
+        </div>
+      
+        <button style="margin-top:8px" onclick="addPoint()">
+          점 추가
+        </button>
+
       </div>
 
       <div class="card hidden" id="segmentBox">
@@ -528,6 +571,59 @@ function drawPeakGraph(){
   });
 }
 
+function drawPointGraph(){
+
+  const guide=[];
+
+  rows.forEach(row=>{
+
+    if(row[0]!=="점") return;
+
+    const name=row[1];
+    const x=Number(row[2]);
+    const y=Number(row[3]);
+    const color=row[4];
+
+    guide.push([x,y]);
+
+    let stroke="#111";
+
+    if(color==="파랑")
+      stroke="#28a5e5";
+
+    ctx.save();
+
+    ctx.fillStyle=stroke;
+    ctx.strokeStyle=stroke;
+
+    ctx.beginPath();
+    ctx.arc(
+      xMap(x),
+      yMap(y),
+      n("pointSize"),
+      0,
+      Math.PI*2
+    );
+    ctx.fill();
+
+    ctx.font="26px Cambria";
+    ctx.textAlign="left";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+      name,
+      xMap(x)+10,
+      yMap(y)-8
+    );
+
+    ctx.restore();
+
+  });
+
+  drawGuideLines(guide);
+
+}
+
 function drawCurveGraph(){
   const guide=[];
 
@@ -555,7 +651,7 @@ function drawCurveGraph(){
       "로그함수 위로볼록","로그함수 아래로볼록"
     ].includes(kind)){
       const x1=Number(row[1]), x2=Number(row[2]), y1=Number(row[3]), y2=Number(row[4]);
-      const shape=row[6]||"보통";
+      const shape=row[6]||"좁게";
       if([x1,x2,y1,y2].some(isNaN)||x2<=x1) return;
       guide.push([x1,y1],[x2,y2]);
 
@@ -611,8 +707,15 @@ function draw(){
   ctx.fillStyle="white";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  if(v("graphType")==="봉우리 곡선 그래프") drawPeakGraph();
-  else drawCurveGraph();
+  if(v("graphType")==="봉우리 곡선 그래프"){
+    drawPeakGraph();
+  }
+  else if(v("graphType")==="점 그래프"){
+    drawPointGraph();
+  }
+  else{
+    drawCurveGraph();
+  }
 
   drawAxes();
 }
@@ -649,6 +752,22 @@ function addRow(row){
   rows.push(row);
   renderTable();
   draw();
+}
+
+function addPoint(){
+
+  addRow([
+    "점",
+    v("pointName"),
+    Number(v("pointX")),
+    Number(v("pointY")),
+    v("pointColor"),
+    "",
+    "",
+    "",
+    ""
+  ]);
+
 }
 
 function addSegment(){
@@ -766,10 +885,19 @@ function changeGraphType(){
   selectedRow=null;
   renderTable();
 
-  const isPeak=v("graphType")==="봉우리 곡선 그래프";
+  const type=v("graphType");
+  const isPeak = type==="봉우리 곡선 그래프";
+  const isPoint = type==="점 그래프";
+  const isSegment = type==="구간 그래프";
 
-  document.getElementById("peakBox").classList.toggle("hidden",!isPeak);
-  document.getElementById("segmentBox").classList.toggle("hidden",isPeak);
+  document.getElementById("peakBox")
+    .classList.toggle("hidden", !isPeak);
+
+  document.getElementById("pointBox")
+    .classList.toggle("hidden", !isPoint);
+
+  document.getElementById("segmentBox")
+    .classList.toggle("hidden", !isSegment);
 
   if(isPeak){
     document.getElementById("xLabel").value="시간";
@@ -780,7 +908,18 @@ function changeGraphType(){
     document.getElementById("yMax").value="3";
     document.getElementById("xTicks").value="0";
     document.getElementById("yTicks").value="0";
-  }else{
+  }
+  else if(isPoint){
+    document.getElementById("xLabel").value="전자 껍질 수";
+    document.getElementById("yLabel").value="원\n자\n가\n전\n자\n수";
+    document.getElementById("xMin").value="0";
+    document.getElementById("xMax").value="5";
+    document.getElementById("yMin").value="0";
+    document.getElementById("yMax").value="8";
+    document.getElementById("xTicks").value="1,2,3,4";
+    document.getElementById("yTicks").value="1,2,7";
+  }
+  else{
     document.getElementById("xLabel").value="시간(s)";
     document.getElementById("yLabel").value="B\n의\n\n운\n동\n량\n\n(kg·m/s)";
     document.getElementById("xMin").value="0";
@@ -791,10 +930,9 @@ function changeGraphType(){
     document.getElementById("yTicks").value="0";
   }
 
-  changeSegmentType();
+  if(isSegment) changeSegmentType();
   draw();
 }
-
 function changeSegmentType(){
   const mode=v("segmentType");
 
