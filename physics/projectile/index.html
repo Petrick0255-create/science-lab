@@ -121,6 +121,21 @@ th{background:#f3f4f6}
     </div>
 
     <div>
+      <label>점 테두리 굵기(px)</label>
+      <input id="ballStroke" type="number" value="2.4" min="0.5" max="10" step="0.1">
+    </div>
+
+    <div>
+      <label>A 글자 크기(px)</label>
+      <input id="aLabelSize" type="number" value="27" min="10" max="60" step="1">
+    </div>
+ 
+    <div>
+      <label>B 글자 크기(px)</label>
+      <input id="bLabelSize" type="number" value="27" min="10" max="60" step="1">
+    </div>
+
+    <div>
       <label>R, H 값 표시</label>
       <select id="showGuideText">
         <option value="yes">표시</option>
@@ -219,6 +234,9 @@ function getInputs(){
     showGuideLine:document.getElementById("showGuideLine").value,
     showD:document.getElementById("showD").value,
     ballSize:num("ballSize")
+    ballStroke:num("ballStroke"), 
+    aLabelSize:num("aLabelSize"),
+    bLabelSize:num("bLabelSize")
   };
 }
 
@@ -453,10 +471,12 @@ function drawPoints(start, end, x0, y0, cell, s){
   const bX0 = x0 + cell*3;
 
   ctx.fillStyle="#111";
-  ctx.font="27px serif";
   ctx.textAlign="center";
 
+  ctx.font=`${s.aLabelSize}px serif`;
   ctx.fillText("A", aX, y0-10);
+
+  ctx.font=`${s.bLabelSize}px serif`;
   ctx.fillText("B", bX0, y0-10);
 
   for(let i=start;i<=end;i++){
@@ -514,10 +534,11 @@ function drawGuide(x0, y0, cell, s){
 }
 
 function drawBall(x, y, style){
-  const r = getInputs().ballSize;
+  const s = getInputs();
+  const r = s.ballSize;
 
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.arc(x, y, r, 0, Math.PI*2);
 
   if(style==="black"){
     ctx.fillStyle="#333";
@@ -528,7 +549,7 @@ function drawBall(x, y, style){
   }
 
   ctx.strokeStyle="#111";
-  ctx.lineWidth=Math.max(1.5, r*0.25);
+  ctx.lineWidth=s.ballStroke;
   ctx.stroke();
 }
 
@@ -641,6 +662,9 @@ function resetAll(){
   document.getElementById("aColor").value = "black";
   document.getElementById("bColor").value = "white";
   document.getElementById("ballSize").value = 8;
+  document.getElementById("ballStroke").value = 2.4;
+  document.getElementById("aLabelSize").value = 27;
+  document.getElementById("bLabelSize").value = 27;
   document.getElementById("showGuideText").value = "no";
   document.getElementById("showGuideLine").value = "no";
   document.getElementById("showD").value = "yes";
