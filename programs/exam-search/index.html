@@ -11,18 +11,19 @@
 <body>
 
 <header>
-  <div class="brand">J&B 문제 검색</div>
-  <div class="badge">INDEX SEARCH</div>
+  <a href="../../index.html" class="home">J&B LAB</a>
+  <div class="brand">평가원 문제 검색</div>
+  <div class="badge">R2 INDEX</div>
 </header>
 
 <main>
   <section class="search-box">
-    <h1>평가원 / 교육청 문제 검색</h1>
+    <h1>문제 검색</h1>
     <p>예: 25 03 고2 지구과학Ⅰ 12번 / 26 수능 지구과학Ⅰ 13번</p>
 
     <div class="search-row">
-      <input id="searchInput" placeholder="검색어를 입력하세요" />
-      <button onclick="searchExam()">검색</button>
+      <input id="searchInput" placeholder="검색어를 입력하세요" autocomplete="off" />
+      <button id="searchBtn">검색</button>
     </div>
 
     <div id="parsed" class="parsed"></div>

@@ -1,13 +1,10 @@
 let DB = [];
 
 fetch("data/index.json")
-  .then(res => {
-    if (!res.ok) throw new Error("index.json 로드 실패");
-    return res.json();
-  })
+  .then(res => res.json())
   .then(data => {
     DB = data;
-    console.log("색인 로드 완료:", DB.length);
+    console.log("색인 로드 완료", DB.length);
   })
   .catch(err => {
     console.error(err);
@@ -17,58 +14,41 @@ fetch("data/index.json")
 const SUBJECT_CODE = {
   "물리학Ⅰ": "P",
   "물리학1": "P",
-  "물리Ⅰ": "P",
   "물리1": "P",
   "물리": "P",
 
   "화학Ⅰ": "C",
   "화학1": "C",
-  "화학Ⅰ": "C",
   "화학": "C",
 
   "생명과학Ⅰ": "B",
   "생명과학1": "B",
-  "생명Ⅰ": "B",
   "생명1": "B",
   "생명": "B",
 
   "지구과학Ⅰ": "G",
   "지구과학1": "G",
-  "지구Ⅰ": "G",
   "지구1": "G",
   "지구": "G"
 };
+
+function normalizeRoman(text) {
+  return text
+    .replace(/I/g, "Ⅰ")
+    .replace(/ⅰ/g, "Ⅰ")
+    .replace(/1/g, "1")
+    .trim();
+}
 
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
-function normalizeText(text) {
-  return text
-    .replace(/ⅰ/g, "Ⅰ")
-    .replace(/Ⅰ/g, "Ⅰ")
-    .replace(/I/g, "Ⅰ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function findSubjectCode(q) {
-  for (const key of Object.keys(SUBJECT_CODE)) {
-    if (q.includes(key)) {
-      return {
-        subjectName: key,
-        subjectCode: SUBJECT_CODE[key]
-      };
-    }
-  }
-
-  throw new Error("과목을 찾지 못했습니다.");
-}
-
 function parseQuery(raw) {
-  const q = normalizeText(raw);
+  let q = raw.trim().replace(/\s+/g, " ");
+  q = normalizeRoman(q);
 
-  const yearMatch = q.match(/(\d{2})/);
+  let yearMatch = q.match(/(\d{2})/);
   if (!yearMatch) throw new Error("연도를 찾지 못했습니다.");
 
   let year = Number(yearMatch[1]);
@@ -82,16 +62,27 @@ function parseQuery(raw) {
     month = Number(monthMatch[1]);
   }
 
-  const gradeMatch = q.match(/고\s*([123])/);
-  const grade = gradeMatch ? Number(gradeMatch[1]) : 3;
+  let gradeMatch = q.match(/고\s*([123])/);
+  let grade = gradeMatch ? Number(gradeMatch[1]) : 3;
 
-  const numberMatch = q.match(/(\d{1,2})\s*번/);
-  if (!numberMatch) throw new Error("문항 번호를 찾지 못했습니다.");
+  let numMatch = q.match(/(\d{1,2})\s*번/);
+  if (!numMatch) throw new Error("문항 번호를 찾지 못했습니다.");
+  let number = Number(numMatch[1]);
 
-  const number = Number(numberMatch[1]);
+  let subjectCode = "";
+  let subjectName = "";
 
-  const { subjectName, subjectCode } = findSubjectCode(q);
+  for (const key of Object.keys(SUBJECT_CODE)) {
+    if (q.includes(key)) {
+      subjectName = key;
+      subjectCode = SUBJECT_CODE[key];
+      break;
+    }
+  }
 
+  if (!subjectCode) throw new Error("과목을 찾지 못했습니다.");
+
+  // 고3 교육청 학년도 보정
   const localEduMonths = [3, 4, 5, 7, 10];
 
   let fileYear = year;
@@ -99,6 +90,8 @@ function parseQuery(raw) {
   if (grade === 3 && localEduMonths.includes(month)) {
     fileYear = year + 1;
   }
+
+  // 평가원 6, 9, 수능 11은 그대로
 
   const code =
     String(grade) +
@@ -131,40 +124,33 @@ function searchExam() {
   resultEl.classList.add("hidden");
   resultEl.innerHTML = "";
 
-  if (!input.trim()) {
-    parsedEl.innerHTML = "검색어를 입력하세요.";
-    return;
-  }
-
   let parsed;
 
   try {
     parsed = parseQuery(input);
-  } catch (err) {
-    parsedEl.innerHTML = `❌ ${err.message}`;
+  } catch (e) {
+    parsedEl.innerHTML = `❌ ${e.message}`;
     return;
   }
 
   parsedEl.innerHTML = `
     변환 코드: <b>${parsed.code}</b><br>
-    PDF 검색 키: <b>${parsed.pdfKey}</b><br>
-    적용 연도: <b>${pad2(parsed.fileYear)}</b>, 월: <b>${pad2(parsed.month)}</b>, 번호: <b>${pad2(parsed.number)}</b>
+    PDF 검색 키: <b>${parsed.pdfKey}</b>
   `;
 
   const item = DB.find(x => x.code === parsed.code);
 
-  resultEl.classList.remove("hidden");
-
   if (!item) {
+    resultEl.classList.remove("hidden");
     resultEl.innerHTML = `
       <h2>검색 결과 없음</h2>
-      <p><b>${parsed.code}</b>에 해당하는 이미지를 찾지 못했습니다.</p>
-      <div class="notice">
-        R2에 <b>images/${parsed.code}.png</b> 형태로 올라가 있는지 확인하세요.
-      </div>
+      <p><b>${parsed.code}</b> 파일을 찾지 못했습니다.</p>
+      <p>이미지 파일명이 <b>${parsed.code}.png</b> 형태인지 확인하세요.</p>
     `;
     return;
   }
+
+  resultEl.classList.remove("hidden");
 
   resultEl.innerHTML = `
     <h2>${parsed.raw}</h2>
@@ -187,8 +173,6 @@ function searchExam() {
     </div>
   `;
 }
-
-document.getElementById("searchBtn").addEventListener("click", searchExam);
 
 document.getElementById("searchInput").addEventListener("keydown", e => {
   if (e.key === "Enter") searchExam();
