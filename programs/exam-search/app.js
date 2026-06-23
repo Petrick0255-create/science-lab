@@ -77,6 +77,36 @@ function parseSearch(text){
 
   const subject = findSubject(q);
 
+    // 통합과학 예시문항 특별 규칙
+  if(q.includes("통합과학") && q.includes("예시문항")){
+    const exampleNumberMatch = q.match(/(\d{1,2})\s*번/);
+    if(!exampleNumberMatch) throw new Error("문항 번호를 찾지 못했습니다.");
+
+    const exampleNumber = Number(exampleNumberMatch[1]);
+
+    let specialPdfKey;
+
+    if(q.includes("예시문항(안)")){
+      specialPdfKey = "3T2409";
+    }else{
+      specialPdfKey = "3T2500";
+    }
+
+    const specialCode = specialPdfKey + pad2(exampleNumber);
+
+    const gradeFolder = "고3 기출";
+    const subjectFolder = "통합과학";
+
+    return {
+      raw: text,
+      code: specialCode,
+      pdfKey: specialPdfKey,
+      imagePath: encodeURI(`data/${gradeFolder}/${subjectFolder}/문제 이미지 파일/${specialCode}.png`),
+      problemPdfPath: encodeURI(`data/${gradeFolder}/${subjectFolder}/${specialPdfKey}.pdf`),
+      solutionPdfPath: encodeURI(`data/${gradeFolder}/${subjectFolder}/${specialPdfKey} 해설.pdf`)
+    };
+  }
+
   let fileYear = year;
 
   if(grade === 3 && [3, 4, 5, 7, 10].includes(month)){
