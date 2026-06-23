@@ -382,3 +382,15 @@ footer {
     display:none;
   }
 }
+
+.quick-title{
+  background:#111827;
+  color:white;
+
+  padding:10px;
+  border-radius:12px;
+
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+}
