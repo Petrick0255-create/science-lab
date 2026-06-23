@@ -1,5 +1,8 @@
 console.log("직접 경로 생성 app.js 로드됨");
 const SUBJECT_INFO = {
+  "통합과학": { code: "T", folder: "통합과학" },
+  "통과": { code: "T", folder: "통합과학" },
+
   "물리학Ⅰ": { code: "M", folder: "물리학" },
   "물리학1": { code: "M", folder: "물리학" },
   "물리": { code: "M", folder: "물리학" },
@@ -59,10 +62,10 @@ function parseSearch(text){
   if(q.includes("수능")){
     grade = 3; 
   }else{
-    const gradeMatch = q.match(/고\s*([23])/);
+    const gradeMatch = q.match(/고\s*([123])/);
 
     if(!gradeMatch){
-      throw new Error("고2 또는 고3을 찾지 못했습니다.");
+      throw new Error("고1, 고2 또는 고3을 찾지 못했습니다.");
     }
   
     grade = Number(gradeMatch[1]);
