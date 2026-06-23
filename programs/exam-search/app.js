@@ -1,3 +1,4 @@
+console.log("직접 경로 생성 app.js 로드됨");
 const SUBJECT_INFO = {
   "물리학Ⅰ": { code: "M", folder: "물리학" },
   "물리학1": { code: "M", folder: "물리학" },
