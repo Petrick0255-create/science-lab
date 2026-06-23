@@ -44,40 +44,9 @@ function findSubject(q){
 function parseSearch(text){
   const q = normalize(text);
 
-  const yearMatch = q.match(/(\d{2})/);
-  if(!yearMatch) throw new Error("연도를 찾지 못했습니다.");
-  const year = Number(yearMatch[1]);
-
-  let month;
-  if(q.includes("수능")){
-    month = 11;
-  }else{
-    const ym = q.match(/(\d{2})\s+(\d{1,2})/);
-    if(!ym) throw new Error("월을 찾지 못했습니다.");
-    month = Number(ym[2]);
-  }
-
-  let grade;
-
-  if(q.includes("수능")){
-    grade = 3; 
-  }else{
-    const gradeMatch = q.match(/고\s*([123])/);
-
-    if(!gradeMatch){
-      throw new Error("고1, 고2 또는 고3을 찾지 못했습니다.");
-    }
-  
-    grade = Number(gradeMatch[1]);
-  }
-
-  const numMatch = q.match(/(\d{1,2})\s*번/);
-  if(!numMatch) throw new Error("문항 번호를 찾지 못했습니다.");
-  const number = Number(numMatch[1]);
-
-  const subject = findSubject(q);
-
-    // 통합과학 예시문항 특별 규칙
+  // 통합과학 예시문항 특별 규칙
+  // 예: 28 수능 통합과학 예시문항 14번 → 3T250014
+  // 예: 통합과학 예시문항(안) 2번 → 3T240902
   if(q.includes("통합과학") && q.includes("예시문항")){
     const exampleNumberMatch = q.match(/(\d{1,2})\s*번/);
     if(!exampleNumberMatch) throw new Error("문항 번호를 찾지 못했습니다.");
@@ -106,6 +75,39 @@ function parseSearch(text){
       solutionPdfPath: encodeURI(`data/${gradeFolder}/${subjectFolder}/${specialPdfKey} 해설.pdf`)
     };
   }
+
+  const yearMatch = q.match(/(\d{2})/);
+  if(!yearMatch) throw new Error("연도를 찾지 못했습니다.");
+  const year = Number(yearMatch[1]);
+
+  let month;
+  if(q.includes("수능")){
+    month = 11;
+  }else{
+    const ym = q.match(/(\d{2})\s+(\d{1,2})/);
+    if(!ym) throw new Error("월을 찾지 못했습니다.");
+    month = Number(ym[2]);
+  }
+
+  let grade;
+
+  if(q.includes("수능")){
+    grade = 3;
+  }else{
+    const gradeMatch = q.match(/고\s*([123])/);
+
+    if(!gradeMatch){
+      throw new Error("고1, 고2 또는 고3을 찾지 못했습니다.");
+    }
+
+    grade = Number(gradeMatch[1]);
+  }
+
+  const numMatch = q.match(/(\d{1,2})\s*번/);
+  if(!numMatch) throw new Error("문항 번호를 찾지 못했습니다.");
+  const number = Number(numMatch[1]);
+
+  const subject = findSubject(q);
 
   let fileYear = year;
 
