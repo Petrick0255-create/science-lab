@@ -149,3 +149,16 @@ main{
   }
 
 }
+
+.home-btn{
+  color:white;
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:10px;
+  background:rgba(255,255,255,.15);
+  transition:.2s;
+}
+
+.home-btn:hover{
+  background:rgba(255,255,255,.25);
+}
