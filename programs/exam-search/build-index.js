@@ -1,74 +1,89 @@
 const fs = require("fs");
 const path = require("path");
 
-const R2_BASE_URL = "https://pub-fa71059b7bda45a2998e6c05a6a6212d.r2.dev";
+const ROOT_DIR = path.join(__dirname, "data");
+const OUT_FILE = path.join(ROOT_DIR, "index.json");
 
-const LOCAL_IMAGE_DIR = path.join(__dirname, "images");
-const LOCAL_PDF_DIR = path.join(__dirname, "pdf");
+function walk(dir) {
+  let results = [];
 
-const OUT_DIR = path.join(__dirname, "data");
-const OUT_FILE = path.join(OUT_DIR, "index.json");
+  if (!fs.existsSync(dir)) return results;
 
-function listFiles(dir) {
-  if (!fs.existsSync(dir)) {
-    console.warn(`폴더 없음: ${dir}`);
-    return [];
+  for (const item of fs.readdirSync(dir)) {
+    if (item.startsWith(".")) continue;
+
+    const fullPath = path.join(dir, item);
+    const stat = fs.statSync(fullPath);
+
+    if (stat.isDirectory()) {
+      results = results.concat(walk(fullPath));
+    } else {
+      results.push(fullPath);
+    }
   }
 
-  return fs.readdirSync(dir).filter(file => !file.startsWith("."));
+  return results;
 }
 
-function encodePath(folder, filename) {
-  return `${R2_BASE_URL}/${folder}/${encodeURIComponent(filename)}`;
+function toWebPath(fullPath) {
+  return path
+    .relative(__dirname, fullPath)
+    .replace(/\\/g, "/")
+    .split("/")
+    .map(part => encodeURIComponent(part))
+    .join("/");
 }
 
-const imageFiles = listFiles(LOCAL_IMAGE_DIR)
-  .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file));
+const files = walk(ROOT_DIR).filter(file => !file.endsWith("index.json"));
 
-const pdfFiles = listFiles(LOCAL_PDF_DIR)
-  .filter(file => /\.pdf$/i.test(file));
+const images = files
+  .filter(file => /\.(png|jpg|jpeg|webp)$/i.test(file))
+  .map(file => {
+    const name = path.basename(file);
+    const code = path.parse(name).name.toUpperCase();
 
-const pdfList = pdfFiles.map(file => {
-  const upper = file.toUpperCase();
-  const keyMatch = upper.match(/[123][PCBG]\d{4}/);
+    return {
+      code,
+      pdfKey: code.slice(0, 6),
+      imageName: name,
+      image: toWebPath(file)
+    };
+  });
+
+const pdfs = files
+  .filter(file => /\.pdf$/i.test(file))
+  .map(file => {
+    const name = path.basename(file);
+    const upper = name.toUpperCase();
+    const keyMatch = upper.match(/[23][MCBG]\d{4}/);
+
+    return {
+      name,
+      key: keyMatch ? keyMatch[0] : "",
+      type: name.includes("해설") ? "solution" : "problem",
+      url: toWebPath(file)
+    };
+  });
+
+const index = images.map(img => {
+  const problemPdf = pdfs.find(pdf => pdf.key === img.pdfKey && pdf.type === "problem");
+  const solutionPdf = pdfs.find(pdf => pdf.key === img.pdfKey && pdf.type === "solution");
 
   return {
-    name: file,
-    key: keyMatch ? keyMatch[0] : "",
-    type: file.includes("해설") ? "solution" : "problem",
-    url: encodePath("pdf", file)
-  };
-});
-
-const index = imageFiles.map(file => {
-  const code = path.parse(file).name.toUpperCase();
-  const pdfKey = code.slice(0, 6);
-
-  const problemPdf = pdfList.find(pdf => pdf.key === pdfKey && pdf.type === "problem");
-  const solutionPdf = pdfList.find(pdf => pdf.key === pdfKey && pdf.type === "solution");
-
-  return {
-    code,
-    pdfKey,
-    imageName: file,
-    image: encodePath("images", file),
-
+    code: img.code,
+    pdfKey: img.pdfKey,
+    imageName: img.imageName,
+    image: img.image,
     problemPdf: problemPdf ? problemPdf.url : "",
     problemPdfName: problemPdf ? problemPdf.name : "",
-
     solutionPdf: solutionPdf ? solutionPdf.url : "",
     solutionPdfName: solutionPdf ? solutionPdf.name : ""
   };
 });
 
-if (!fs.existsSync(OUT_DIR)) {
-  fs.mkdirSync(OUT_DIR);
-}
-
 fs.writeFileSync(OUT_FILE, JSON.stringify(index, null, 2), "utf-8");
 
 console.log("색인 생성 완료");
-console.log(`이미지: ${imageFiles.length}개`);
-console.log(`PDF: ${pdfFiles.length}개`);
+console.log(`이미지: ${images.length}개`);
+console.log(`PDF: ${pdfs.length}개`);
 console.log(`색인: ${index.length}개`);
-console.log(`저장 위치: ${OUT_FILE}`);
