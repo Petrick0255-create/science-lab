@@ -382,17 +382,32 @@ function buildDivergent() {
   createConvectionCell(-3, 0, false);
   createConvectionCell(3, 0, true);
 
+  const left = addBox(-3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
+  const right = addBox(3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
+
   const leftSurface = createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
   const rightSurface = createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
 
   left.rotation.z = -0.035;
   right.rotation.z = 0.035;
 
-  plateObjects.push({ mesh: left, surface: leftSurface, baseX: -3.65, dirX: -1, kind: "divergent" });
-  plateObjects.push({ mesh: right, surface: rightSurface, baseX: 3.65, dirX: 1, kind: "divergent" });
+  plateObjects.push({
+    mesh: left,
+    surface: leftSurface,
+    baseX: -3.65,
+    surfaceBaseX: -3.65,
+    dirX: -1,
+    kind: "divergent"
+  });
 
-  createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
-  createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
+  plateObjects.push({
+    mesh: right,
+    surface: rightSurface,
+    baseX: 3.65,
+    surfaceBaseX: 3.65,
+    dirX: 1,
+    kind: "divergent"
+  });
 
   const ridge = addCone(0, 0.5, 0, 1.2, 1.5, materials.oceanPlateDark);
   ridge.rotation.z = Math.PI;
@@ -407,25 +422,8 @@ function buildDivergent() {
   for (let i = 0; i < 13; i++) {
     const offset = i * 0.48;
 
-    const leftBand = addBox(
-      -0.32 - offset,
-      0.39,
-      0,
-      0.14,
-      0.07,
-      6.85,
-      i % 2 ? materials.oldCrust : materials.youngCrust
-    );
-
-    const rightBand = addBox(
-      0.32 + offset,
-      0.39,
-      0,
-      0.14,
-      0.07,
-      6.85,
-      i % 2 ? materials.oldCrust : materials.youngCrust
-    );
+    const leftBand = addBox(-0.32 - offset, 0.39, 0, 0.14, 0.07, 6.85, i % 2 ? materials.oldCrust : materials.youngCrust);
+    const rightBand = addBox(0.32 + offset, 0.39, 0, 0.14, 0.07, 6.85, i % 2 ? materials.oldCrust : materials.youngCrust);
 
     crustBands.push({ mesh: leftBand, side: -1, offset });
     crustBands.push({ mesh: rightBand, side: 1, offset });
@@ -495,24 +493,61 @@ function buildTransform() {
   clearScene();
   addOceanAndMantle();
 
-  // 보존형: 경계와 평행하게 서로 반대 방향 이동
   createConvectionCell(-3, -1.8, false);
   createConvectionCell(3, 1.8, false);
 
-  const a = addBox(-2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlate);
-  const b = addBox(2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlateDark);
+  const a = addBox(
+    -2.95, -0.05, 0,
+    5.5, 0.6, 6.5,
+    materials.oceanPlate
+  );
 
-  createTerrainSurface(-2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
-  createTerrainSurface(2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
+  const b = addBox(
+    2.95, -0.05, 0,
+    5.5, 0.6, 6.5,
+    materials.oceanPlateDark
+  );
 
-  // 왼쪽 판: 아래쪽(-Z), 오른쪽 판: 위쪽(+Z)
-  plateObjects.push({ mesh: a, baseZ: 0, dirZ: -1, kind: "transform" });
-  plateObjects.push({ mesh: b, baseZ: 0, dirZ: 1, kind: "transform" });
+  const surfaceA = createTerrainSurface(
+    -2.95, 0.35, 0,
+    5.4, 6.4,
+    materials.oceanDeep,
+    0.08,
+    0
+  );
 
-  const fault = addBox(0, 0.44, 0, 0.12, 0.12, 6.8, materials.dark);
+  const surfaceB = createTerrainSurface(
+    2.95, 0.35, 0,
+    5.4, 6.4,
+    materials.oceanDeep,
+    0.08,
+    0
+  );
+
+  plateObjects.push({
+    mesh: a,
+    surface: surfaceA,
+    baseZ: 0,
+    dirZ: -1,
+    kind: "transform"
+  });
+
+  plateObjects.push({
+    mesh: b,
+    surface: surfaceB,
+    baseZ: 0,
+    dirZ: 1,
+    kind: "transform"
+  });
+
+  const fault = addBox(
+    0, 0.44, 0,
+    0.12, 0.12, 6.8,
+    materials.dark
+  );
+
   fault.rotation.y = 0.05;
 
-  // 화살표도 판 이동 방향과 일치
   addArrow(
     new THREE.Vector3(-3.8, 1.2, 1.4),
     new THREE.Vector3(-3.8, 1.2, -2.6)
@@ -524,7 +559,8 @@ function buildTransform() {
   );
 
   infoTitle.textContent = "보존형 경계";
-  infoText.textContent = "두 판이 경계와 평행한 방향으로 서로 어긋나게 이동하며, 단층을 따라 지진이 발생한다.";
+  infoText.textContent =
+    "두 판이 경계와 평행한 방향으로 서로 어긋나게 이동하며, 단층을 따라 지진이 발생한다.";
 }
 
 function rebuild() {
@@ -618,33 +654,50 @@ function animate() {
 
   plateObjects.forEach(p => {
     if (p.kind === "divergent") {
-      p.mesh.position.x = p.baseX + smooth * 0.8 * p.dirX;
-      p.mesh.position.x = x;
-      if (p.surface) p.surface.position.x = x;
-    }
+      const x = p.baseX + smooth * 0.8 * p.dirX;
 
-    if (p.kind === "subductingPlate") {
-      p.mesh.position.x = p.baseX + smooth * 0.95 * p.dirX;
-      p.mesh.position.y = p.baseY + smooth * 0.16 * p.dirY;
-    }
-
-    if (p.kind === "continent") {
-      const x = p.baseX + smooth * 0.35 * p.dirX;
       p.mesh.position.x = x;
 
       if (p.surface) {
-        p.surface.position.x = p.surfaceBaseX + smooth * 0.35 * p.dirX;
+        p.surface.position.x =
+          p.surfaceBaseX + smooth * 0.8 * p.dirX;
+      }
+    }
+
+    if (p.kind === "subductingPlate") {
+      p.mesh.position.x =
+        p.baseX + smooth * 0.95 * p.dirX;
+
+      p.mesh.position.y =
+        p.baseY + smooth * 0.16 * p.dirY;
+    }
+
+    if (p.kind === "continent") {
+      const x =
+        p.baseX + smooth * 0.35 * p.dirX;
+
+      p.mesh.position.x = x;
+
+      if (p.surface) {
+        p.surface.position.x =
+          p.surfaceBaseX + smooth * 0.35 * p.dirX;
       }
     }
 
     if (p.kind === "slab") {
-      p.mesh.position.x = p.baseX + smooth * 0.75 * p.dirX;
-      p.mesh.position.y = p.baseY + smooth * 0.65 * p.dirY;
+      p.mesh.position.x =
+        p.baseX + smooth * 0.75 * p.dirX;
+
+      p.mesh.position.y =
+        p.baseY + smooth * 0.65 * p.dirY;
     }
 
     if (p.kind === "transform") {
-      const slide = ((time * 0.75) % 2) - 1;
-      const z = p.baseZ + slide * 1.25 * p.dirZ;
+      const slide =
+        ((time * 0.75) % 2) - 1;
+
+      const z =
+        p.baseZ + slide * 1.25 * p.dirZ;
 
       p.mesh.position.z = z;
 
@@ -655,41 +708,63 @@ function animate() {
   });
 
   crustBands.forEach(b => {
-    const d = (b.offset + smooth * 1.2) % 5.6;
-    b.mesh.position.x = b.side * (0.25 + d);
-    b.mesh.scale.x = 1 + Math.max(0, 0.5 - d) * 1.5;
+    const d =
+      (b.offset + smooth * 1.2) % 5.6;
+
+    b.mesh.position.x =
+      b.side * (0.25 + d);
+
+    b.mesh.scale.x =
+      1 + Math.max(0, 0.5 - d) * 1.5;
   });
 
   magmaObjects.forEach((m, i) => {
     m.visible = showMagma.checked;
-    m.scale.y = 1 + Math.sin(time * 4 + i) * 0.11 * magmaPower;
+
+    m.scale.y =
+      1 + Math.sin(time * 4 + i) * 0.11 * magmaPower;
   });
 
   convectionParticles.forEach(p => {
     const dir = p.reverse ? -1 : 1;
     const a = time * 2.2 * dir + p.phase;
 
-    p.mesh.position.x = p.cx + Math.cos(a) * 1.45;
-    p.mesh.position.y = -1.05 + Math.sin(a) * 0.75;
+    p.mesh.position.x =
+      p.cx + Math.cos(a) * 1.45;
+
+    p.mesh.position.y =
+      -1.05 + Math.sin(a) * 0.75;
+
     p.mesh.position.z = p.cz;
-  
-    const scale = 1.8 + Math.sin(a) * 0.35;
+
+    const scale =
+      1.8 + Math.sin(a) * 0.35;
+
     p.mesh.scale.setScalar(scale);
   });
 
   smokeObjects.forEach((s, i) => {
     s.mesh.visible = showMagma.checked;
-    s.mesh.position.y = s.baseY + Math.sin(time * 2 + s.phase) * 0.08;
-    s.mesh.scale.setScalar(1 + Math.sin(time * 2 + i) * 0.08);
+
+    s.mesh.position.y =
+      s.baseY + Math.sin(time * 2 + s.phase) * 0.08;
+
+    s.mesh.scale.setScalar(
+      1 + Math.sin(time * 2 + i) * 0.08
+    );
   });
 
   waveObjects.forEach((w, i) => {
-    w.position.y = 0.62 + Math.sin(time * 2 + i) * 0.015;
+    w.position.y =
+      0.62 + Math.sin(time * 2 + i) * 0.015;
   });
 
   benioffDots.forEach((dot, i) => {
     dot.visible = showQuakes.checked;
-    const pulse = 0.8 + Math.sin(time * 6 + i * 0.8) * 0.35;
+
+    const pulse =
+      0.8 + Math.sin(time * 6 + i * 0.8) * 0.35;
+
     dot.scale.setScalar(pulse);
   });
 
@@ -697,24 +772,44 @@ function animate() {
     a.visible = showArrows.checked;
   });
 
-  if (showQuakes.checked && Math.random() < Number(quakeSlider.value) / 6000) {
+  if (
+    showQuakes.checked &&
+    Math.random() < Number(quakeSlider.value) / 6000
+  ) {
     if (boundaryType.value === "convergent") {
       const n = Math.random();
-      addQuake(-0.4 + n * 2.6, 0.05 - n * 1.3, -2.5 + Math.random() * 5);
+
+      addQuake(
+        -0.4 + n * 2.6,
+        0.05 - n * 1.3,
+        -2.5 + Math.random() * 5
+      );
     }
 
     if (boundaryType.value === "transform") {
-      addQuake(0, 0.7, -2.8 + Math.random() * 5.6);
+      addQuake(
+        0,
+        0.7,
+        -2.8 + Math.random() * 5.6
+      );
     }
 
     if (boundaryType.value === "divergent") {
-      addQuake((Math.random() - 0.5) * 1.2, 0.65, -2.6 + Math.random() * 5.2);
+      addQuake(
+        (Math.random() - 0.5) * 1.2,
+        0.65,
+        -2.6 + Math.random() * 5.2
+      );
     }
   }
 
   quakes.forEach(q => {
     q.life -= 0.025;
-    q.mesh.scale.setScalar(1 + (1 - q.life) * 1.4);
+
+    q.mesh.scale.setScalar(
+      1 + (1 - q.life) * 1.4
+    );
+
     q.mesh.material.opacity = q.life;
   });
 
@@ -724,6 +819,7 @@ function animate() {
       q.mesh.geometry.dispose();
       return false;
     }
+
     return true;
   });
 
