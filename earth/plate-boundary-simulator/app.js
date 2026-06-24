@@ -372,6 +372,8 @@ function rebuild() {
   if (boundaryType.value === "divergent") buildDivergent();
   if (boundaryType.value === "convergent") buildConvergent();
   if (boundaryType.value === "transform") buildTransform();
+
+  updateExamples(boundaryType.value);
 }
 
 function addQuake(x, y, z) {
@@ -487,3 +489,94 @@ document.getElementById("captureBtn").addEventListener("click", () => {
 
 rebuild();
 animate();
+
+const exampleList = document.getElementById("exampleList");
+const mapMarkers = document.getElementById("mapMarkers");
+
+function updateExamples(type) {
+  const data = {
+    divergent: {
+      examples: [
+        {
+          name: "대서양 중앙 해령",
+          desc: "해양판-해양판 발산형 경계. 해령이 발달하고 새로운 해양 지각이 생성된다."
+        },
+        {
+          name: "동태평양 해령",
+          desc: "해양판-해양판 발산형 경계. 해령과 열곡, 지진, 화산 활동이 나타난다."
+        },
+        {
+          name: "동아프리카 열곡대",
+          desc: "대륙판-대륙판 발산형 경계. 대륙이 갈라지며 열곡대가 형성된다."
+        }
+      ],
+      markers: [
+        { x: 47, y: 48 },
+        { x: 25, y: 62 },
+        { x: 57, y: 58 }
+      ]
+    },
+
+    convergent: {
+      examples: [
+        {
+          name: "페루-칠레 해구",
+          desc: "해양판-대륙판 섭입형 경계. 해구, 습곡 산맥, 지진, 화산 활동이 나타난다."
+        },
+        {
+          name: "안데스 산맥",
+          desc: "나스카판이 남아메리카판 아래로 섭입하며 형성된 습곡 산맥이다."
+        },
+        {
+          name: "알류산 열도",
+          desc: "해양판-해양판 섭입형 경계. 해구와 호상 열도가 발달한다."
+        },
+        {
+          name: "마리아나 해구",
+          desc: "해양판-해양판 섭입형 경계. 깊은 해구와 호상 열도가 나타난다."
+        },
+        {
+          name: "히말라야 산맥",
+          desc: "대륙판-대륙판 충돌형 경계. 습곡 산맥이 발달하고 지진이 발생한다."
+        },
+        {
+          name: "알프스 산맥",
+          desc: "대륙판-대륙판 충돌형 경계. 판의 충돌로 습곡 산맥이 형성되었다."
+        }
+      ],
+      markers: [
+        { x: 29, y: 72 },
+        { x: 31, y: 73 },
+        { x: 75, y: 32 },
+        { x: 83, y: 54 },
+        { x: 66, y: 47 },
+        { x: 53, y: 43 }
+      ]
+    },
+
+    transform: {
+      examples: [
+        {
+          name: "산안드레아스 단층",
+          desc: "보존형 경계. 두 판이 서로 어긋나게 이동하며 변환 단층과 지진이 나타난다."
+        }
+      ],
+      markers: [
+        { x: 22, y: 43 }
+      ]
+    }
+  };
+
+  const selected = data[type];
+
+  exampleList.innerHTML = selected.examples.map(e => `
+    <div class="example-item">
+      <div class="example-name">${e.name}</div>
+      <div class="example-desc">${e.desc}</div>
+    </div>
+  `).join("");
+
+  mapMarkers.innerHTML = selected.markers.map(m => `
+    <div class="map-marker" style="left:${m.x}%; top:${m.y}%;"></div>
+  `).join("");
+}
