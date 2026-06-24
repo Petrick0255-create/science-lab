@@ -8,6 +8,10 @@ const speedSlider = document.getElementById("speed");
 const magmaSlider = document.getElementById("magma");
 const quakeSlider = document.getElementById("quake");
 
+const showPlates = document.getElementById("showPlates");
+const showMantle = document.getElementById("showMantle");
+const showBoundary = document.getElementById("showBoundary");
+
 const showArrows = document.getElementById("showArrows");
 const showQuakes = document.getElementById("showQuakes");
 const showMagma = document.getElementById("showMagma");
@@ -155,6 +159,9 @@ let benioffDots = [];
 let smokeObjects = [];
 let waveObjects = [];
 let convectionParticles = [];
+let plateMeshes = [];
+let mantleMeshes = [];
+let boundaryMeshes = [];
 
 function clearScene() {
   while (mainGroup.children.length) {
@@ -173,6 +180,9 @@ function clearScene() {
   smokeObjects = [];
   waveObjects = [];
   convectionParticles = [];
+  plateMeshes = [];
+  mantleMeshes = [];
+  boundaryMeshes = [];
 }
 
 function addBox(x, y, z, sx, sy, sz, mat) {
@@ -303,10 +313,25 @@ function createTerrainSurface(x, y, z, width, depth, mat, rough = 0.25, lift = 0
 }
 
 function addOceanAndMantle() {
-  addBox(0, -2.05, 0, 20, 2.5, 10, materials.mantle);
-  addBox(0, -3.15, 0, 20, 0.45, 10, materials.mantleDark);
+
+  const mantle = addBox(
+    0, -2.05, 0,
+    20, 2.5, 10,
+    materials.mantle
+  );
+
+  mantleMeshes.push(mantle);
+
+  const mantleDark = addBox(
+    0, -3.15, 0,
+    20, 0.45, 10,
+    materials.mantleDark
+  );
+
+  mantleMeshes.push(mantleDark);
 
   for (let i = 0; i < 36; i++) {
+
     const blob = addCylinder(
       -9 + i * 0.55,
       -1.15,
@@ -318,6 +343,8 @@ function addOceanAndMantle() {
 
     blob.scale.x = 2.2;
     blob.scale.z = 0.7;
+
+    mantleMeshes.push(blob);
     magmaObjects.push(blob);
   }
 }
@@ -392,6 +419,8 @@ function buildDivergent() {
   const leftSurface = createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
   const rightSurface = createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
 
+  plateMeshes.push(left, right, leftSurface, rightSurface);
+
   left.rotation.z = -0.035;
   right.rotation.z = 0.035;
 
@@ -421,23 +450,55 @@ function buildDivergent() {
   plume.rotation.z = Math.PI;
   magmaObjects.push(plume);
 
-  makeMagmaColumn(0, 0, 2.5);
+  const magmaColumn = makeMagmaColumn(0, 0, 2.5);
+
+  boundaryMeshes.push(ridge, plume);
+  boundaryMeshes.push(magmaColumn.column, magmaColumn.core, magmaColumn.glow);
 
   for (let i = 0; i < 13; i++) {
     const offset = i * 0.48;
 
-    const leftBand = addBox(-0.32 - offset, 0.39, 0, 0.14, 0.07, 6.85, i % 2 ? materials.oldCrust : materials.youngCrust);
-    const rightBand = addBox(0.32 + offset, 0.39, 0, 0.14, 0.07, 6.85, i % 2 ? materials.oldCrust : materials.youngCrust);
+    const leftBand = addBox(
+      -0.32 - offset,
+      0.39,
+      0,
+      0.14,
+      0.07,
+      6.85,
+      i % 2 ? materials.oldCrust : materials.youngCrust
+    );
+
+    const rightBand = addBox(
+      0.32 + offset,
+      0.39,
+      0,
+      0.14,
+      0.07,
+      6.85,
+      i % 2 ? materials.oldCrust : materials.youngCrust
+    );
+
+    plateMeshes.push(leftBand, rightBand);
 
     crustBands.push({ mesh: leftBand, side: -1, offset });
     crustBands.push({ mesh: rightBand, side: 1, offset });
   }
 
-  addArrow(new THREE.Vector3(-0.8, 1.45, 0), new THREE.Vector3(-3.8, 1.45, 0));
-  addArrow(new THREE.Vector3(0.8, 1.45, 0), new THREE.Vector3(3.8, 1.45, 0));
+  const arrow1 = addArrow(
+    new THREE.Vector3(-0.8, 1.45, 0),
+    new THREE.Vector3(-3.8, 1.45, 0)
+  );
+
+  const arrow2 = addArrow(
+    new THREE.Vector3(0.8, 1.45, 0),
+    new THREE.Vector3(3.8, 1.45, 0)
+  );
+
+  boundaryMeshes.push(arrow1, arrow2);
 
   infoTitle.textContent = "발산형 경계";
-  infoText.textContent = "해령에서 마그마가 상승하고 새로운 해양 지각이 생성되어 양쪽으로 이동한다.";
+  infoText.textContent =
+    "해령에서 마그마가 상승하고 새로운 해양 지각이 생성되어 양쪽으로 이동한다.";
 }
 
 function buildConvergent() {
@@ -468,6 +529,8 @@ function buildConvergent() {
     0.24,
     0.05
   );
+
+  plateMeshes.push(oceanPlate, continent, continentSurface);
 
   addMountainRange(2.4, 6.3, -1.8, 9);
 
@@ -503,6 +566,8 @@ function buildConvergent() {
 
     part.rotation.z = -0.22 - t * 0.65;
 
+    boundaryMeshes.push(part);
+
     plateObjects.push({
       mesh: part,
       baseX: x,
@@ -520,14 +585,27 @@ function buildConvergent() {
   );
 
   trench.rotation.z = -0.08;
+  boundaryMeshes.push(trench);
 
-  makeVolcano(2.8, -1.4, 1.0);
-  makeVolcano(3.8, -0.2, 1.15);
-  makeVolcano(5.0, 1.4, 0.9);
+  const volcano1 = makeVolcano(2.8, -1.4, 1.0);
+  const volcano2 = makeVolcano(3.8, -0.2, 1.15);
+  const volcano3 = makeVolcano(5.0, 1.4, 0.9);
 
-  makeMagmaColumn(2.8, -1.4, 2.7);
-  makeMagmaColumn(3.8, -0.2, 2.9);
-  makeMagmaColumn(5.0, 1.4, 2.4);
+  boundaryMeshes.push(
+    volcano1.base, volcano1.side, volcano1.crater, volcano1.lava,
+    volcano2.base, volcano2.side, volcano2.crater, volcano2.lava,
+    volcano3.base, volcano3.side, volcano3.crater, volcano3.lava
+  );
+
+  const magma1 = makeMagmaColumn(2.8, -1.4, 2.7);
+  const magma2 = makeMagmaColumn(3.8, -0.2, 2.9);
+  const magma3 = makeMagmaColumn(5.0, 1.4, 2.4);
+
+  boundaryMeshes.push(
+    magma1.column, magma1.core, magma1.glow,
+    magma2.column, magma2.core, magma2.glow,
+    magma3.column, magma3.core, magma3.glow
+  );
 
   for (let i = 0; i < 18; i++) {
     const t = i / 17;
@@ -545,17 +623,20 @@ function buildConvergent() {
 
     mainGroup.add(dot);
     benioffDots.push(dot);
+    boundaryMeshes.push(dot);
   }
 
-  addArrow(
+  const arrow1 = addArrow(
     new THREE.Vector3(-6.1, 1.25, 0),
     new THREE.Vector3(-3.1, 1.25, 0)
   );
 
-  addArrow(
+  const arrow2 = addArrow(
     new THREE.Vector3(6.2, 1.25, 0),
     new THREE.Vector3(3.4, 1.25, 0)
   );
+
+  boundaryMeshes.push(arrow1, arrow2);
 
   infoTitle.textContent = "수렴형 경계";
   infoText.textContent =
@@ -594,6 +675,8 @@ function buildTransform() {
     0
   );
 
+  plateMeshes.push(a, b, surfaceA, surfaceB);
+
   plateObjects.push({
     mesh: a,
     surface: surfaceA,
@@ -617,16 +700,19 @@ function buildTransform() {
   );
 
   fault.rotation.y = 0.05;
+  boundaryMeshes.push(fault);
 
-  addArrow(
+  const arrow1 = addArrow(
     new THREE.Vector3(-3.8, 1.2, 1.4),
     new THREE.Vector3(-3.8, 1.2, -2.6)
   );
 
-  addArrow(
+  const arrow2 = addArrow(
     new THREE.Vector3(3.8, 1.2, -1.4),
     new THREE.Vector3(3.8, 1.2, 2.6)
   );
+
+  boundaryMeshes.push(arrow1, arrow2);
 
   infoTitle.textContent = "보존형 경계";
   infoText.textContent =
@@ -894,6 +980,17 @@ function animate() {
   });
 
   controls.update();
+    plateMeshes.forEach(m => {
+    m.visible = showPlates.checked;
+  });
+
+  mantleMeshes.forEach(m => {
+    m.visible = showMantle.checked;
+  });
+ 
+  boundaryMeshes.forEach(m => {
+    m.visible = showBoundary.checked;
+  });
   renderer.render(scene, camera);
 }
 
