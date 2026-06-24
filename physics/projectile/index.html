@@ -258,22 +258,22 @@ function build(){
 
 function makeData(s){
   const arr = [];
-  const totalTime = Math.sqrt(2*s.h/s.g);
+  const totalTime = Math.sqrt(2 * s.h / s.g);
 
-  let n = 0;
-  while(true){
-    const t = n * s.dt;
+  // 영상 재생용 프레임 수
+  // 값이 클수록 부드럽고, 작을수록 빠르게 넘어감
+  const frameCount = 30;
+
+  for(let i = 0; i <= frameCount; i++){
+    const t = totalTime * i / frameCount;
     const y = 0.5 * s.g * t * t;
 
-    if(y >= s.h - 1e-9) break;
-
+    // 땅을 넘지 않도록 보정
     arr.push({
-      t:t,
-      x:s.v*t,
-      y:y
+      t: t,
+      x: s.v * t,
+      y: Math.min(y, s.h)
     });
-
-    n++;
   }
 
   return arr;
@@ -566,7 +566,7 @@ function play(){
     }
 
     draw();
-  }, 180);
+  }, 120);
 }
 
 function stop(){
