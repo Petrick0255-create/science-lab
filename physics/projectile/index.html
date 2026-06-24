@@ -485,10 +485,10 @@ function drawPoints(start, end, x0, y0, cell, s){
   ctx.textAlign="center";
 
   ctx.font=`${s.aLabelSize}px serif`;
-  ctx.fillText("A", aX, y0-10);
+  ctx.fillText("A", aX, y0-20);
 
   ctx.font=`${s.bLabelSize}px serif`;
-  ctx.fillText("B", bX0, y0-10);
+  ctx.fillText("B", bX0, y0-20);
 
   for(let i=start;i<=end;i++){
     if(i % s.showEvery !== 0 && i !== frame) continue;
