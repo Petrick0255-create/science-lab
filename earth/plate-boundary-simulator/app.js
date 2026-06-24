@@ -106,10 +106,14 @@ const materials = {
   mantle: new THREE.MeshStandardMaterial({
     color: 0xf97316,
     roughness: 0.75
+    transparent: true,
+    opacity: 0.72
   }),
   mantleDark: new THREE.MeshStandardMaterial({
     color: 0x8b2f12,
     roughness: 0.9
+    transparent: true,
+    opacity: 0.8
   }),
   magma: new THREE.MeshStandardMaterial({
     color: 0xff3b18,
@@ -561,9 +565,6 @@ function buildConvergent() {
 function buildTransform() {
   clearScene();
   addOceanAndMantle();
-
-  createConvectionCell(-3, -1.8, false);
-  createConvectionCell(3, 1.8, false);
 
   const a = addBox(
     -2.95, -0.05, 0,
