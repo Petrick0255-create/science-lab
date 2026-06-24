@@ -345,6 +345,18 @@ function draw(){
   updateInfo();
 }
 
+function drawAnimationFrame(){
+  const oldMode = document.getElementById("viewMode").value;
+
+  // 영상 재생 중에는 전체 점 말고 현재 점만 표시
+  document.getElementById("viewMode").value = "current";
+
+  draw();
+
+  // 재생 끝나고 기존 선택값 복구
+  document.getElementById("viewMode").value = oldMode;
+}
+
 function drawGrid(x0, y0, cols, rows, cell, s){
   ctx.strokeStyle = "#b8bec8";
   ctx.lineWidth = 1;
@@ -554,18 +566,25 @@ function drawBall(x, y, style){
 }
 
 function play(){
-  if(!data.length) build();
   stop();
 
+  const s = getInputs();
+  data = makeData(s);
+
+  if(!data.length) return;
+
+  frame = 0;
+
   timer = setInterval(()=>{
+    drawAnimationFrame();
+
     frame++;
 
     if(frame >= data.length){
-      frame = data.length-1;
       stop();
+      frame = data.length - 1;
+      drawAnimationFrame();
     }
-
-    draw();
   }, 120);
 }
 
