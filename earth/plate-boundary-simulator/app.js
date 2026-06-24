@@ -321,7 +321,6 @@ function addOceanAndMantle() {
   createConvectionCell(-1.7, 1.6, true);
   createConvectionCell(1.7, -1.6, false);
   createConvectionCell(5, 1.8, true);
-
 }
 
 function makeMagmaColumn(x, z, height = 2.7) {
