@@ -308,40 +308,44 @@ header{
   position:relative;
   margin-top:18px;
   background:#f8fafc;
-  border-radius:16px;
-  padding:12px;
+  border-radius:14px;
+  padding:10px;
   box-shadow:inset 0 0 0 1px #e5e7eb;
 }
 
 .map-title{
-  font-size:13px;
+  font-size:12px;
   font-weight:800;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 
 .world-map-img{
   display:block;
   width:100%;
-  border-radius:12px;
+  max-height:130px;
+  object-fit:cover;
+  object-position:center;
+  border-radius:10px;
 }
 
 #mapMarkers{
   position:absolute;
-  left:12px;
-  right:12px;
-  top:37px;
-  bottom:12px;
+  left:10px;
+  right:10px;
+  top:34px;
+  height:130px;
   pointer-events:none;
+  overflow:hidden;
 }
 
 .map-marker{
   position:absolute;
-  width:11px;
-  height:11px;
+  width:9px;
+  height:9px;
   background:#ef4444;
   border:2px solid white;
   border-radius:50%;
-  box-shadow:0 0 0 4px rgba(239,68,68,.25);
+  box-shadow:0 0 0 3px rgba(239,68,68,.25);
   transform:translate(-50%,-50%);
 }
 
