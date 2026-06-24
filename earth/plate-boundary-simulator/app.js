@@ -14,11 +14,13 @@ const showMagma = document.getElementById("showMagma");
 
 const infoTitle = document.getElementById("infoTitle");
 const infoText = document.getElementById("infoText");
+
 const exampleList = document.getElementById("exampleList");
 const mapMarkers = document.getElementById("mapMarkers");
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdff6ff);
+scene.fog = new THREE.Fog(0xdff6ff, 16, 34);
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -29,6 +31,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(canvas.width, canvas.height, false);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -42,72 +45,99 @@ camera.lookAt(0, 0, 0);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.target.set(0, 0, 0);
-
 controls.enableZoom = false;
 controls.enablePan = false;
-
-const light = new THREE.DirectionalLight(0xffffff, 2.4);
-light.position.set(6, 12, 8);
-light.castShadow = true;
-scene.add(light);
-
-scene.add(new THREE.AmbientLight(0xffffff, 1.25));
+controls.target.set(0, 0, 0);
 
 const mainGroup = new THREE.Group();
 scene.add(mainGroup);
 
+const sun = new THREE.DirectionalLight(0xffffff, 2.6);
+sun.position.set(6, 12, 8);
+sun.castShadow = true;
+scene.add(sun);
+
+scene.add(new THREE.AmbientLight(0xffffff, 1.15));
+
 const materials = {
   ocean: new THREE.MeshStandardMaterial({
-    color: 0x1e9be0,
+    color: 0x168fd3,
     transparent: true,
-    opacity: 0.58
+    opacity: 0.62,
+    roughness: 0.25,
+    metalness: 0.05
+  }),
+  oceanDeep: new THREE.MeshStandardMaterial({
+    color: 0x0b4f78,
+    roughness: 0.8
+  }),
+  oceanPlate: new THREE.MeshStandardMaterial({
+    color: 0x4f7488,
+    roughness: 0.85
+  }),
+  oceanPlateDark: new THREE.MeshStandardMaterial({
+    color: 0x273f4d,
+    roughness: 0.9
+  }),
+  youngCrust: new THREE.MeshStandardMaterial({
+    color: 0x8edcff,
+    roughness: 0.45
+  }),
+  oldCrust: new THREE.MeshStandardMaterial({
+    color: 0x27495d,
+    roughness: 0.9
+  }),
+  continent: new THREE.MeshStandardMaterial({
+    color: 0x9b7a4b,
+    roughness: 0.9
+  }),
+  grass: new THREE.MeshStandardMaterial({
+    color: 0x5f8f4e,
+    roughness: 0.9
+  }),
+  mountain: new THREE.MeshStandardMaterial({
+    color: 0x6d604c,
+    roughness: 0.95
+  }),
+  snow: new THREE.MeshStandardMaterial({
+    color: 0xf5f7fa,
+    roughness: 0.55
   }),
   mantle: new THREE.MeshStandardMaterial({
     color: 0xf97316,
-    roughness: 0.7
-  }),
-  oceanPlate: new THREE.MeshStandardMaterial({
-    color: 0x5f7f95,
     roughness: 0.75
   }),
-  youngCrust: new THREE.MeshStandardMaterial({
-    color: 0x86d1ff,
-    roughness: 0.5
-  }),
-  oldCrust: new THREE.MeshStandardMaterial({
-    color: 0x36576a,
-    roughness: 0.85
-  }),
-  slab: new THREE.MeshStandardMaterial({
-    color: 0x354f60,
-    roughness: 0.85
-  }),
-  continent: new THREE.MeshStandardMaterial({
-    color: 0xb88a55,
-    roughness: 0.85
-  }),
-  volcano: new THREE.MeshStandardMaterial({
-    color: 0x5a351f,
-    roughness: 0.95
+  mantleDark: new THREE.MeshStandardMaterial({
+    color: 0x8b2f12,
+    roughness: 0.9
   }),
   magma: new THREE.MeshStandardMaterial({
-    color: 0xff2d18,
-    emissive: 0xff2200,
-    emissiveIntensity: 2.2
+    color: 0xff3b18,
+    emissive: 0xff2600,
+    emissiveIntensity: 2.4
   }),
   magmaBright: new THREE.MeshStandardMaterial({
     color: 0xfff176,
     emissive: 0xff7a00,
-    emissiveIntensity: 2.8
+    emissiveIntensity: 3.2
+  }),
+  volcano: new THREE.MeshStandardMaterial({
+    color: 0x54311f,
+    roughness: 0.95
   }),
   dark: new THREE.MeshStandardMaterial({
-    color: 0x202020
+    color: 0x1c1c1c
   }),
   quake: new THREE.MeshBasicMaterial({
-    color: 0xff0000,
+    color: 0xff1a1a,
     transparent: true,
     opacity: 1
+  }),
+  smoke: new THREE.MeshStandardMaterial({
+    color: 0x555555,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 1
   })
 };
 
@@ -118,6 +148,8 @@ let magmaObjects = [];
 let quakes = [];
 let crustBands = [];
 let benioffDots = [];
+let smokeObjects = [];
+let waveObjects = [];
 
 function clearScene() {
   while (mainGroup.children.length) {
@@ -133,6 +165,8 @@ function clearScene() {
   quakes = [];
   crustBands = [];
   benioffDots = [];
+  smokeObjects = [];
+  waveObjects = [];
 }
 
 function addBox(x, y, z, sx, sy, sz, mat) {
@@ -144,8 +178,8 @@ function addBox(x, y, z, sx, sy, sz, mat) {
   return mesh;
 }
 
-function addCone(x, y, z, r, h, mat) {
-  const mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, 64), mat);
+function addCone(x, y, z, r, h, mat, segments = 64) {
+  const mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, segments), mat);
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -153,8 +187,8 @@ function addCone(x, y, z, r, h, mat) {
   return mesh;
 }
 
-function addCylinder(x, y, z, r, h, mat) {
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 64), mat);
+function addCylinder(x, y, z, r, h, mat, segments = 64) {
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, segments), mat);
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -162,119 +196,179 @@ function addCylinder(x, y, z, r, h, mat) {
   return mesh;
 }
 
-function addArrow(start, end, color = 0x111111) {
+function addSphere(x, y, z, r, mat) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 24), mat);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mainGroup.add(mesh);
+  return mesh;
+}
+
+function addArrow(start, end, color = 0xffffff) {
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
   const len = start.distanceTo(end);
 
-  const arrow = new THREE.ArrowHelper(
-    dir,
-    start,
-    len,
-    color,
-    0.55,
-    0.32
-  );
-
+  const arrow = new THREE.ArrowHelper(dir, start, len, color, 0.55, 0.32);
   mainGroup.add(arrow);
   arrows.push(arrow);
   return arrow;
 }
 
-function addOceanAndMantle() {
-  addBox(0, 0.55, 0, 18, 0.12, 9, materials.ocean);
-  addBox(0, -1.55, 0, 20, 1.8, 10, materials.mantle);
+function createTerrainSurface(x, y, z, width, depth, mat, rough = 0.25, lift = 0) {
+  const geo = new THREE.PlaneGeometry(width, depth, 48, 48);
+  const pos = geo.attributes.position;
 
-  for (let i = 0; i < 24; i++) {
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i);
+    const py = pos.getY(i);
+
+    const h =
+      Math.sin(px * 1.4) * rough +
+      Math.cos(py * 1.2) * rough +
+      Math.sin((px + py) * 1.7) * rough * 0.4 +
+      lift;
+
+    pos.setZ(i, h);
+  }
+
+  geo.computeVertexNormals();
+
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mainGroup.add(mesh);
+  return mesh;
+}
+
+function addOceanAndMantle() {
+  addBox(0, -1.75, 0, 20, 1.35, 10, materials.mantle);
+  addBox(0, -2.45, 0, 20, 0.45, 10, materials.mantleDark);
+
+  const ocean = createTerrainSurface(0, 0.62, 0, 18, 9, materials.ocean, 0.045, 0);
+  waveObjects.push(ocean);
+
+  for (let i = 0; i < 28; i++) {
     const blob = addCylinder(
-      -9 + i * 0.8,
-      -0.8,
-      -3.9 + Math.random() * 7.8,
-      0.16,
-      0.06,
+      -9 + i * 0.7,
+      -0.95,
+      -4 + Math.random() * 8,
+      0.14,
+      0.055,
       materials.magma
     );
 
-    blob.scale.x = 2.3;
-    blob.scale.z = 0.7;
+    blob.scale.x = 2.4;
+    blob.scale.z = 0.75;
     magmaObjects.push(blob);
   }
 }
 
-function makeMagmaColumn(x, z, height = 2.5) {
-  const column = addCylinder(x, 0.15, z, 0.22, height, materials.magma);
-  column.position.y = -0.6 + height / 2;
-  magmaObjects.push(column);
+function makeMagmaColumn(x, z, height = 2.7) {
+  const column = addCylinder(x, -0.6 + height / 2, z, 0.18, height, materials.magma);
+  const core = addCylinder(x, -0.55 + height / 2, z, 0.08, height * 1.04, materials.magmaBright);
 
-  const glow = addCylinder(x, 0.15, z, 0.34, height * 0.9, materials.magmaBright);
-  glow.position.y = -0.65 + height / 2;
+  const glow = addCylinder(x, -0.65 + height / 2, z, 0.38, height * 0.9, materials.magmaBright);
+  glow.material = materials.magmaBright.clone();
   glow.material.transparent = true;
-  glow.material.opacity = 0.45;
-  magmaObjects.push(glow);
+  glow.material.opacity = 0.25;
 
-  return { column, glow };
+  magmaObjects.push(column, core, glow);
+  return { column, core, glow };
 }
 
-function makeVolcano(x, z) {
-  const base = addCone(x, 1.0, z, 0.95, 1.75, materials.volcano);
-  const side = addCone(x - 0.12, 1.03, z + 0.08, 0.72, 1.45, materials.continent);
+function makeVolcano(x, z, scale = 1) {
+  const base = addCone(x, 1.0, z, 1.05 * scale, 1.9 * scale, materials.volcano);
+  const side = addCone(x - 0.16 * scale, 1.02, z + 0.12 * scale, 0.78 * scale, 1.55 * scale, materials.continent);
 
-  const crater = addCylinder(x, 1.9, z, 0.25, 0.08, materials.dark);
-  const lava = addCone(x, 2.12, z, 0.2, 0.58, materials.magmaBright);
+  const crater = addCylinder(x, 1.95 * scale, z, 0.27 * scale, 0.08, materials.dark);
+  const lava = addCone(x, 2.18 * scale, z, 0.22 * scale, 0.62 * scale, materials.magmaBright);
 
-  const lavaFlow1 = addBox(x, 1.35, z + 0.36, 0.12, 0.08, 0.75, materials.magma);
-  lavaFlow1.rotation.x = 0.6;
+  const lavaFlow1 = addBox(x, 1.36, z + 0.42 * scale, 0.11, 0.08, 0.9 * scale, materials.magma);
+  lavaFlow1.rotation.x = 0.58;
 
-  const lavaFlow2 = addBox(x + 0.25, 1.2, z - 0.22, 0.1, 0.07, 0.65, materials.magma);
+  const lavaFlow2 = addBox(x + 0.28 * scale, 1.24, z - 0.28 * scale, 0.1, 0.07, 0.78 * scale, materials.magma);
   lavaFlow2.rotation.x = -0.45;
   lavaFlow2.rotation.z = 0.25;
 
+  for (let i = 0; i < 8; i++) {
+    const smoke = addSphere(
+      x + (Math.random() - 0.5) * 0.35,
+      2.35 + i * 0.18,
+      z + (Math.random() - 0.5) * 0.35,
+      0.16 + i * 0.025,
+      materials.smoke.clone()
+    );
+    smokeObjects.push({ mesh: smoke, baseY: smoke.position.y, phase: Math.random() * 10 });
+  }
+
   magmaObjects.push(lava, lavaFlow1, lavaFlow2);
   return { base, side, crater, lava };
+}
+
+function addMountainRange(startX, endX, zBase, count) {
+  for (let i = 0; i < count; i++) {
+    const t = i / Math.max(1, count - 1);
+    const x = startX + (endX - startX) * t;
+    const z = zBase + Math.sin(i * 1.7) * 0.8;
+    const h = 0.7 + Math.random() * 0.7;
+
+    const m = addCone(x, 1.0 + h / 2, z, 0.38 + Math.random() * 0.18, h, materials.mountain, 5);
+    m.rotation.y = Math.random() * Math.PI;
+
+    const snow = addCone(x, 1.0 + h, z, 0.16, h * 0.28, materials.snow, 5);
+    snow.rotation.y = m.rotation.y;
+  }
 }
 
 function buildDivergent() {
   clearScene();
   addOceanAndMantle();
 
-  const left = addBox(-3.6, 0, 0, 6.2, 0.55, 6.6, materials.oceanPlate);
-  const right = addBox(3.6, 0, 0, 6.2, 0.55, 6.6, materials.oceanPlate);
+  const left = addBox(-3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
+  const right = addBox(3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
 
-  left.rotation.z = -0.04;
-  right.rotation.z = 0.04;
+  left.rotation.z = -0.035;
+  right.rotation.z = 0.035;
 
-  plateObjects.push({ mesh: left, baseX: -3.6, dirX: -1, kind: "divergent" });
-  plateObjects.push({ mesh: right, baseX: 3.6, dirX: 1, kind: "divergent" });
+  plateObjects.push({ mesh: left, baseX: -3.65, dirX: -1, kind: "divergent" });
+  plateObjects.push({ mesh: right, baseX: 3.65, dirX: 1, kind: "divergent" });
 
-  const ridge = addCone(0, 0.55, 0, 1.15, 1.35, materials.oceanPlate);
+  createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
+  createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
+
+  const ridge = addCone(0, 0.5, 0, 1.2, 1.5, materials.oceanPlateDark);
   ridge.rotation.z = Math.PI;
-  ridge.scale.z = 2.9;
+  ridge.scale.z = 3.1;
 
-  const plume = addCone(0, -0.35, 0, 0.75, 2.7, materials.magmaBright);
+  const plume = addCone(0, -0.3, 0, 0.78, 2.8, materials.magmaBright);
   plume.rotation.z = Math.PI;
   magmaObjects.push(plume);
 
-  makeMagmaColumn(0, 0, 2.3);
+  makeMagmaColumn(0, 0, 2.5);
 
-  for (let i = 0; i < 11; i++) {
-    const offset = i * 0.55;
+  for (let i = 0; i < 13; i++) {
+    const offset = i * 0.48;
 
     const leftBand = addBox(
-      -0.35 - offset,
-      0.34,
+      -0.32 - offset,
+      0.39,
       0,
-      0.18,
-      0.08,
-      6.75,
+      0.14,
+      0.07,
+      6.85,
       i % 2 ? materials.oldCrust : materials.youngCrust
     );
 
     const rightBand = addBox(
-      0.35 + offset,
-      0.34,
+      0.32 + offset,
+      0.39,
       0,
-      0.18,
-      0.08,
-      6.75,
+      0.14,
+      0.07,
+      6.85,
       i % 2 ? materials.oldCrust : materials.youngCrust
     );
 
@@ -282,8 +376,8 @@ function buildDivergent() {
     crustBands.push({ mesh: rightBand, side: 1, offset });
   }
 
-  addArrow(new THREE.Vector3(-0.8, 1.45, 0), new THREE.Vector3(-3.4, 1.45, 0));
-  addArrow(new THREE.Vector3(0.8, 1.45, 0), new THREE.Vector3(3.4, 1.45, 0));
+  addArrow(new THREE.Vector3(-0.8, 1.45, 0), new THREE.Vector3(-3.8, 1.45, 0));
+  addArrow(new THREE.Vector3(0.8, 1.45, 0), new THREE.Vector3(3.8, 1.45, 0));
 
   infoTitle.textContent = "발산형 경계";
   infoText.textContent = "해령에서 마그마가 상승하고 새로운 해양 지각이 생성되어 양쪽으로 이동한다.";
@@ -293,62 +387,47 @@ function buildConvergent() {
   clearScene();
   addOceanAndMantle();
 
-  const oceanPlate = addBox(-3.4, 0, 0, 6.0, 0.45, 6.4, materials.oceanPlate);
+  const oceanPlate = addBox(-3.5, -0.04, 0, 6.0, 0.5, 6.5, materials.oceanPlate);
   oceanPlate.rotation.z = -0.18;
 
-  const continent = addBox(3.6, 0.15, 0, 7.4, 0.75, 6.4, materials.continent);
+  const continent = addBox(3.7, 0.0, 0, 7.2, 0.85, 6.5, materials.continent);
 
-  const slab = addBox(0.2, -0.95, 0, 4.3, 0.34, 6.2, materials.slab);
-  slab.rotation.z = -0.62;
+  createTerrainSurface(3.8, 0.55, 0, 7.0, 6.2, materials.grass, 0.24, 0.05);
+  addMountainRange(2.4, 6.3, -1.8, 9);
 
-  plateObjects.push({
-    mesh: oceanPlate,
-    baseX: -3.4,
-    baseY: 0,
-    dirX: 1,
-    dirY: -0.08,
-    kind: "subductingPlate"
-  });
+  const slab = addBox(0.15, -0.95, 0, 4.4, 0.36, 6.3, materials.oceanPlateDark);
+  slab.rotation.z = -0.63;
 
-  plateObjects.push({
-    mesh: continent,
-    baseX: 3.6,
-    dirX: -0.25,
-    kind: "continent"
-  });
+  const trench = addBox(0.55, 0.32, 0, 0.28, 0.2, 6.8, materials.dark);
+  trench.rotation.z = -0.1;
 
-  plateObjects.push({
-    mesh: slab,
-    baseX: 0.2,
-    baseY: -0.95,
-    dirX: 0.6,
-    dirY: -0.7,
-    kind: "slab"
-  });
+  plateObjects.push({ mesh: oceanPlate, baseX: -3.5, baseY: -0.04, dirX: 1, dirY: -0.08, kind: "subductingPlate" });
+  plateObjects.push({ mesh: continent, baseX: 3.7, dirX: -0.22, kind: "continent" });
+  plateObjects.push({ mesh: slab, baseX: 0.15, baseY: -0.95, dirX: 0.6, dirY: -0.7, kind: "slab" });
 
-  makeVolcano(3.2, -0.9);
-  makeVolcano(4.5, 1.2);
-  makeMagmaColumn(3.2, -0.9, 2.7);
-  makeMagmaColumn(4.5, 1.2, 2.4);
+  makeVolcano(3.15, -0.9, 1.05);
+  makeVolcano(4.55, 1.2, 0.9);
+  makeMagmaColumn(3.15, -0.9, 2.9);
+  makeMagmaColumn(4.55, 1.2, 2.5);
 
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 18; i++) {
     const dot = new THREE.Mesh(
-      new THREE.SphereGeometry(0.09, 16, 16),
+      new THREE.SphereGeometry(0.085, 16, 16),
       materials.quake.clone()
     );
 
     dot.position.set(
-      -0.6 + i * 0.23,
-      0.1 - i * 0.12,
-      -2.8 + i * 0.08
+      -0.75 + i * 0.22,
+      0.12 - i * 0.12,
+      -2.8 + i * 0.1
     );
 
     mainGroup.add(dot);
     benioffDots.push(dot);
   }
 
-  addArrow(new THREE.Vector3(-6.0, 1.25, 0), new THREE.Vector3(-3.0, 1.25, 0));
-  addArrow(new THREE.Vector3(6.1, 1.25, 0), new THREE.Vector3(3.3, 1.25, 0));
+  addArrow(new THREE.Vector3(-6.1, 1.25, 0), new THREE.Vector3(-3.1, 1.25, 0));
+  addArrow(new THREE.Vector3(6.2, 1.25, 0), new THREE.Vector3(3.4, 1.25, 0));
 
   infoTitle.textContent = "수렴형 경계";
   infoText.textContent = "해양판이 대륙판 아래로 섭입하고, 섭입대 위쪽에서 마그마가 상승하여 화산 활동이 나타난다.";
@@ -358,16 +437,20 @@ function buildTransform() {
   clearScene();
   addOceanAndMantle();
 
-  const a = addBox(-2.9, 0, 0, 5.5, 0.55, 6.4, materials.oceanPlate);
-  const b = addBox(2.9, 0, 0, 5.5, 0.55, 6.4, materials.slab);
+  const a = addBox(-2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlate);
+  const b = addBox(2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlateDark);
+
+  createTerrainSurface(-2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
+  createTerrainSurface(2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
 
   plateObjects.push({ mesh: a, baseZ: 0, dirZ: 1, kind: "transform" });
   plateObjects.push({ mesh: b, baseZ: 0, dirZ: -1, kind: "transform" });
 
-  addBox(0, 0.42, 0, 0.08, 0.08, 6.7, materials.dark);
+  const fault = addBox(0, 0.44, 0, 0.12, 0.12, 6.8, materials.dark);
+  fault.rotation.y = 0.05;
 
-  addArrow(new THREE.Vector3(-3.8, 1.2, -2.4), new THREE.Vector3(-3.8, 1.2, 1.3));
-  addArrow(new THREE.Vector3(3.8, 1.2, 2.4), new THREE.Vector3(3.8, 1.2, -1.3));
+  addArrow(new THREE.Vector3(-3.8, 1.2, -2.6), new THREE.Vector3(-3.8, 1.2, 1.4));
+  addArrow(new THREE.Vector3(3.8, 1.2, 2.6), new THREE.Vector3(3.8, 1.2, -1.4));
 
   infoTitle.textContent = "보존형 경계";
   infoText.textContent = "두 판이 서로 어긋나게 이동하며 단층을 따라 지진이 발생한다.";
@@ -390,97 +473,6 @@ function addQuake(x, y, z) {
   sphere.position.set(x, y, z);
   mainGroup.add(sphere);
   quakes.push({ mesh: sphere, life: 1 });
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-
-  const speed = Number(speedSlider.value) / 100;
-  const magmaPower = Number(magmaSlider.value) / 100;
-
-  time += 0.008 + speed * 0.025;
-
-  const cycle = (time * 0.55) % 1;
-  const smooth = cycle;
-
-  plateObjects.forEach(p => {
-    if (p.kind === "divergent") {
-      p.mesh.position.x = p.baseX + smooth * 0.75 * p.dirX;
-    }
-
-    if (p.kind === "subductingPlate") {
-      p.mesh.position.x = p.baseX + smooth * 0.95 * p.dirX;
-      p.mesh.position.y = p.baseY + smooth * 0.16 * p.dirY;
-    }
-
-    if (p.kind === "continent") {
-      p.mesh.position.x = p.baseX + smooth * 0.35 * p.dirX;
-    }
-
-    if (p.kind === "slab") {
-      p.mesh.position.x = p.baseX + smooth * 0.75 * p.dirX;
-      p.mesh.position.y = p.baseY + smooth * 0.65 * p.dirY;
-    }
-
-    if (p.kind === "transform") {
-      const slide = ((time * 0.75) % 2) - 1;
-      p.mesh.position.z = p.baseZ + slide * 1.2 * p.dirZ;
-    }
-  });
-
-  crustBands.forEach(b => {
-    const d = (b.offset + smooth * 1.2) % 5.5;
-    b.mesh.position.x = b.side * (0.25 + d);
-    b.mesh.scale.x = 1 + Math.max(0, 0.5 - d) * 1.5;
-  });
-
-  magmaObjects.forEach((m, i) => {
-    m.visible = showMagma.checked;
-    m.scale.y = 1 + Math.sin(time * 4 + i) * 0.1 * magmaPower;
-  });
-
-  benioffDots.forEach((dot, i) => {
-    dot.visible = showQuakes.checked;
-    const pulse = 0.8 + Math.sin(time * 6 + i * 0.8) * 0.35;
-    dot.scale.setScalar(pulse);
-  });
-
-  arrows.forEach(a => {
-    a.visible = showArrows.checked;
-  });
-
-  if (showQuakes.checked && Math.random() < Number(quakeSlider.value) / 6000) {
-    if (boundaryType.value === "convergent") {
-      const n = Math.random();
-      addQuake(-0.4 + n * 2.6, 0.05 - n * 1.3, -2.5 + Math.random() * 5);
-    }
-
-    if (boundaryType.value === "transform") {
-      addQuake(0, 0.7, -2.8 + Math.random() * 5.6);
-    }
-
-    if (boundaryType.value === "divergent") {
-      addQuake((Math.random() - 0.5) * 1.2, 0.65, -2.6 + Math.random() * 5.2);
-    }
-  }
-
-  quakes.forEach(q => {
-    q.life -= 0.025;
-    q.mesh.scale.setScalar(1 + (1 - q.life) * 1.4);
-    q.mesh.material.opacity = q.life;
-  });
-
-  quakes = quakes.filter(q => {
-    if (q.life <= 0) {
-      mainGroup.remove(q.mesh);
-      q.mesh.geometry.dispose();
-      return false;
-    }
-    return true;
-  });
-
-  controls.update();
-  renderer.render(scene, camera);
 }
 
 function updateExamples(type) {
@@ -540,6 +532,107 @@ function updateExamples(type) {
   mapMarkers.innerHTML = selected.markers.map(m => `
     <div class="map-marker" style="left:${m.x}%; top:${m.y}%;"></div>
   `).join("");
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const speed = Number(speedSlider.value) / 100;
+  const magmaPower = Number(magmaSlider.value) / 100;
+
+  time += 0.008 + speed * 0.025;
+
+  const cycle = (time * 0.55) % 1;
+  const smooth = cycle;
+
+  plateObjects.forEach(p => {
+    if (p.kind === "divergent") {
+      p.mesh.position.x = p.baseX + smooth * 0.8 * p.dirX;
+    }
+
+    if (p.kind === "subductingPlate") {
+      p.mesh.position.x = p.baseX + smooth * 0.95 * p.dirX;
+      p.mesh.position.y = p.baseY + smooth * 0.16 * p.dirY;
+    }
+
+    if (p.kind === "continent") {
+      p.mesh.position.x = p.baseX + smooth * 0.35 * p.dirX;
+    }
+
+    if (p.kind === "slab") {
+      p.mesh.position.x = p.baseX + smooth * 0.75 * p.dirX;
+      p.mesh.position.y = p.baseY + smooth * 0.65 * p.dirY;
+    }
+
+    if (p.kind === "transform") {
+      const slide = ((time * 0.75) % 2) - 1;
+      p.mesh.position.z = p.baseZ + slide * 1.25 * p.dirZ;
+    }
+  });
+
+  crustBands.forEach(b => {
+    const d = (b.offset + smooth * 1.2) % 5.6;
+    b.mesh.position.x = b.side * (0.25 + d);
+    b.mesh.scale.x = 1 + Math.max(0, 0.5 - d) * 1.5;
+  });
+
+  magmaObjects.forEach((m, i) => {
+    m.visible = showMagma.checked;
+    m.scale.y = 1 + Math.sin(time * 4 + i) * 0.11 * magmaPower;
+  });
+
+  smokeObjects.forEach((s, i) => {
+    s.mesh.visible = showMagma.checked;
+    s.mesh.position.y = s.baseY + Math.sin(time * 2 + s.phase) * 0.08;
+    s.mesh.scale.setScalar(1 + Math.sin(time * 2 + i) * 0.08);
+  });
+
+  waveObjects.forEach((w, i) => {
+    w.position.y = 0.62 + Math.sin(time * 2 + i) * 0.015;
+  });
+
+  benioffDots.forEach((dot, i) => {
+    dot.visible = showQuakes.checked;
+    const pulse = 0.8 + Math.sin(time * 6 + i * 0.8) * 0.35;
+    dot.scale.setScalar(pulse);
+  });
+
+  arrows.forEach(a => {
+    a.visible = showArrows.checked;
+  });
+
+  if (showQuakes.checked && Math.random() < Number(quakeSlider.value) / 6000) {
+    if (boundaryType.value === "convergent") {
+      const n = Math.random();
+      addQuake(-0.4 + n * 2.6, 0.05 - n * 1.3, -2.5 + Math.random() * 5);
+    }
+
+    if (boundaryType.value === "transform") {
+      addQuake(0, 0.7, -2.8 + Math.random() * 5.6);
+    }
+
+    if (boundaryType.value === "divergent") {
+      addQuake((Math.random() - 0.5) * 1.2, 0.65, -2.6 + Math.random() * 5.2);
+    }
+  }
+
+  quakes.forEach(q => {
+    q.life -= 0.025;
+    q.mesh.scale.setScalar(1 + (1 - q.life) * 1.4);
+    q.mesh.material.opacity = q.life;
+  });
+
+  quakes = quakes.filter(q => {
+    if (q.life <= 0) {
+      mainGroup.remove(q.mesh);
+      q.mesh.geometry.dispose();
+      return false;
+    }
+    return true;
+  });
+
+  controls.update();
+  renderer.render(scene, camera);
 }
 
 boundaryType.addEventListener("change", rebuild);
