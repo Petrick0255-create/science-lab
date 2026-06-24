@@ -266,3 +266,34 @@ canvas{
   pointer-events:none;
   z-index:9;
 }
+
+header{
+  justify-content:space-between;
+}
+
+.home-btn{
+  text-decoration:none;
+  background:#2563eb;
+  color:white;
+  padding:10px 16px;
+  border-radius:10px;
+  font-weight:700;
+}
+
+.legend-box{
+  margin-top:18px;
+  background:white;
+  padding:18px 20px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.legend-box h3{
+  margin-bottom:10px;
+}
+
+.legend-box ul{
+  margin-left:18px;
+  line-height:1.8;
+  color:#444;
+}
