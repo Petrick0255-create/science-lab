@@ -17,6 +17,8 @@
       <div class="brand">J&B</div>
       <div class="badge">LAB</div>
     </a>
+
+    <a href="../../index.html" class="home-btn">J&B 홈으로</a>
   </header>
 
   <main class="container">
@@ -24,8 +26,8 @@
       <div>
         <h1>판의 경계 시뮬레이터</h1>
         <p>
-          발산형 · 보존형 · 수렴형 경계에서 나타나는 판의 운동,
-          마그마 상승, 섭입, 지진 발생을 관찰합니다.
+          발산형 · 보존형 · 수렴형 경계에서 판의 운동, 마그마 상승,
+          섭입, 지진 발생을 3D로 관찰합니다.
         </p>
       </div>
     </section>
@@ -58,13 +60,7 @@
           <input id="quake" type="range" min="0" max="100" value="45" />
         </label>
 
-        <label>
-          <input id="showLabels" type="checkbox" checked>
-          명칭 표시
-        </label>
-
         <div class="check-list">
-          <label><input id="showLabels" type="checkbox" checked /> 이름 표시</label>
           <label><input id="showArrows" type="checkbox" checked /> 화살표 표시</label>
           <label><input id="showQuakes" type="checkbox" checked /> 지진 표시</label>
           <label><input id="showMagma" type="checkbox" checked /> 마그마 표시</label>
@@ -75,6 +71,18 @@
 
       <section class="sim-area">
         <canvas id="simCanvas" width="1100" height="620"></canvas>
+
+        <div class="legend-box">
+          <h3>그림 설명</h3>
+          <ul>
+            <li><b>푸른 판</b> : 해양판</li>
+            <li><b>갈색 판</b> : 대륙판</li>
+            <li><b>주황색 아래층</b> : 맨틀</li>
+            <li><b>붉은 기둥</b> : 상승하는 마그마</li>
+            <li><b>빨간 점</b> : 지진 발생 위치</li>
+            <li><b>흰 화살표</b> : 판의 이동 방향</li>
+          </ul>
+        </div>
 
         <div class="info-box">
           <h2 id="infoTitle">발산형 경계</h2>
