@@ -36,7 +36,9 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-camera.position.set(0, 8, 16);
+camera.position.set(8, 7, 14);
+camera.lookAt(0, 0, 0);
+controls.target.set(0, 0, 0);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -443,9 +445,9 @@ function animate() {
     }
 
     if (p.kind === "transform") {
-      p.mesh.position.z = p.baseZ + Math.sin(time) * 0.18 * p.dirZ;
+      const slide = ((time * 0.8) % 2) - 1;
+      p.mesh.position.z = p.baseZ + slide * 1.2 * p.dirZ;
     }
-  });
 
   crustBands.forEach(b => {
     const d = (b.offset + smooth * 1.2) % 5.5;
