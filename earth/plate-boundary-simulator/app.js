@@ -382,14 +382,14 @@ function buildDivergent() {
   createConvectionCell(-3, 0, false);
   createConvectionCell(3, 0, true);
 
-  const left = addBox(-3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
-  const right = addBox(3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
+  const leftSurface = createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
+  const rightSurface = createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
 
   left.rotation.z = -0.035;
   right.rotation.z = 0.035;
 
-  plateObjects.push({ mesh: left, baseX: -3.65, dirX: -1, kind: "divergent" });
-  plateObjects.push({ mesh: right, baseX: 3.65, dirX: 1, kind: "divergent" });
+  plateObjects.push({ mesh: left, surface: leftSurface, baseX: -3.65, dirX: -1, kind: "divergent" });
+  plateObjects.push({ mesh: right, surface: rightSurface, baseX: 3.65, dirX: 1, kind: "divergent" });
 
   createTerrainSurface(-3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
   createTerrainSurface(3.65, 0.35, 0, 6.2, 6.8, materials.oceanDeep, 0.08, 0);
@@ -619,6 +619,8 @@ function animate() {
   plateObjects.forEach(p => {
     if (p.kind === "divergent") {
       p.mesh.position.x = p.baseX + smooth * 0.8 * p.dirX;
+      p.mesh.position.x = x;
+      if (p.surface) p.surface.position.x = x;
     }
 
     if (p.kind === "subductingPlate") {
@@ -627,7 +629,12 @@ function animate() {
     }
 
     if (p.kind === "continent") {
-      p.mesh.position.x = p.baseX + smooth * 0.35 * p.dirX;
+      const x = p.baseX + smooth * 0.35 * p.dirX;
+      p.mesh.position.x = x;
+
+      if (p.surface) {
+        p.surface.position.x = p.surfaceBaseX + smooth * 0.35 * p.dirX;
+      }
     }
 
     if (p.kind === "slab") {
@@ -637,7 +644,13 @@ function animate() {
 
     if (p.kind === "transform") {
       const slide = ((time * 0.75) % 2) - 1;
-      p.mesh.position.z = p.baseZ + slide * 1.25 * p.dirZ;
+      const z = p.baseZ + slide * 1.25 * p.dirZ;
+
+      p.mesh.position.z = z;
+
+      if (p.surface) {
+        p.surface.position.z = z;
+      }
     }
   });
 
