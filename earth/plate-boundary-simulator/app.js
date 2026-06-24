@@ -246,7 +246,7 @@ function createConvectionCell(cx, cz, reverse = false) {
 
   for (let i = 0; i < 8; i++) {
     const p = new THREE.Mesh(
-      new THREE.SphereGeometry(0.07, 16, 16),
+      new THREE.SphereGeometry(0.13, 24, 24),
       materials.magmaBright.clone()
     );
 
@@ -310,11 +310,10 @@ function addOceanAndMantle() {
     magmaObjects.push(blob);
   }
 
-  createConvectionCell(-6, -2.2, false);
-  createConvectionCell(-2, 2.0, true);
-  createConvectionCell(2, -2.0, false);
-  createConvectionCell(6, 2.2, true);
-}
+  createConvectionCell(-5, -1.8, false);
+  createConvectionCell(-1.7, 1.6, true);
+  createConvectionCell(1.7, -1.6, false);
+  createConvectionCell(5, 1.8, true);
 
 function makeMagmaColumn(x, z, height = 2.7) {
   const column = addCylinder(x, -0.6 + height / 2, z, 0.18, height, materials.magma);
@@ -636,10 +635,10 @@ function animate() {
     const a = time * 2.2 * dir + p.phase;
 
     p.mesh.position.x = p.cx + Math.cos(a) * 1.45;
-    p.mesh.position.y = -1.75 + Math.sin(a) * 0.55;
+    p.mesh.position.y = -1.05 + Math.sin(a) * 0.75;
     p.mesh.position.z = p.cz;
   
-    const scale = 0.8 + Math.sin(a) * 0.25;
+    const scale = 1.8 + Math.sin(a) * 0.35;
     p.mesh.scale.setScalar(scale);
   });
 
