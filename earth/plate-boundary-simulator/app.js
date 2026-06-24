@@ -245,9 +245,16 @@ function createConvectionCell(cx, cz, reverse = false) {
   group.add(line);
 
   for (let i = 0; i < 8; i++) {
+
     const p = new THREE.Mesh(
       new THREE.SphereGeometry(0.13, 24, 24),
       materials.magmaBright.clone()
+    );
+
+    p.position.set(
+      cx + Math.cos((i / 8) * Math.PI * 2) * 1.45,
+      -1.2,
+      cz
     );
 
     group.add(p);
