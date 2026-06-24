@@ -110,8 +110,8 @@ let benioffDots = [];
 
 function clearScene() {
   labels.forEach(l => {
-    l.div.remove();
-    l.line.remove();
+    if (l.div) l.div.remove();
+    if (l.line) l.line.remove();
   });
   labels = [];
 
@@ -157,24 +157,8 @@ function addCylinder(x, y, z, r, h, mat) {
   return mesh;
 }
 
-function addText(text, x, y, z, ox = 35, oy = -30) {
-  const div = document.createElement("div");
-  div.className = "label3d";
-  div.textContent = text;
-
-  const line = document.createElement("div");
-  line.className = "labelLine";
-
-  document.querySelector(".sim-area").appendChild(div);
-  document.querySelector(".sim-area").appendChild(line);
-
-  labels.push({
-    div,
-    line,
-    position: new THREE.Vector3(x, y, z),
-    ox,
-    oy
-  });
+function addText(text, x, y, z, ox = 0, oy = 0) {
+  return;
 }
 
 function addArrow(start, end, color = 0x111111) {
@@ -385,53 +369,7 @@ function addQuake(x, y, z) {
 }
 
 function updateLabels() {
-  const rect = canvas.getBoundingClientRect();
-  const area = document.querySelector(".sim-area");
-  const areaRect = area.getBoundingClientRect();
-
-  labels.forEach(item => {
-    if (!showLabels.checked) {
-      item.div.style.display = "none";
-      item.line.style.display = "none";
-      return;
-    }
-
-    const p = item.position.clone();
-    p.project(camera);
-
-    if (p.z < -1 || p.z > 1) {
-      item.div.style.display = "none";
-      item.line.style.display = "none";
-      return;
-    }
-
-    let anchorX = (p.x * 0.5 + 0.5) * rect.width + rect.left - areaRect.left;
-    let anchorY = (-p.y * 0.5 + 0.5) * rect.height + rect.top - areaRect.top;
-
-    let labelX = anchorX + item.ox;
-    let labelY = anchorY + item.oy;
-
-    const margin = 45;
-
-    labelX = Math.max(margin, Math.min(rect.width - margin, labelX));
-    labelY = Math.max(margin, Math.min(rect.height - margin, labelY));
-
-    item.div.style.display = "block";
-    item.line.style.display = "block";
-
-    item.div.style.left = `${labelX}px`;
-    item.div.style.top = `${labelY}px`;
-
-    const dx = labelX - anchorX;
-    const dy = labelY - anchorY;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx);
-
-    item.line.style.left = `${anchorX}px`;
-    item.line.style.top = `${anchorY}px`;
-    item.line.style.width = `${len}px`;
-    item.line.style.transform = `rotate(${angle}rad)`;
-  });
+  return;
 }
 
 function animate() {
