@@ -157,7 +157,7 @@ function addCylinder(x, y, z, r, h, mat) {
   return mesh;
 }
 
-function addText(text, x, y, z, ox = 70, oy = -45) {
+function addText(text, x, y, z, ox = 35, oy = -30) {
   const div = document.createElement("div");
   div.className = "label3d";
   div.textContent = text;
@@ -386,7 +386,8 @@ function addQuake(x, y, z) {
 
 function updateLabels() {
   const rect = canvas.getBoundingClientRect();
-  const areaRect = document.querySelector(".sim-area").getBoundingClientRect();
+  const area = document.querySelector(".sim-area");
+  const areaRect = area.getBoundingClientRect();
 
   labels.forEach(item => {
     if (!showLabels.checked) {
@@ -395,17 +396,28 @@ function updateLabels() {
       return;
     }
 
-    item.div.style.display = "block";
-    item.line.style.display = "block";
-
     const p = item.position.clone();
     p.project(camera);
 
-    const anchorX = (p.x * 0.5 + 0.5) * rect.width + rect.left - areaRect.left;
-    const anchorY = (-p.y * 0.5 + 0.5) * rect.height + rect.top - areaRect.top;
+    if (p.z < -1 || p.z > 1) {
+      item.div.style.display = "none";
+      item.line.style.display = "none";
+      return;
+    }
 
-    const labelX = anchorX + item.ox;
-    const labelY = anchorY + item.oy;
+    let anchorX = (p.x * 0.5 + 0.5) * rect.width + rect.left - areaRect.left;
+    let anchorY = (-p.y * 0.5 + 0.5) * rect.height + rect.top - areaRect.top;
+
+    let labelX = anchorX + item.ox;
+    let labelY = anchorY + item.oy;
+
+    const margin = 45;
+
+    labelX = Math.max(margin, Math.min(rect.width - margin, labelX));
+    labelY = Math.max(margin, Math.min(rect.height - margin, labelY));
+
+    item.div.style.display = "block";
+    item.line.style.display = "block";
 
     item.div.style.left = `${labelX}px`;
     item.div.style.top = `${labelY}px`;
