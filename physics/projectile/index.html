@@ -258,22 +258,21 @@ function build(){
 
 function makeData(s){
   const arr = [];
-  const totalTime = Math.sqrt(2 * s.h / s.g);
 
-  // 영상 재생용 프레임 수
-  // 값이 클수록 부드럽고, 작을수록 빠르게 넘어감
-  const frameCount = 30;
-
-  for(let i = 0; i <= frameCount; i++){
-    const t = totalTime * i / frameCount;
+  let n = 0;
+  while(true){
+    const t = n * s.dt;
     const y = 0.5 * s.g * t * t;
 
-    // 땅을 넘지 않도록 보정
+    if(y >= s.h - 1e-9) break;
+
     arr.push({
-      t: t,
-      x: s.v * t,
-      y: Math.min(y, s.h)
+      t:t,
+      x:s.v*t,
+      y:y
     });
+
+    n++;
   }
 
   return arr;
@@ -568,24 +567,32 @@ function drawBall(x, y, style){
 function play(){
   stop();
 
-  const s = getInputs();
-  data = makeData(s);
-
+  data = makeData(getInputs());
   if(!data.length) return;
 
   frame = 0;
 
-  timer = setInterval(()=>{
-    drawAnimationFrame();
+  const viewModeSelect = document.getElementById("viewMode");
+  const oldMode = viewModeSelect.value;
 
+  // 재생할 때만 지나온 점 방식
+  viewModeSelect.value = "trail";
+
+  draw();
+
+  timer = setInterval(()=>{
     frame++;
 
     if(frame >= data.length){
-      stop();
       frame = data.length - 1;
-      drawAnimationFrame();
+      stop();
+
+      // 재생 끝나면 원래 선택값 복구
+      viewModeSelect.value = oldMode;
     }
-  }, 120);
+
+    draw();
+  }, 350);
 }
 
 function stop(){
