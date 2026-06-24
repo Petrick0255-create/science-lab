@@ -42,6 +42,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 0, 0);
 
+controls.enableZoom = false;
+controls.enablePan = false;
+
 const light = new THREE.DirectionalLight(0xffffff, 2.4);
 light.position.set(6, 12, 8);
 light.castShadow = true;
