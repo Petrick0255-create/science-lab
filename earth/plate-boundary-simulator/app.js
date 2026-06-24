@@ -316,11 +316,6 @@ function addOceanAndMantle() {
     blob.scale.z = 0.7;
     magmaObjects.push(blob);
   }
-
-  createConvectionCell(-5, -1.8, false);
-  createConvectionCell(-1.7, 1.6, true);
-  createConvectionCell(1.7, -1.6, false);
-  createConvectionCell(5, 1.8, true);
 }
 
 function makeMagmaColumn(x, z, height = 2.7) {
@@ -384,6 +379,9 @@ function buildDivergent() {
   clearScene();
   addOceanAndMantle();
 
+  createConvectionCell(-3, 0, false);
+  createConvectionCell(3, 0, true);
+
   const left = addBox(-3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
   const right = addBox(3.65, -0.05, 0, 6.1, 0.6, 6.8, materials.oceanPlate);
 
@@ -443,6 +441,9 @@ function buildDivergent() {
 function buildConvergent() {
   clearScene();
   addOceanAndMantle();
+ 
+  createConvectionCell(-3, 0, true);
+  createConvectionCell(3, 0, false);
 
   const oceanPlate = addBox(-3.5, -0.04, 0, 6.0, 0.5, 6.5, materials.oceanPlate);
   oceanPlate.rotation.z = -0.18;
@@ -493,6 +494,9 @@ function buildConvergent() {
 function buildTransform() {
   clearScene();
   addOceanAndMantle();
+
+  createConvectionCell(-3, -1.8, false);
+  createConvectionCell(3, 1.8, false);
 
   const a = addBox(-2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlate);
   const b = addBox(2.95, -0.05, 0, 5.5, 0.6, 6.5, materials.oceanPlateDark);
