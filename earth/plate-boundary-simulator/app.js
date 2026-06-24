@@ -439,54 +439,123 @@ function buildDivergent() {
 function buildConvergent() {
   clearScene();
   addOceanAndMantle();
- 
+
   createConvectionCell(-3, 0, true);
   createConvectionCell(3, 0, false);
 
-  const oceanPlate = addBox(-3.5, -0.04, 0, 6.0, 0.5, 6.5, materials.oceanPlate);
-  oceanPlate.rotation.z = -0.18;
+  const oceanPlate = addBox(
+    -3.5, -0.04, 0,
+    6.0, 0.5, 6.5,
+    materials.oceanPlate
+  );
 
-  const continent = addBox(3.7, 0.0, 0, 7.2, 0.85, 6.5, materials.continent);
+  oceanPlate.rotation.z = -0.12;
 
-  createTerrainSurface(3.8, 0.55, 0, 7.0, 6.2, materials.grass, 0.24, 0.05);
+  const continent = addBox(
+    3.7, 0.0, 0,
+    7.2, 0.85, 6.5,
+    materials.continent
+  );
+
+  const continentSurface = createTerrainSurface(
+    3.8, 0.55, 0,
+    7.0, 6.2,
+    materials.grass,
+    0.24,
+    0.05
+  );
+
   addMountainRange(2.4, 6.3, -1.8, 9);
 
-  const slab = addBox(0.15, -0.95, 0, 4.4, 0.36, 6.3, materials.oceanPlateDark);
-  slab.rotation.z = -0.63;
+  plateObjects.push({
+    mesh: oceanPlate,
+    baseX: -3.5,
+    baseY: -0.04,
+    dirX: 1,
+    dirY: -0.08,
+    kind: "subductingPlate"
+  });
 
-  const trench = addBox(0.55, 0.32, 0, 0.28, 0.2, 6.8, materials.dark);
-  trench.rotation.z = -0.1;
+  plateObjects.push({
+    mesh: continent,
+    surface: continentSurface,
+    baseX: 3.7,
+    surfaceBaseX: 3.8,
+    dirX: -0.22,
+    kind: "continent"
+  });
 
-  plateObjects.push({ mesh: oceanPlate, baseX: -3.5, baseY: -0.04, dirX: 1, dirY: -0.08, kind: "subductingPlate" });
-  plateObjects.push({ mesh: continent, baseX: 3.7, dirX: -0.22, kind: "continent" });
-  plateObjects.push({ mesh: slab, baseX: 0.15, baseY: -0.95, dirX: 0.6, dirY: -0.7, kind: "slab" });
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7;
 
-  makeVolcano(3.15, -0.9, 1.05);
-  makeVolcano(4.55, 1.2, 0.9);
-  makeMagmaColumn(3.15, -0.9, 2.9);
-  makeMagmaColumn(4.55, 1.2, 2.5);
+    const x = -0.25 + t * 2.8;
+    const y = -0.38 - Math.pow(t, 1.7) * 1.55;
+
+    const part = addBox(
+      x, y, 0,
+      0.72, 0.34, 6.3,
+      materials.oceanPlateDark
+    );
+
+    part.rotation.z = -0.22 - t * 0.65;
+
+    plateObjects.push({
+      mesh: part,
+      baseX: x,
+      baseY: y,
+      dirX: 0.55,
+      dirY: -0.6,
+      kind: "slab"
+    });
+  }
+
+  const trench = addBox(
+    0.45, 0.32, 0,
+    0.3, 0.2, 6.8,
+    materials.dark
+  );
+
+  trench.rotation.z = -0.08;
+
+  makeVolcano(2.8, -1.4, 1.0);
+  makeVolcano(3.8, -0.2, 1.15);
+  makeVolcano(5.0, 1.4, 0.9);
+
+  makeMagmaColumn(2.8, -1.4, 2.7);
+  makeMagmaColumn(3.8, -0.2, 2.9);
+  makeMagmaColumn(5.0, 1.4, 2.4);
 
   for (let i = 0; i < 18; i++) {
+    const t = i / 17;
+
     const dot = new THREE.Mesh(
       new THREE.SphereGeometry(0.085, 16, 16),
       materials.quake.clone()
     );
 
     dot.position.set(
-      -0.75 + i * 0.22,
-      0.12 - i * 0.12,
-      -2.8 + i * 0.1
+      -0.75 + t * 3.6,
+      0.12 - Math.pow(t, 1.8) * 2.2,
+      -2.8 + t * 1.8
     );
 
     mainGroup.add(dot);
     benioffDots.push(dot);
   }
 
-  addArrow(new THREE.Vector3(-6.1, 1.25, 0), new THREE.Vector3(-3.1, 1.25, 0));
-  addArrow(new THREE.Vector3(6.2, 1.25, 0), new THREE.Vector3(3.4, 1.25, 0));
+  addArrow(
+    new THREE.Vector3(-6.1, 1.25, 0),
+    new THREE.Vector3(-3.1, 1.25, 0)
+  );
+
+  addArrow(
+    new THREE.Vector3(6.2, 1.25, 0),
+    new THREE.Vector3(3.4, 1.25, 0)
+  );
 
   infoTitle.textContent = "수렴형 경계";
-  infoText.textContent = "해양판이 대륙판 아래로 섭입하고, 섭입대 위쪽에서 마그마가 상승하여 화산 활동이 나타난다.";
+  infoText.textContent =
+    "해양판이 휘어지며 대륙판 아래로 섭입하고, 섭입대를 따라 지진과 화산 활동이 나타난다.";
 }
 
 function buildTransform() {
