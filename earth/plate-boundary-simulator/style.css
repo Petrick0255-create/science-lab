@@ -305,48 +305,39 @@ header{
 }
 
 .world-map-box{
-  position:absolute;
-  left:18px;
-  bottom:18px;
-  width:230px;
-  background:rgba(255,255,255,.9);
+  position:relative;
+  margin-top:18px;
+  background:#f8fafc;
   border-radius:16px;
   padding:12px;
-  box-shadow:0 8px 24px rgba(0,0,0,.18);
-  z-index:5;
+  box-shadow:inset 0 0 0 1px #e5e7eb;
 }
 
 .map-title{
   font-size:13px;
   font-weight:800;
-  margin-bottom:6px;
+  margin-bottom:8px;
 }
 
-.mini-map{
-  position:relative;
+.world-map-img{
+  display:block;
   width:100%;
-  height:120px;
-  background:#dff4ff;
   border-radius:12px;
-  overflow:hidden;
 }
 
-.continent{
+#mapMarkers{
   position:absolute;
-  background:#8fb56f;
-  border-radius:45%;
-  opacity:.9;
+  left:12px;
+  right:12px;
+  top:37px;
+  bottom:12px;
+  pointer-events:none;
 }
-
-.c1{ width:55px; height:75px; left:30px; top:20px; transform:rotate(-18deg); }
-.c2{ width:48px; height:55px; left:82px; top:54px; transform:rotate(15deg); }
-.c3{ width:76px; height:62px; left:128px; top:24px; transform:rotate(8deg); }
-.c4{ width:44px; height:34px; left:168px; top:78px; transform:rotate(-12deg); }
 
 .map-marker{
   position:absolute;
-  width:12px;
-  height:12px;
+  width:11px;
+  height:11px;
   background:#ef4444;
   border:2px solid white;
   border-radius:50%;
