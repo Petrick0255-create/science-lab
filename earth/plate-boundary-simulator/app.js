@@ -262,38 +262,6 @@ function createConvectionCell(cx, cz, reverse = false) {
   }
 }
 
-function createConvectionCell(x){
-
-  const curve = new THREE.EllipseCurve(
-    0, 0,
-    1.5, 0.7,
-    0, Math.PI * 2
-  );
-
-  const points = curve.getPoints(80);
-
-  const geometry =
-    new THREE.BufferGeometry().setFromPoints(
-      points.map(p =>
-        new THREE.Vector3(
-          p.x + x,
-          -2.0,
-          p.y
-        )
-      )
-    );
-
-  const line = new THREE.Line(
-    geometry,
-    new THREE.LineBasicMaterial({
-      color: 0xffffff
-    })
-  );
-
-  mainGroup.add(line);
-
-  return line;
-}
 
 function createTerrainSurface(x, y, z, width, depth, mat, rough = 0.25, lift = 0) {
   const geo = new THREE.PlaneGeometry(width, depth, 48, 48);
