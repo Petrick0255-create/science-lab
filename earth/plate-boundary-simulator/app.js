@@ -105,13 +105,13 @@ const materials = {
   }),
   mantle: new THREE.MeshStandardMaterial({
     color: 0xf97316,
-    roughness: 0.75
+    roughness: 0.75,
     transparent: true,
     opacity: 0.72
   }),
   mantleDark: new THREE.MeshStandardMaterial({
     color: 0x8b2f12,
-    roughness: 0.9
+    roughness: 0.9,
     transparent: true,
     opacity: 0.8
   }),
