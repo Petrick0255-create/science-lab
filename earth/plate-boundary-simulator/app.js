@@ -14,6 +14,8 @@ const showMagma = document.getElementById("showMagma");
 
 const infoTitle = document.getElementById("infoTitle");
 const infoText = document.getElementById("infoText");
+const exampleList = document.getElementById("exampleList");
+const mapMarkers = document.getElementById("mapMarkers");
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdff6ff);
@@ -492,9 +494,6 @@ document.getElementById("captureBtn").addEventListener("click", () => {
 
 rebuild();
 animate();
-
-const exampleList = document.getElementById("exampleList");
-const mapMarkers = document.getElementById("mapMarkers");
 
 function updateExamples(type) {
   const data = {
