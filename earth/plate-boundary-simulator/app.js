@@ -495,6 +495,7 @@ function buildTransform() {
   clearScene();
   addOceanAndMantle();
 
+  // 보존형: 경계와 평행하게 서로 반대 방향 이동
   createConvectionCell(-3, -1.8, false);
   createConvectionCell(3, 1.8, false);
 
@@ -504,17 +505,26 @@ function buildTransform() {
   createTerrainSurface(-2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
   createTerrainSurface(2.95, 0.35, 0, 5.4, 6.4, materials.oceanDeep, 0.08, 0);
 
-  plateObjects.push({ mesh: a, baseZ: 0, dirZ: 1, kind: "transform" });
-  plateObjects.push({ mesh: b, baseZ: 0, dirZ: -1, kind: "transform" });
+  // 왼쪽 판: 아래쪽(-Z), 오른쪽 판: 위쪽(+Z)
+  plateObjects.push({ mesh: a, baseZ: 0, dirZ: -1, kind: "transform" });
+  plateObjects.push({ mesh: b, baseZ: 0, dirZ: 1, kind: "transform" });
 
   const fault = addBox(0, 0.44, 0, 0.12, 0.12, 6.8, materials.dark);
   fault.rotation.y = 0.05;
 
-  addArrow(new THREE.Vector3(-3.8, 1.2, -2.6), new THREE.Vector3(-3.8, 1.2, 1.4));
-  addArrow(new THREE.Vector3(3.8, 1.2, 2.6), new THREE.Vector3(3.8, 1.2, -1.4));
+  // 화살표도 판 이동 방향과 일치
+  addArrow(
+    new THREE.Vector3(-3.8, 1.2, 1.4),
+    new THREE.Vector3(-3.8, 1.2, -2.6)
+  );
+
+  addArrow(
+    new THREE.Vector3(3.8, 1.2, -1.4),
+    new THREE.Vector3(3.8, 1.2, 2.6)
+  );
 
   infoTitle.textContent = "보존형 경계";
-  infoText.textContent = "두 판이 서로 어긋나게 이동하며 단층을 따라 지진이 발생한다.";
+  infoText.textContent = "두 판이 경계와 평행한 방향으로 서로 어긋나게 이동하며, 단층을 따라 지진이 발생한다.";
 }
 
 function rebuild() {
