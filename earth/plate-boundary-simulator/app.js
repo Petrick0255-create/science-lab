@@ -150,6 +150,7 @@ let crustBands = [];
 let benioffDots = [];
 let smokeObjects = [];
 let waveObjects = [];
+let convectionParticles = [];
 
 function clearScene() {
   while (mainGroup.children.length) {
@@ -167,6 +168,7 @@ function clearScene() {
   benioffDots = [];
   smokeObjects = [];
   waveObjects = [];
+  convectionParticles = [];
 }
 
 function addBox(x, y, z, sx, sy, sz, mat) {
@@ -215,6 +217,84 @@ function addArrow(start, end, color = 0xffffff) {
   return arrow;
 }
 
+function createConvectionCell(cx, cz, reverse = false) {
+  const group = new THREE.Group();
+  mainGroup.add(group);
+
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0xfff3a3,
+    transparent: true,
+    opacity: 0.75
+  });
+
+  const points = [];
+
+  for (let i = 0; i <= 120; i++) {
+    const a = (i / 120) * Math.PI * 2;
+    points.push(
+      new THREE.Vector3(
+        cx + Math.cos(a) * 1.45,
+        -1.75 + Math.sin(a) * 0.55,
+        cz
+      )
+    );
+  }
+
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(lineGeo, lineMat);
+  group.add(line);
+
+  for (let i = 0; i < 8; i++) {
+    const p = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 16, 16),
+      materials.magmaBright.clone()
+    );
+
+    group.add(p);
+
+    convectionParticles.push({
+      mesh: p,
+      cx,
+      cz,
+      phase: (i / 8) * Math.PI * 2,
+      reverse
+    });
+  }
+}
+
+function createConvectionCell(x){
+
+  const curve = new THREE.EllipseCurve(
+    0, 0,
+    1.5, 0.7,
+    0, Math.PI * 2
+  );
+
+  const points = curve.getPoints(80);
+
+  const geometry =
+    new THREE.BufferGeometry().setFromPoints(
+      points.map(p =>
+        new THREE.Vector3(
+          p.x + x,
+          -2.0,
+          p.y
+        )
+      )
+    );
+
+  const line = new THREE.Line(
+    geometry,
+    new THREE.LineBasicMaterial({
+      color: 0xffffff
+    })
+  );
+
+  mainGroup.add(line);
+
+  return line;
+}
+
 function createTerrainSurface(x, y, z, width, depth, mat, rough = 0.25, lift = 0) {
   const geo = new THREE.PlaneGeometry(width, depth, 48, 48);
   const pos = geo.attributes.position;
@@ -244,26 +324,28 @@ function createTerrainSurface(x, y, z, width, depth, mat, rough = 0.25, lift = 0
 }
 
 function addOceanAndMantle() {
-  addBox(0, -1.75, 0, 20, 1.35, 10, materials.mantle);
-  addBox(0, -2.45, 0, 20, 0.45, 10, materials.mantleDark);
+  addBox(0, -2.05, 0, 20, 2.5, 10, materials.mantle);
+  addBox(0, -3.15, 0, 20, 0.45, 10, materials.mantleDark);
 
-  const ocean = createTerrainSurface(0, 0.62, 0, 18, 9, materials.ocean, 0.045, 0);
-  waveObjects.push(ocean);
-
-  for (let i = 0; i < 28; i++) {
+  for (let i = 0; i < 36; i++) {
     const blob = addCylinder(
-      -9 + i * 0.7,
-      -0.95,
+      -9 + i * 0.55,
+      -1.15,
       -4 + Math.random() * 8,
-      0.14,
+      0.13,
       0.055,
       materials.magma
     );
 
-    blob.scale.x = 2.4;
-    blob.scale.z = 0.75;
+    blob.scale.x = 2.2;
+    blob.scale.z = 0.7;
     magmaObjects.push(blob);
   }
+
+  createConvectionCell(-6, -2.2, false);
+  createConvectionCell(-2, 2.0, true);
+  createConvectionCell(2, -2.0, false);
+  createConvectionCell(6, 2.2, true);
 }
 
 function makeMagmaColumn(x, z, height = 2.7) {
@@ -579,6 +661,18 @@ function animate() {
   magmaObjects.forEach((m, i) => {
     m.visible = showMagma.checked;
     m.scale.y = 1 + Math.sin(time * 4 + i) * 0.11 * magmaPower;
+  });
+
+  convectionParticles.forEach(p => {
+    const dir = p.reverse ? -1 : 1;
+    const a = time * 2.2 * dir + p.phase;
+
+    p.mesh.position.x = p.cx + Math.cos(a) * 1.45;
+    p.mesh.position.y = -1.75 + Math.sin(a) * 0.55;
+    p.mesh.position.z = p.cz;
+  
+    const scale = 0.8 + Math.sin(a) * 0.25;
+    p.mesh.scale.setScalar(scale);
   });
 
   smokeObjects.forEach((s, i) => {
