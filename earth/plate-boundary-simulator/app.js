@@ -315,6 +315,8 @@ function addOceanAndMantle() {
   createConvectionCell(1.7, -1.6, false);
   createConvectionCell(5, 1.8, true);
 
+}
+
 function makeMagmaColumn(x, z, height = 2.7) {
   const column = addCylinder(x, -0.6 + height / 2, z, 0.18, height, materials.magma);
   const core = addCylinder(x, -0.55 + height / 2, z, 0.08, height * 1.04, materials.magmaBright);
