@@ -109,7 +109,10 @@ let crustBands = [];
 let benioffDots = [];
 
 function clearScene() {
-  labels.forEach(l => l.div.remove());
+  labels.forEach(l => {
+    l.div.remove();
+    l.line.remove();
+  });
   labels = [];
 
   while (mainGroup.children.length) {
@@ -154,33 +157,24 @@ function addCylinder(x, y, z, r, h, mat) {
   return mesh;
 }
 
-function addText(text, x, y, z) {
-
-  if(!showLabels.checked) return;
-
+function addText(text, x, y, z, ox = 70, oy = -45) {
   const div = document.createElement("div");
-
   div.className = "label3d";
-
   div.textContent = text;
 
-  div.style.position = "absolute";
-  div.style.pointerEvents = "none";
-  div.style.fontWeight = "700";
-  div.style.fontSize = "18px";
-  div.style.color = "#111";
-  div.style.textShadow =
-    "0 0 10px white, 0 0 20px white";
+  const line = document.createElement("div");
+  line.className = "labelLine";
 
-  document
-    .querySelector(".sim-area")
-    .appendChild(div);
+  document.querySelector(".sim-area").appendChild(div);
+  document.querySelector(".sim-area").appendChild(line);
 
   labels.push({
     div,
-    position:new THREE.Vector3(x,y,z)
+    line,
+    position: new THREE.Vector3(x, y, z),
+    ox,
+    oy
   });
-
 }
 
 function addArrow(start, end, color = 0x111111) {
@@ -391,26 +385,40 @@ function addQuake(x, y, z) {
 }
 
 function updateLabels() {
+  const rect = canvas.getBoundingClientRect();
+  const areaRect = document.querySelector(".sim-area").getBoundingClientRect();
+
   labels.forEach(item => {
-    if(!showLabels.checked){
-
-      item.div.style.display="none";
+    if (!showLabels.checked) {
+      item.div.style.display = "none";
+      item.line.style.display = "none";
       return;
-
     }
 
-    item.div.style.display="block";
+    item.div.style.display = "block";
+    item.line.style.display = "block";
 
     const p = item.position.clone();
     p.project(camera);
 
-    const rect = canvas.getBoundingClientRect();
+    const anchorX = (p.x * 0.5 + 0.5) * rect.width + rect.left - areaRect.left;
+    const anchorY = (-p.y * 0.5 + 0.5) * rect.height + rect.top - areaRect.top;
 
-    const x = (p.x * 0.5 + 0.5) * rect.width + rect.left;
-    const y = (-p.y * 0.5 + 0.5) * rect.height + rect.top;
+    const labelX = anchorX + item.ox;
+    const labelY = anchorY + item.oy;
 
-    item.div.style.left = `${x}px`;
-    item.div.style.top = `${y}px`;
+    item.div.style.left = `${labelX}px`;
+    item.div.style.top = `${labelY}px`;
+
+    const dx = labelX - anchorX;
+    const dy = labelY - anchorY;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+
+    item.line.style.left = `${anchorX}px`;
+    item.line.style.top = `${anchorY}px`;
+    item.line.style.width = `${len}px`;
+    item.line.style.transform = `rotate(${angle}rad)`;
   });
 }
 

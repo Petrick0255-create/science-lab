@@ -241,3 +241,26 @@ canvas{
     0 2px 10px rgba(0,0,0,.15);
 
 }
+
+.label3d{
+  position:absolute;
+  transform:translate(-50%, -50%);
+  background:rgba(15,23,42,.88);
+  color:white;
+  padding:5px 10px;
+  border-radius:8px;
+  font-size:15px;
+  font-weight:800;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:5;
+}
+
+.labelLine{
+  position:absolute;
+  height:2px;
+  background:rgba(15,23,42,.7);
+  transform-origin:0 50%;
+  pointer-events:none;
+  z-index:4;
+}
