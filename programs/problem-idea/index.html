@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>J&B 문제 아이디어</title>
+
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+
+<header>
+  <a class="home-link" href="../../index.html">
+    <div class="brand">J&B</div>
+    <div class="badge">LAB</div>
+  </a>
+
+  <div class="header-title">문제 아이디어</div>
+</header>
+
+<main class="container">
+
+  <section class="hero">
+    <h1>문제 아이디어</h1>
+    <p>
+      과목과 유형을 선택하면 관련 문항을 확인하고,<br>
+      출처 검색 프로그램에서 바로 검색할 수 있습니다.
+    </p>
+  </section>
+
+  <section class="control-panel">
+    <div class="filters">
+
+      <label>
+        과목
+        <select id="subjectSelect">
+          <option value="">전체 과목</option>
+        </select>
+      </label>
+
+      <label>
+        유형
+        <select id="typeSelect">
+          <option value="">전체 유형</option>
+        </select>
+      </label>
+
+      <label>
+        정렬
+        <select id="sortSelect">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+          <option value="number">번호순</option>
+          <option value="random">랜덤</option>
+        </select>
+      </label>
+
+      <label>
+        보기
+        <select id="columnSelect">
+          <option value="2">2열</option>
+          <option value="3" selected>3열</option>
+        </select>
+      </label>
+
+    </div>
+
+    <div class="summary-row">
+      <div id="resultCount">총 0문항</div>
+      <button id="copyAllBtn">전체 출처 복사</button>
+    </div>
+  </section>
+
+  <section class="source-panel">
+    <div class="section-head">
+      <h2>출처 검색용</h2>
+      <span>클릭하면 개별 복사됩니다.</span>
+    </div>
+
+    <div id="sourceList" class="source-list">
+      데이터를 불러오는 중입니다.
+    </div>
+  </section>
+
+  <section class="problem-panel">
+    <div class="section-head">
+      <h2>관련 문제</h2>
+      <span>출처 검색 버튼을 누르면 exam-search에서 바로 검색됩니다.</span>
+    </div>
+
+    <div id="problemGrid" class="problem-grid cols-3"></div>
+  </section>
+
+</main>
+
+<script src="./app.js"></script>
+</body>
+</html>

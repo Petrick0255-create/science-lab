@@ -194,3 +194,23 @@ document.getElementById("searchBtn").addEventListener("click", search);
 document.getElementById("searchInput").addEventListener("keydown", function(e){
   if(e.key === "Enter") search();
 });
+
+window.addEventListener("load", () => {
+  const params = new URLSearchParams(window.location.search);
+  const keyword = params.get("q");
+
+  if (!keyword) return;
+
+  const input = document.getElementById("searchInput");
+
+  if (!input) {
+    console.warn("searchInput을 찾지 못했습니다.");
+    return;
+  }
+
+  input.value = keyword;
+
+  setTimeout(() => {
+    search();
+  }, 100);
+});
