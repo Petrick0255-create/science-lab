@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J&B LAB 유전형질 Logic Builder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <div class="logo"></div>
+  <div class="brand">J&B</div>
+  <div class="badge">LAB</div>
+  <div class="title">유전형질 Logic Builder</div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>① 조건 선택</h2>
+
+    <h3>우열 검사</h3>
+    <label class="check"><input type="checkbox" id="diffChild"><div>부모와 다른 표현형의 자손<div class="small">자손 표현형 = 열성</div></div></label>
+    <label class="check"><input type="checkbox" id="hetero"><div>이형접합 제시<div class="small">Aa이면 표현형은 우성</div></div></label>
+
+    <h3>성상 검사</h3>
+    <label class="check"><input type="checkbox" id="sexRatio"><div>남녀 표현형 빈도 차이<div class="small">반성유전 의심</div></div></label>
+    <label class="check"><input type="checkbox" id="geneAmount"><div>유전자량 제시<div class="small">성염색체 유전자 검사</div></div></label>
+    <label class="check"><input type="checkbox" id="xDisease"><div>적록색맹 / 혈우병 / 피부 얼룩증<div class="small">X 염색체 소재</div></div></label>
+
+    <h3>반성유전 부정 검사</h3>
+    <label class="check"><input type="checkbox" id="recessiveFemale"><div>열성 여자 존재<div class="small">아버지 확인</div></div></label>
+    <label class="check"><input type="checkbox" id="motherSonDiff"><div>어머니와 아들 표현형 다름<div class="small">X열성 부정 가능</div></div></label>
+    <label class="check"><input type="checkbox" id="fatherDaughterDiff"><div>아버지와 딸 표현형 다름<div class="small">X열성 부정 가능</div></div></label>
+    <label class="check"><input type="checkbox" id="fatherSonDiff"><div>아버지와 아들 표현형 다름<div class="small">X 전달 아님</div></div></label>
+
+    <h3>추가 조건</h3>
+    <label class="check"><input type="checkbox" id="sameGeneAmountDiffPhenotype"><div>남녀 유전자량 동일 + 표현형 다름<div class="small">반성유전 확정 조건</div></div></label>
+    <label class="check"><input type="checkbox" id="parentsOneAllele"><div>부모가 각각 대립유전자 한 종류<div class="small">AA × aa 같은 조건</div></div></label>
+    <label class="check"><input type="checkbox" id="fatherNoRecessive"><div>아버지가 열성 유전자를 갖지 않음<div class="small">아버지-아들 비교와 결합</div></div></label>
+
+    <button onclick="resetChecks()">조건 초기화</button>
+    <button class="secondary" onclick="downloadSVG()">가계도 SVG 저장</button>
+  </section>
+
+  <section class="grid">
+    <div>
+      <div class="box">
+        <div class="box-title">② 문제에서는 이렇게 제시됩니다</div>
+        <div id="examples"></div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">③ 대표 가계도</div>
+        <svg id="pedigree" viewBox="0 0 720 430"></svg>
+        <p class="note" id="pedigreeNote"></p>
+      </div>
+
+      <div class="box">
+        <div class="box-title">④ 판별 과정</div>
+        <div id="logicCards"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box">
+        <div class="box-title">⑤ 현재 결론</div>
+        <div id="summary"></div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">⑥ 가능한 유전 방식</div>
+        <div id="candidates"></div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">⑦ 추천 발문</div>
+        <ul id="prompts"></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
