@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>벤다이어그램 제작기</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:"Noto Sans KR",system-ui,sans-serif;
+  background:#eef3f8;
+  color:#111827;
+}
+
+header{
+  height:60px;
+  background:white;
+  border-bottom:1px solid #dbe3ef;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+}
+
+.logo-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  font-size:21px;
+}
+
+.logo-area img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
+}
+
+.home-btn{
+  text-decoration:none;
+  background:#f1f5f9;
+  border:1px solid #cbd5e1;
+  color:#1e293b;
+  padding:8px 15px;
+  border-radius:999px;
+  font-weight:800;
+}
+
+main{
+  height:calc(100vh - 60px);
+  padding:14px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:14px;
+}
+
+.quad{
+  background:white;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 5px 16px rgba(0,0,0,.08);
+  overflow:auto;
+}
+
+.preview{
+  grid-column:2;
+  grid-row:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.panel-basic{
+  grid-column:1;
+  grid-row:1;
+}
+
+.panel-shade{
+  grid-column:1;
+  grid-row:2;
+}
+
+.panel-text{
+  grid-column:2;
+  grid-row:2;
+}
+
+h2{
+  margin:0 0 12px;
+  font-size:17px;
+}
+
+h3{
+  margin:16px 0 8px;
+  font-size:14px;
+  color:#334155;
+}
+
+.control{
+  margin-bottom:11px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+input,select{
+  width:100%;
+  padding:8px 10px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  font-size:14px;
+}
+
+input[type="color"]{
+  padding:2px;
+  height:36px;
+}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.check-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  background:#f8fafc;
+  border:1px solid #dbe3ef;
+  padding:9px;
+  border-radius:9px;
+  font-size:13px;
+  font-weight:800;
+}
+
+.check input{
+  width:auto;
+}
+
+.canvas-box{
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:10px;
+}
+
+canvas{
+  width:100%;
+  max-width:520px;
+  background:white;
+  border:1px solid #e5e7eb;
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:11px;
+  padding:11px;
+  background:#2563eb;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+button.secondary{
+  background:#334155;
+}
+
+@media(max-width:900px){
+  main{
+    height:auto;
+    grid-template-columns:1fr;
+    grid-template-rows:auto;
+  }
+
+  .preview,
+  .panel-basic,
+  .panel-shade,
+  .panel-text{
+    grid-column:auto;
+    grid-row:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="../logo.png" alt="J&B LAB">
+    <div>J&B LAB</div>
+  </div>
+
+  <a href="../index.html" class="home-btn">홈으로</a>
+</header>
+
+<main>
+
+  <!-- 2사분면: 기본 설정 -->
+  <section class="quad panel-basic">
+    <h2>기본 설정</h2>
+
+    <div class="row">
+      <div class="control">
+        <label>집합 개수</label>
+        <select id="setCount">
+          <option value="3">3개</option>
+          <option value="2">2개</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>선 두께</label>
+        <input id="lineWidth" type="range" min="1" max="8" value="3">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="control">
+        <label>원 크기</label>
+        <input id="circleSize" type="range" min="120" max="210" value="165">
+      </div>
+
+      <div class="control">
+        <label>겹침 정도</label>
+        <input id="overlap" type="range" min="80" max="250" value="220">
+      </div>
+    </div>
+
+    <h3>집합 이름</h3>
+
+    <label class="check">
+      <input type="checkbox" id="showSetName">
+      A, B, C 표시
+    </label>
+
+    <div class="row">
+      <div class="control">
+        <label>A 이름</label>
+        <input id="nameA" value="A">
+      </div>
+
+      <div class="control">
+        <label>B 이름</label>
+        <input id="nameB" value="B">
+      </div>
+    </div>
+
+    <div class="control three">
+      <label>C 이름</label>
+      <input id="nameC" value="C">
+    </div>
+  </section>
+
+  <!-- 1사분면: 미리보기 -->
+  <section class="quad preview">
+    <h2>미리보기</h2>
+
+    <div class="canvas-box">
+      <canvas id="canvas" width="900" height="650"></canvas>
+    </div>
+
+    <button class="secondary" onclick="downloadPNG()">PNG 저장</button>
+  </section>
+
+  <!-- 3사분면: 색칠 설정 -->
+  <section class="quad panel-shade">
+    <h2>색칠 설정</h2>
+
+    <div class="row">
+      <div class="control">
+        <label>색칠 색</label>
+        <input id="fillColor" type="color" value="#9ca3af">
+      </div>
+
+      <div class="control">
+        <label>색칠 투명도</label>
+        <input id="alpha" type="range" min="10" max="90" value="45">
+      </div>
+    </div>
+
+    <h3>색칠할 영역</h3>
+
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" id="onlyA"> A만</label>
+      <label class="check"><input type="checkbox" id="onlyB"> B만</label>
+      <label class="check three"><input type="checkbox" id="onlyC"> C만</label>
+
+      <label class="check"><input type="checkbox" id="ab"> A∩B</label>
+      <label class="check three"><input type="checkbox" id="ac"> A∩C</label>
+      <label class="check three"><input type="checkbox" id="bc"> B∩C</label>
+      <label class="check three"><input type="checkbox" id="abc"> A∩B∩C</label>
+    </div>
+
+    <button onclick="clearShade()">색칠 초기화</button>
+  </section>
+
+  <!-- 4사분면: 글씨 입력 -->
+  <section class="quad panel-text">
+    <h2>영역 글씨</h2>
+
+    <div class="control">
+      <label>글씨 크기</label>
+      <input id="fontSize" type="range" min="12" max="100" value="55">
+    </div>
+
+    <div class="row">
+      <div class="control">
+        <label>A만</label>
+        <input id="textOnlyA">
+      </div>
+
+      <div class="control">
+        <label>B만</label>
+        <input id="textOnlyB">
+      </div>
+    </div>
+
+    <div class="control three">
+      <label>C만</label>
+      <input id="textOnlyC">
+    </div>
+
+    <div class="row">
+      <div class="control">
+        <label>A∩B</label>
+        <input id="textAB">
+      </div>
+
+      <div class="control three">
+        <label>A∩C</label>
+        <input id="textAC">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="control three">
+        <label>B∩C</label>
+        <input id="textBC">
+      </div>
+
+      <div class="control three">
+        <label>A∩B∩C</label>
+        <input id="textABC">
+      </div>
+    </div>
+
+    <button onclick="clearText()">글씨 초기화</button>
+    <button onclick="clearAll()">전체 초기화</button>
+  </section>
+
+</main>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const $ = id => document.getElementById(id);
+
+document.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("input",()=>{
+    updateControls();
+    draw();
+  });
+});
+
+function updateControls(){
+  const isThree = $("setCount").value === "3";
+
+  document.querySelectorAll(".three").forEach(el=>{
+    el.style.display = isThree ? "" : "none";
+  });
+}
+
+function hexToRgba(hex, alpha){
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function fillColor(){
+  return hexToRgba($("fillColor").value, Number($("alpha").value)/100);
+}
+
+function clearCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="white";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function strokeCircle(x,y,r){
+  ctx.save();
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=Number($("lineWidth").value);
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function fillIntersection(paths){
+  ctx.save();
+  ctx.fillStyle=fillColor();
+
+  paths.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.clip();
+  });
+
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.restore();
+}
+
+function fillOnlyFixed(target, subtracts){
+  const temp = document.createElement("canvas");
+  temp.width = canvas.width;
+  temp.height = canvas.height;
+
+  const t = temp.getContext("2d");
+
+  t.fillStyle = fillColor();
+  t.beginPath();
+  t.arc(target.x,target.y,target.r,0,Math.PI*2);
+  t.fill();
+
+  t.globalCompositeOperation = "destination-out";
+
+  subtracts.forEach(s=>{
+    t.beginPath();
+    t.arc(s.x,s.y,s.r,0,Math.PI*2);
+    t.fill();
+  });
+
+  ctx.drawImage(temp,0,0);
+}
+
+function drawText(value,x,y){
+  if(!value) return;
+
+  ctx.save();
+  ctx.fillStyle="#111";
+  ctx.font=`700 ${$("fontSize").value}px "Noto Sans KR", sans-serif`;
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+
+  const lines = String(value).split("\\n");
+  const size = Number($("fontSize").value);
+
+  lines.forEach((line,i)=>{
+    ctx.fillText(line,x,y + (i - (lines.length-1)/2) * size * 1.25);
+  });
+
+  ctx.restore();
+}
+
+function drawTwo(){
+  clearCanvas();
+
+  const r = Number($("circleSize").value);
+  const gap = Number($("overlap").value);
+
+  const A = {x:450-gap/2,y:330,r};
+  const B = {x:450+gap/2,y:330,r};
+
+  if($("onlyA").checked) fillOnlyFixed(A,[B]);
+  if($("onlyB").checked) fillOnlyFixed(B,[A]);
+  if($("ab").checked) fillIntersection([A,B]);
+
+  strokeCircle(A.x,A.y,A.r);
+  strokeCircle(B.x,B.y,B.r);
+
+  if($("showSetName").checked){
+    drawText($("nameA").value, A.x - r*0.45, A.y - r - 25);
+    drawText($("nameB").value, B.x + r*0.45, B.y - r - 25);
+  }
+
+  drawText($("textOnlyA").value,A.x-r*0.45,A.y);
+  drawText($("textOnlyB").value,B.x+r*0.45,B.y);
+  drawText($("textAB").value,450,330);
+}
+
+function drawThree(){
+  clearCanvas();
+
+  const r = Number($("circleSize").value);
+  const gap = Number($("overlap").value);
+
+  const A = {x:450,y:245,r};
+  const B = {x:450-gap/2,y:440,r};
+  const C = {x:450+gap/2,y:440,r};
+
+  if($("onlyA").checked) fillOnlyFixed(A,[B,C]);
+  if($("onlyB").checked) fillOnlyFixed(B,[A,C]);
+  if($("onlyC").checked) fillOnlyFixed(C,[A,B]);
+
+  if($("ab").checked) fillIntersection([A,B]);
+  if($("ac").checked) fillIntersection([A,C]);
+  if($("bc").checked) fillIntersection([B,C]);
+  if($("abc").checked) fillIntersection([A,B,C]);
+
+  strokeCircle(A.x,A.y,A.r);
+  strokeCircle(B.x,B.y,B.r);
+  strokeCircle(C.x,C.y,C.r);
+
+  if($("showSetName").checked){
+    drawText($("nameA").value, A.x, A.y-r-25);
+    drawText($("nameB").value, B.x-r*0.65, B.y+r*0.75);
+    drawText($("nameC").value, C.x+r*0.65, C.y+r*0.75);
+  }
+
+  drawText($("textOnlyA").value,A.x,A.y-r*0.45);
+  drawText($("textOnlyB").value,B.x-r*0.45,B.y+r*0.25);
+  drawText($("textOnlyC").value,C.x+r*0.45,C.y+r*0.25);
+
+  drawText($("textAB").value,390,345);
+  drawText($("textAC").value,510,345);
+  drawText($("textBC").value,450,485);
+  drawText($("textABC").value,450,400);
+}
+
+function draw(){
+  if($("setCount").value==="2") drawTwo();
+  else drawThree();
+}
+
+function clearShade(){
+  document.querySelectorAll("input[type='checkbox']").forEach(c=>{
+    if(["onlyA","onlyB","onlyC","ab","ac","bc","abc"].includes(c.id)){
+      c.checked=false;
+    }
+  });
+  draw();
+}
+
+function clearText(){
+  [
+    "textOnlyA","textOnlyB","textOnlyC",
+    "textAB","textAC","textBC","textABC"
+  ].forEach(id=>$(id).value="");
+
+  draw();
+}
+
+function clearAll(){
+  clearShade();
+  clearText();
+
+  $("showSetName").checked=false;
+  $("nameA").value="A";
+  $("nameB").value="B";
+  $("nameC").value="C";
+
+  draw();
+}
+
+function downloadPNG(){
+  const link=document.createElement("a");
+  link.download="venn-diagram.png";
+  link.href=canvas.toDataURL("image/png");
+  link.click();
+}
+
+updateControls();
+draw();
+</script>
+
+</body>
+</html>
