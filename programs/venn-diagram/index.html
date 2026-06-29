@@ -310,6 +310,9 @@ button.secondary{
       <label class="check three"><input type="checkbox" id="ac"> A∩C</label>
       <label class="check three"><input type="checkbox" id="bc"> B∩C</label>
       <label class="check three"><input type="checkbox" id="abc"> A∩B∩C</label>
+      <label class="check three"><input type="checkbox" id="abOnly"> A∩B (ABC 제외)</label>
+      <label class="check three"><input type="checkbox" id="acOnly"> A∩C (ABC 제외)</label>
+      <label class="check three"><input type="checkbox" id="bcOnly"> B∩C (ABC 제외)</label>
     </div>
 
     <button onclick="clearShade()">색칠 초기화</button>
@@ -455,6 +458,36 @@ function fillOnlyFixed(target, subtracts){
   ctx.drawImage(temp,0,0);
 }
 
+function fillIntersectionExcept(paths, subtracts){
+  const temp=document.createElement("canvas");
+  temp.width=canvas.width;
+  temp.height=canvas.height;
+
+  const t=temp.getContext("2d");
+
+  t.save();
+  t.fillStyle=fillColor();
+
+  paths.forEach(p=>{
+    t.beginPath();
+    t.arc(p.x,p.y,p.r,0,Math.PI*2);
+    t.clip();
+  });
+
+  t.fillRect(0,0,temp.width,temp.height);
+  t.restore();
+
+  t.globalCompositeOperation="destination-out";
+
+  subtracts.forEach(s=>{
+    t.beginPath();
+    t.arc(s.x,s.y,s.r,0,Math.PI*2);
+    t.fill();
+  });
+
+  ctx.drawImage(temp,0,0);
+}
+
 function drawText(value,x,y){
   if(!value) return;
 
@@ -519,6 +552,10 @@ function drawThree(){
   if($("bc").checked) fillIntersection([B,C]);
   if($("abc").checked) fillIntersection([A,B,C]);
 
+  if($("abOnly").checked) fillIntersectionExcept([A,B],[C]);
+  if($("acOnly").checked) fillIntersectionExcept([A,C],[B]);
+  if($("bcOnly").checked) fillIntersectionExcept([B,C],[A]);
+
   strokeCircle(A.x,A.y,A.r);
   strokeCircle(B.x,B.y,B.r);
   strokeCircle(C.x,C.y,C.r);
@@ -546,10 +583,22 @@ function draw(){
 
 function clearShade(){
   document.querySelectorAll("input[type='checkbox']").forEach(c=>{
-    if(["onlyA","onlyB","onlyC","ab","ac","bc","abc"].includes(c.id)){
-      c.checked=false;
+    if([
+      "onlyA",
+      "onlyB",
+      "onlyC",
+      "ab",
+      "ac",
+      "bc",
+      "abc",
+      "abOnly",
+      "acOnly",
+      "bcOnly"
+    ].includes(c.id)){
+      c.checked = false;
     }
   });
+
   draw();
 }
 
