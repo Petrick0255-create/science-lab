@@ -270,6 +270,23 @@ button.secondary{
       <label>C 이름</label>
       <input id="nameC" value="C">
     </div>
+
+    <div class="row">
+      <div class="control three">
+        <label>A∩B (ABC 제외)</label>
+        <input id="textABOnly">
+      </div>
+
+      <div class="control three">
+        <label>A∩C (ABC 제외)</label>
+        <input id="textACOnly">
+      </div>
+    </div>
+ 
+    <div class="control three">
+      <label>B∩C (ABC 제외)</label>
+      <input id="textBCOnly">
+    </div>
   </section>
 
   <!-- 1사분면: 미리보기 -->
@@ -574,6 +591,9 @@ function drawThree(){
   drawText($("textAC").value,510,345);
   drawText($("textBC").value,450,485);
   drawText($("textABC").value,450,400);
+  drawText($("textABOnly").value,390,365);
+  drawText($("textACOnly").value,510,365);
+  drawText($("textBCOnly").value,450,505);
 }
 
 function draw(){
@@ -604,9 +624,19 @@ function clearShade(){
 
 function clearText(){
   [
-    "textOnlyA","textOnlyB","textOnlyC",
-    "textAB","textAC","textBC","textABC"
-  ].forEach(id=>$(id).value="");
+    "textOnlyA",
+    "textOnlyB",
+    "textOnlyC",
+    "textAB",
+    "textAC",
+    "textBC",
+    "textABC",
+    "textABOnly",
+    "textACOnly",
+    "textBCOnly"
+  ].forEach(id=>{
+    $(id).value = "";
+  });
 
   draw();
 }
