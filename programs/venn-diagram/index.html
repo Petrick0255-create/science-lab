@@ -270,23 +270,6 @@ button.secondary{
       <label>C 이름</label>
       <input id="nameC" value="C">
     </div>
-
-    <div class="row">
-      <div class="control three">
-        <label>A∩B (ABC 제외)</label>
-        <input id="textABOnly">
-      </div>
-
-      <div class="control three">
-        <label>A∩C (ABC 제외)</label>
-        <input id="textACOnly">
-      </div>
-    </div>
- 
-    <div class="control three">
-      <label>B∩C (ABC 제외)</label>
-      <input id="textBCOnly">
-    </div>
   </section>
 
   <!-- 1사분면: 미리보기 -->
@@ -327,6 +310,7 @@ button.secondary{
       <label class="check three"><input type="checkbox" id="ac"> A∩C</label>
       <label class="check three"><input type="checkbox" id="bc"> B∩C</label>
       <label class="check three"><input type="checkbox" id="abc"> A∩B∩C</label>
+
       <label class="check three"><input type="checkbox" id="abOnly"> A∩B (ABC 제외)</label>
       <label class="check three"><input type="checkbox" id="acOnly"> A∩C (ABC 제외)</label>
       <label class="check three"><input type="checkbox" id="bcOnly"> B∩C (ABC 제외)</label>
@@ -383,6 +367,23 @@ button.secondary{
         <label>A∩B∩C</label>
         <input id="textABC">
       </div>
+    </div>
+
+    <div class="row">
+      <div class="control three">
+        <label>A∩B (ABC 제외)</label>
+        <input id="textABOnly">
+      </div>
+
+      <div class="control three">
+        <label>A∩C (ABC 제외)</label>
+        <input id="textACOnly">
+      </div>
+    </div>
+
+    <div class="control three">
+      <label>B∩C (ABC 제외)</label>
+      <input id="textBCOnly">
     </div>
 
     <button onclick="clearText()">글씨 초기화</button>
