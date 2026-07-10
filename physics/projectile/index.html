@@ -170,22 +170,25 @@ th{background:#f3f4f6}
         <option value="no">숨김</option>
       </select>
     </div>
+
+    <div>
+      <label>배경 점선 진하기</label>
+      <input id="gridAlpha" type="range" min="0.10" max="1.00" step="0.05" value="0.45">
+    </div>
   </div>
 
-  <div class="card grid">
-    <button onclick="build()">그림 만들기</button>
-    <button onclick="play()">▶ 영상 재생</button>
-    <button class="secondary" onclick="prevFrame()">◀ 한 단계 전</button>
-    <button class="secondary" onclick="nextFrame()">한 단계 후 ▶</button>
-
-    <button class="secondary" onclick="gridXPlus()">가로 격자 +</button>
-    <button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
-    <button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
-    <button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
-
-    <button class="dark" onclick="saveImage()">PNG 저장</button>
-    <button class="warn" onclick="resetAll()">초기화</button>
-  </div>
+  <div class="card" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+<button onclick="build()">그림 만들기</button>
+<button onclick="play()">▶ 영상 재생</button>
+<button class="secondary" onclick="prevFrame()">◀ 한 단계 전</button>
+<button class="secondary" onclick="nextFrame()">한 단계 후 ▶</button>
+<button class="dark" onclick="saveImage()">PNG 저장</button>
+<button class="secondary" onclick="gridXPlus()">가로 격자 +</button>
+<button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
+<button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
+<button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
+<button class="warn" onclick="resetAll()">초기화</button>
+</div>
 
   <div class="card small">
     기본값: h=0.5m, v=0.5m/s, g=10m/s², Δt=0.1s, 가로/세로 1칸=0.05m.
@@ -250,7 +253,8 @@ function getInputs(){
     bLabelSize:num("bLabelSize"),
     showGuideText:document.getElementById("showGuideText").value,
     showGuideLine:document.getElementById("showGuideLine").value,
-    showD:document.getElementById("showD").value
+    showD:document.getElementById("showD").value,
+    gridAlpha:Number(document.getElementById("gridAlpha").value)
   };
 }
 
@@ -371,7 +375,7 @@ function drawAnimationFrame(){
 }
 
 function drawGrid(x0, y0, cols, rows, cell, s){
-  ctx.strokeStyle = "#b8bec8";
+  ctx.strokeStyle = `rgba(120,120,120,${s.gridAlpha})`;
   ctx.lineWidth = 1;
   ctx.setLineDash([5,4]);
 
@@ -705,6 +709,7 @@ function resetAll(){
   document.getElementById("showGuideText").value = "no";
   document.getElementById("showGuideLine").value = "no";
   document.getElementById("showD").value = "yes";
+  document.getElementById("gridAlpha").value = 0.45;
 
   build();
 }
