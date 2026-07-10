@@ -100,10 +100,21 @@ th{background:#f3f4f6}
     </div>
 
     <div>
+      <label>A 이름</label>
+      <input id="aName" value="A">
+    </div>
+
+    <div>
+      <label>B 이름</label>
+      <input id="bName" value="B">
+    </div>
+
+    <div>
       <label>A 색</label>
       <select id="aColor">
         <option value="white">흰 공</option>
         <option value="black" selected>검은 공</option>
+        <option value="hide">숨김</option>
       </select>
     </div>
 
@@ -112,6 +123,7 @@ th{background:#f3f4f6}
       <select id="bColor">
         <option value="black">검은 공</option>
         <option value="white" selected>흰 공</option>
+        <option value="hide">숨김</option>
       </select>
     </div>
 
@@ -228,6 +240,8 @@ function getInputs(){
     viewMode:document.getElementById("viewMode").value,
     surfaceText:txt("surfaceText"),
     captionText:txt("captionText"),
+    aName:txt("aName"),
+    bName:txt("bName"),
     aColor:document.getElementById("aColor").value,
     bColor:document.getElementById("bColor").value,
     ballSize:num("ballSize"),
@@ -478,17 +492,14 @@ function screenY(y, y0, cell, s){
 }
 
 function drawPoints(start, end, x0, y0, cell, s){
-  const aX = x0 + cell;
-  const bX0 = x0 + cell*3;
+  const hideA=s.aColor==="hide";
+  const aX=x0+cell;
+  const bX0=hideA?aX:x0+cell*3;
 
   ctx.fillStyle="#111";
   ctx.textAlign="center";
 
-  ctx.font=`${s.aLabelSize}px serif`;
-  ctx.fillText("A", aX, y0-20);
-
-  ctx.font=`${s.bLabelSize}px serif`;
-  ctx.fillText("B", bX0, y0-20);
+  if(!hideA){ctx.font=`${s.aLabelSize}px serif`;ctx.fillText(s.aName,aX,y0-20);} if(s.bColor!=="hide"){ctx.font=`${s.bLabelSize}px serif`;ctx.fillText(s.bName,bX0,y0-20);}
 
   for(let i=start;i<=end;i++){
     if(i % s.showEvery !== 0 && i !== frame) continue;
@@ -498,11 +509,11 @@ function drawPoints(start, end, x0, y0, cell, s){
     const ax = aX;
     const ay = screenY(p.y, y0, cell, s);
 
-    const bx = screenX(p.x, x0, cell, s);
+    const bx = bX0 + (p.x / s.dx) * cell;
     const by = screenY(p.y, y0, cell, s);
 
-    drawBall(ax, ay, s.aColor);
-    drawBall(bx, by, s.bColor);
+    if(!hideA) drawBall(ax,ay,s.aColor);
+    if(s.bColor!=="hide") drawBall(bx,by,s.bColor);
   }
 
   ctx.textAlign="left";
@@ -513,8 +524,8 @@ function drawGuide(x0, y0, cell, s){
 
   const p = data[frame];
 
-  const bX0 = x0 + cell*3;
-  const bx = screenX(p.x, x0, cell, s);
+  const bX0 = (s.aColor==="hide") ? x0+cell : x0+cell*3;
+  const bx = bX0 + (p.x / s.dx) * cell;
   const by = screenY(p.y, y0, cell, s);
 
   if(s.showGuideLine === "yes"){
