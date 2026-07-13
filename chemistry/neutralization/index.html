@@ -25,21 +25,47 @@
 
       <div class="notice">
         화면에는 A, B, C로 표시됩니다.<br>
-        내부 계산은 A=산, B/C=염기입니다.
+        내부 계산은 선택한 산·염기 종류를 기준으로 수행됩니다.
       </div>
 
       <div class="input-grid">
+
+        <label>A 용액 종류</label>
+        <select id="aType">
+          <option value="acid1" selected>1가산</option>
+          <option value="acid2">2가산</option>
+          <option value="base1">1가 염기</option>
+          <option value="base2">2가 염기</option>
+        </select>
+
         <label>A 용액 단위량</label>
         <input id="aN" type="number" value="3" step="0.5" />
 
+        <label>B 용액 종류</label>
+        <select id="bType">
+          <option value="acid1">1가산</option>
+          <option value="acid2">2가산</option>
+          <option value="base1" selected>1가 염기</option>
+          <option value="base2">2가 염기</option>
+        </select>
+
         <label>B 용액 단위량</label>
         <input id="bN" type="number" value="2" step="0.5" />
+
+        <label>C 용액 종류</label>
+        <select id="cType">
+          <option value="acid1">1가산</option>
+          <option value="acid2">2가산</option>
+          <option value="base1" selected>1가 염기</option>
+          <option value="base2">2가 염기</option>
+        </select>
 
         <label>C 용액 단위량</label>
         <input id="cN" type="number" value="1" step="0.5" />
 
         <label>기준 부피</label>
         <input id="unitV" type="number" value="10" step="1" />
+
       </div>
 
       <div class="unit-box">
