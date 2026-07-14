@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합과학 에너지 전환 문제 생성기</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        h2 {
+            border-bottom: 2px solid #222;
+            padding-bottom: 8px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #666; 
+            margin-top: 0; 
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .control-panel {
+            width: 340px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .preview-panel {
+            flex: 1;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+        .input-flex {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .input-flex input[type="number"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        /* 가리기 체크박스 토글 스타일 */
+        .hide-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 70px;
+            text-align: center;
+        }
+        .hide-btn.hidden-active {
+            background-color: #dc3545;
+        }
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-update {
+            background-color: #007bff;
+        }
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+        .btn-random {
+            background-color: #e0a800;
+            color: #212529;
+        }
+        .btn-random:hover {
+            background-color: #d39e00;
+        }
+        .btn-print {
+            background-color: #28a745;
+        }
+        .btn-print:hover {
+            background-color: #218838;
+        }
+        .result-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f1f3f5;
+            border-left: 4px solid #17a2b8;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .error-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        .success-box {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        /* 프린트 영역 스타일 */
+        #print-area {
+            width: 100%;
+            max-width: 650px;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            background: #fff;
+        }
+        .problem-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            word-break: keep-all;
+        }
+        svg {
+            background-color: #fff;
+            display: block;
+            margin: 0 auto;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h2>⚡ 에너지 전환 맞춤형 문제 빌더</h2>
+<p class="subtitle">전체 수치를 입력한 뒤, 오른쪽 [가리기] 버튼을 눌러 숨길 항목들을 선택하세요. 정답 도출 여부를 실시간으로 논리 검증합니다.</p>
+
+<div class="container">
+    <!-- 컨트롤 패널 -->
+    <div class="control-panel">
+        <h3 class="section-title">기본 물리량 입력 및 노출 설정</h3>
+        <hr style="margin-bottom: 15px; border: 0; border-top: 1px solid #eee;">
+        
+        <!-- 1. 발전기 투입 (화학) -->
+        <div class="input-group">
+            <label>① 발전기 투입 화학 에너지 (㉠)</label>
+            <div class="input-flex">
+                <input type="number" id="val_X" value="128" oninput="calculateFromBase()">
+                <button class="hide-btn" id="btn_X" onclick="toggleHide('X')">노출중</button>
+            </div>
+        </div>
+
+        <!-- 2. 발전기 열에너지 -->
+        <div class="input-group">
+            <label>② 발전기 손실 열에너지</label>
+            <div class="input-flex">
+                <input type="number" id="val_Q_gen" value="112" oninput="calculateFromBase()">
+                <button class="hide-btn" id="btn_Q_gen" onclick="toggleHide('Q_gen')">노출중</button>
+            </div>
+        </div>
+
+        <!-- 3. 전기 에너지 -->
+        <div class="input-group">
+            <label>③ 생산된 전기 에너지</label>
+            <div class="input-flex">
+                <input type="number" id="val_E" value="16" oninput="calculateFromBase(true)">
+                <button class="hide-btn" id="btn_E" onclick="toggleHide('E')">노출중</button>
+            </div>
+        </div>
+
+        <!-- 4. 백열등 빛에너지 -->
+        <div class="input-group">
+            <label>④ 백열등 유효 빛에너지</label>
+            <div class="input-flex">
+                <input type="number" id="val_L_bulb" value="1" oninput="calculateFromBase()">
+                <button class="hide-btn" id="btn_L_bulb" onclick="toggleHide('L_bulb')">노출중</button>
+            </div>
+        </div>
+
+        <!-- 5. 백열등 열에너지 -->
+        <div class="input-group">
+            <label>⑤ 백열등 손실 열에너지</label>
+            <div class="input-flex">
+                <input type="number" id="val_Q_bulb" value="15" oninput="calculateFromBase()">
+                <button class="hide-btn" id="btn_Q_bulb" onclick="toggleHide('Q_bulb')">노출중</button>
+            </div>
+        </div>
+
+        <!-- 효율 비 -->
+        <div class="input-group">
+            <label>⑥ 효율 비 (발전기 : 백열등)</label>
+            <div class="input-flex">
+                <input type="number" id="ratioA" value="4" style="width:50px;" oninput="updateProblem()"> : 
+                <input type="number" id="ratioB" value="5" style="width:50px;" oninput="updateProblem()">
+                <button class="hide-btn" id="btn_Ratio" onclick="toggleHide('Ratio')">노출중</button>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-random" onclick="loadPerfectInteger()">🎲 정수 데이터셋 불러오기</button>
+            <button class="btn-print" onclick="window.print()">🖨️ 이 상태로 시험지 출력 (PDF)</button>
+        </div>
+
+        <div class="result-info" id="status-box">
+            <!-- 실시간 논리 검증 및 결과 표시 -->
+        </div>
+    </div>
+
+    <!-- 미리보기 영역 -->
+    <div class="preview-panel">
+        <div id="print-area">
+            <div class="problem-text" id="problem-q">
+                그림은 어느 발전기 A와 백열등 B에서의 에너지 전환을 나타낸 것이다. 발전기와 백열등의 에너지 효율이 4:5일 때, 빈칸에 들어갈 알맞은 값을 구하시오.
+            </div>
+            
+            <!-- SVG 다이어그램 -->
+            <svg id="diagram" width="600" height="300" viewBox="0 0 600 300">
+                <!-- 발전기 박스 -->
+                <rect x="140" y="80" width="120" height="50" rx="4" fill="none" stroke="black" stroke-width="1.5"/>
+                <text x="200" y="110" font-size="14" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold">발전기</text>
+
+                <!-- 백열등 박스 -->
+                <rect x="340" y="80" width="110" height="50" rx="4" fill="none" stroke="black" stroke-width="1.5"/>
+                <text x="395" y="110" font-size="14" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold">백열등</text>
+
+                <!-- 화학 에너지 -> 발전기 -->
+                <line x1="60" y1="105" x2="132" y2="105" stroke="black" stroke-width="1.2"/>
+                <polygon points="140,105 130,100 130,110" fill="black"/>
+                <text x="95" y="125" font-size="13" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold" id="disp_X">128 kJ</text>
+                <text x="100" y="90" font-size="12" font-family="Malgun Gothic" text-anchor="middle">화학 에너지</text>
+
+                <!-- 발전기 -> 백열등 -->
+                <line x1="260" y1="105" x2="332" y2="105" stroke="black" stroke-width="1.2"/>
+                <polygon points="340,105 330,100 330,110" fill="black"/>
+                <text x="300" y="125" font-size="13" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold" id="disp_E">16 kJ</text>
+                <text x="300" y="90" font-size="12" font-family="Malgun Gothic" text-anchor="middle">전기 에너지</text>
+
+                <!-- 백열등 -> 빛에너지 -->
+                <line x1="450" y1="105" x2="522" y2="105" stroke="black" stroke-width="1.2"/>
+                <polygon points="530,105 520,100 520,110" fill="black"/>
+                <text x="495" y="90" font-size="12" font-family="Malgun Gothic" text-anchor="middle">빛에너지</text>
+                <text x="495" y="125" font-size="13" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold" id="disp_L_bulb">1 kJ</text>
+
+                <!-- 발전기 -> 열에너지 -->
+                <line x1="200" y1="130" x2="200" y2="192" stroke="black" stroke-width="1.2"/>
+                <polygon points="200,200 195,190 205,190" fill="black"/>
+                <text x="200" y="218" font-size="12" font-family="Malgun Gothic" text-anchor="middle">열에너지</text>
+                <text x="200" y="238" font-size="13" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold" id="disp_Q_gen">112 kJ</text>
+
+                <!-- 백열등 -> 열에너지 -->
+                <line x1="395" y1="130" x2="395" y2="192" stroke="black" stroke-width="1.2"/>
+                <polygon points="395,200 390,190 400,190" fill="black"/>
+                <text x="395" y="218" font-size="12" font-family="Malgun Gothic" text-anchor="middle">열에너지</text>
+                <text x="395" y="238" font-size="13" font-family="Malgun Gothic" text-anchor="middle" font-weight="bold" id="disp_Q_bulb">15 kJ</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 현재 가리기 상태 저장 (true = 가림, false = 노출)
+    const hiddenStates = {
+        X: false,
+        Q_gen: false,
+        E: false,
+        L_bulb: false,
+        Q_bulb: false,
+        Ratio: false
+    };
+
+    // 기초 데이터셋 (깔끔한 정수로 들어맞는 셋업 모음)
+    const datasets = [
+        { X: 128, Q_gen: 112, E: 16, L_bulb: 1, Q_bulb: 15, ratioA: 4, ratioB: 5 },
+        { X: 20,  Q_gen: 15,  E: 5,  L_bulb: 1, Q_bulb: 4,  ratioA: 1, ratioB: 4 },
+        { X: 100, Q_gen: 75,  E: 25, L_bulb: 2, Q_bulb: 23, ratioA: 25, ratioB: 8 },
+        { X: 100, Q_gen: 80,  E: 20, L_bulb: 4, Q_bulb: 16, ratioA: 1, ratioB: 1 },
+        { X: 60,  Q_gen: 45,  E: 15, L_bulb: 1, Q_bulb: 14, ratioA: 1, ratioB: 4 },
+        { X: 150, Q_gen: 120, E: 30, L_bulb: 6, Q_bulb: 24, ratioA: 1, ratioB: 1 }
+    ];
+
+    function loadPerfectInteger() {
+        const r = datasets[Math.floor(Math.random() * datasets.length)];
+        document.getElementById('val_X').value = r.X;
+        document.getElementById('val_Q_gen').value = r.Q_gen;
+        document.getElementById('val_E').value = r.E;
+        document.getElementById('val_L_bulb').value = r.L_bulb;
+        document.getElementById('val_Q_bulb').value = r.Q_bulb;
+        document.getElementById('ratioA').value = r.ratioA;
+        document.getElementById('ratioB').value = r.ratioB;
+
+        updateProblem();
+    }
+
+    // 기본 에너지 보존 법칙 연동 (X = E + Q_gen / E = L_bulb + Q_bulb)
+    function calculateFromBase(eChanged = false) {
+        let X = parseFloat(document.getElementById('val_X').value) || 0;
+        let Q_gen = parseFloat(document.getElementById('val_Q_gen').value) || 0;
+        let E = parseFloat(document.getElementById('val_E').value) || 0;
+        let L_bulb = parseFloat(document.getElementById('val_L_bulb').value) || 0;
+        let Q_bulb = parseFloat(document.getElementById('val_Q_bulb').value) || 0;
+
+        if (eChanged) {
+            // E가 직접 바뀌면 X = E + Q_gen 연동
+            X = E + Q_gen;
+            document.getElementById('val_X').value = X;
+        } else {
+            // 그 외 값이 바뀌면 E = X - Q_gen 연동
+            E = X - Q_gen;
+            document.getElementById('val_E').value = E;
+        }
+        
+        // 백열등 관계 보정 (Q_bulb = E - L_bulb)
+        Q_bulb = E - L_bulb;
+        document.getElementById('val_Q_bulb').value = Q_bulb;
+
+        updateProblem();
+    }
+
+    // 가리기 버튼 토글
+    function toggleHide(key) {
+        hiddenStates[key] = !hiddenStates[key];
+        const btn = document.getElementById(`btn_${key}`);
+        if (hiddenStates[key]) {
+            btn.textContent = "가림 (㉠등)";
+            btn.classList.add('hidden-active');
+        } else {
+            btn.textContent = "노출중";
+            btn.classList.remove('hidden-active');
+        }
+        updateProblem();
+    }
+
+    // 핵심: 현재 노출된 단서들을 통해 문제를 풀 수 있는지 없는지 실시간 논리 검증
+    function checkSolvability(X, Q_gen, E, L_bulb, Q_bulb, rA, rB, h) {
+        // h: { X: bool, Q_gen: bool, E: bool, L_bulb: bool, Q_bulb: bool, Ratio: bool }
+        
+        // 1. 단순 보존법칙으로 바로 구해지는 단계적 치환 검사 반복
+        let known = {
+            X: !h.X,
+            Q_gen: !h.Q_gen,
+            E: !h.E,
+            L_bulb: !h.L_bulb,
+            Q_bulb: !h.Q_bulb,
+            Ratio: !h.Ratio
+        };
+
+        let progress = true;
+        while (progress) {
+            progress = false;
+            // 발전기 보존: X = E + Q_gen (셋 중 둘을 알면 남은 하나를 안다)
+            if (!known.X && known.E && known.Q_gen) { known.X = true; progress = true; }
+            if (!known.E && known.X && known.Q_gen) { known.E = true; progress = true; }
+            if (!known.Q_gen && known.X && known.E) { known.Q_gen = true; progress = true; }
+
+            // 백열등 보존: E = L_bulb + Q_bulb
+            if (!known.E && known.L_bulb && known.Q_bulb) { known.E = true; progress = true; }
+            if (!known.L_bulb && known.E && known.Q_bulb) { known.L_bulb = true; progress = true; }
+            if (!known.Q_bulb && known.E && known.L_bulb) { known.Q_bulb = true; progress = true; }
+        }
+
+        // 모든 정보가 구해졌으면 해결 가능
+        if (known.X && known.Q_gen && known.E && known.L_bulb && known.Q_bulb && known.Ratio) {
+            return { solvable: true, type: "기본 에너지 보존 법칙만으로 해결 가능" };
+        }
+
+        // 2. 효율비 조건이 노출되어 있을 때 2차 방정식 풀이 가능 여부 검사
+        if (known.Ratio) {
+            // 발전기 효율: e_gen = E / X
+            // 백열등 효율: e_bulb = L_bulb / E
+            // (E / X) : (L_bulb / E) = rA : rB  =>  E^2 / (X * L_bulb) = rA / rB
+
+            // 케이스 A: X(가림), Q_gen(노출), E(가림), L_bulb(노출) 이고 효율비가 주어진 경우 (사용자가 주신 기본 질문 패턴)
+            if (!known.X && known.Q_gen && !known.E && known.L_bulb) {
+                // E = X - Q_gen 대입하면 X에 대한 2차방정식이 풀림 -> 해결 가능!
+                known.X = true;
+                known.E = true;
+                known.Q_bulb = true; // E를 알면 자동 해결
+            }
+
+            // 케이스 B: X(가림), Q_gen(노출), E(노출) 이면 효율비가 없어도 위에서 다 풀림
+            // 케이스 C: X(노출), L_bulb(노출), 효율비가 주어진 경우
+            // E^2 / (X * L_bulb) = rA / rB 에서 E^2 = (rA/rB) * X * L_bulb 이므로 E를 제곱근으로 바로 구함 -> 해결 가능!
+            if (!known.E && known.X && known.L_bulb) {
+                known.E = true;
+                known.Q_gen = true;
+                known.Q_bulb = true;
+            }
+        }
+
+        // 최종 상태 재검사
+        if (known.X && known.Q_gen && known.E && known.L_bulb && known.Q_bulb) {
+            return { solvable: true, type: "물리적 효율 공식(효율 비)을 활용하여 해결 가능" };
+        }
+
+        return { solvable: false };
+    }
+
+    // 프리뷰 그리기 및 검증 상태 업데이트
+    function updateProblem() {
+        // 수치 파싱
+        const X = parseFloat(document.getElementById('val_X').value) || 0;
+        const Q_gen = parseFloat(document.getElementById('val_Q_gen').value) || 0;
+        const E = parseFloat(document.getElementById('val_E').value) || 0;
+        const L_bulb = parseFloat(document.getElementById('val_L_bulb').value) || 0;
+        const Q_bulb = parseFloat(document.getElementById('val_Q_bulb').value) || 0;
+        const rA = parseFloat(document.getElementById('ratioA').value) || 1;
+        const rB = parseFloat(document.getElementById('ratioB').value) || 1;
+
+        // SVG 텍스트 업데이트 (가려진 것은 기호로 치환)
+        let disp_idx = 1;
+        const symbolMap = {};
+
+        const getDispText = (key, val, unit="kJ") => {
+            if (hiddenStates[key]) {
+                const sym = String.fromCharCode(12592 + disp_idx); // ㉠, ㉡, ㉢ 순서로 문자 부여
+                symbolMap[key] = sym;
+                disp_idx++;
+                return sym;
+            } else {
+                return `${val} ${unit}`;
+            }
+        };
+
+        const str_X = getDispText('X', X);
+        const str_Q_gen = getDispText('Q_gen', Q_gen);
+        const str_E = getDispText('E', E);
+        const str_L_bulb = getDispText('L_bulb', L_bulb);
+        const str_Q_bulb = getDispText('Q_bulb', Q_bulb);
+
+        // SVG에 반영
+        document.getElementById('disp_X').textContent = str_X;
+        document.getElementById('disp_Q_gen').textContent = str_Q_gen;
+        document.getElementById('disp_E').textContent = str_E;
+        document.getElementById('disp_L_bulb').textContent = str_L_bulb;
+        document.getElementById('disp_Q_bulb').textContent = str_Q_bulb;
+
+        // 문제 지문 생성
+        let problemText = "그림은 어느 발전기 A와 백열등 B에서의 에너지 전환을 나타낸 것이다. ";
+        if (!hiddenStates.Ratio) {
+            problemText += `발전기와 백열등의 에너지 효율 비가 <b>${rA}:${rB}</b>일 때, `;
+        }
+        
+        const hiddenSymbols = Object.values(symbolMap);
+        if (hiddenSymbols.length > 0) {
+            problemText += `빈칸 <b>${hiddenSymbols.join(', ')}</b>에 들어갈 알맞은 값을 구하시오.`;
+        } else {
+            problemText += `에너지 전환 관계가 옳은지 분석하시오. (숨겨진 빈칸이 없습니다)`;
+        }
+        document.getElementById('problem-q').innerHTML = problemText;
+
+        // 논리 해결 검증 실행
+        const result = checkSolvability(X, Q_gen, E, L_bulb, Q_bulb, rA, rB, hiddenStates);
+        const statusBox = document.getElementById('status-box');
+
+        if (result.solvable) {
+            statusBox.className = "result-info success-box";
+            let answerDetails = "";
+            for (let k in symbolMap) {
+                let val = (k === 'X') ? X : (k === 'Q_gen') ? Q_gen : (k === 'E') ? E : (k === 'L_bulb') ? L_bulb : Q_bulb;
+                answerDetails += `<br>• <b>${symbolMap[k]}</b> = <span style="color:#155724; font-weight:bold;">${val} kJ</span>`;
+            }
+            statusBox.innerHTML = `
+                <strong>✅ 출제 가능 (정답 논리 성립)</strong><br>
+                <span style="font-size: 12px; color: #555;">분석 결과: ${result.type}</span>
+                <hr style="margin:6px 0; border:0; border-top:1px solid #c3e6cb;">
+                <strong>[모범 답안]</strong>${answerDetails}
+            `;
+        } else {
+            statusBox.className = "result-info error-box";
+            statusBox.innerHTML = `
+                <strong>⚠️ 오류: 조건 부족 (해결 불가능)</strong><br>
+                <span style="font-size: 12px; color: #721c24;">
+                    너무 많은 정보를 가려서 현재 단서로는 정답을 논리적으로 역산할 수 없습니다.<br>
+                    가린 항목 중 일부를 다시 <b>[노출중]</b>으로 바꾸거나 효율 비를 제공해 주세요.
+                </span>
+            `;
+        }
+    }
+
+    // 초기 실행
+    updateProblem();
+</script>
+
+</body>
+</html>
