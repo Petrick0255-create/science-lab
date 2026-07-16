@@ -1,35 +1,58 @@
-const BASE_DIR = "../exam-search/data/고3 기출/";
+const DATA_ROOT = "../exam-search/data/";
 
 const EXAM_SEARCH_URL =
   "https://petrick0255-create.github.io/science-lab/programs/exam-search/index.html";
 
+const STORAGE_KEY = "jb-problem-type-edits";
+
 let DATA = [];
 let CURRENT_RESULTS = [];
+let SAVED_EDITS = {};
 
 const subjectSelect = document.getElementById("subjectSelect");
 const typeSelect = document.getElementById("typeSelect");
 const sortSelect = document.getElementById("sortSelect");
 const columnSelect = document.getElementById("columnSelect");
+
 const copyAllBtn = document.getElementById("copyAllBtn");
+const resetChangesBtn = document.getElementById("resetChangesBtn");
+const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+
 const sourceList = document.getElementById("sourceList");
 const problemGrid = document.getElementById("problemGrid");
 const resultCount = document.getElementById("resultCount");
+const editedCount = document.getElementById("editedCount");
 
 init();
 
 async function init() {
   try {
-    const res = await fetch("./index.json");
+    const response = await fetch("./index.json");
 
-    if (!res.ok) {
+    if (!response.ok) {
       throw new Error("index.json 로딩 실패");
     }
 
-    DATA = await res.json();
+    const jsonData = await response.json();
+
+    SAVED_EDITS = loadSavedEdits();
+
+    DATA = jsonData.map(item => {
+      const key = makeItemKey(item);
+      const originalType = item.type || "미분류";
+
+      return {
+        ...item,
+        type: SAVED_EDITS[key] || originalType,
+        _originalType: originalType,
+        _itemKey: key
+      };
+    });
 
     buildSubjectOptions();
     buildTypeOptions();
     applyFilters();
+    updateEditedCount();
 
     subjectSelect.addEventListener("change", () => {
       buildTypeOptions();
@@ -39,9 +62,23 @@ async function init() {
     typeSelect.addEventListener("change", applyFilters);
     sortSelect.addEventListener("change", applyFilters);
     columnSelect.addEventListener("change", changeColumns);
-    copyAllBtn.addEventListener("click", copyAllSources);
-  } catch (err) {
-    console.error(err);
+
+    copyAllBtn.addEventListener(
+      "click",
+      copyAllSources
+    );
+
+    resetChangesBtn.addEventListener(
+      "click",
+      resetAllChanges
+    );
+
+    downloadJsonBtn.addEventListener(
+      "click",
+      downloadModifiedJson
+    );
+  } catch (error) {
+    console.error(error);
 
     sourceList.innerHTML = `
       <div class="empty">
@@ -52,41 +89,88 @@ async function init() {
     problemGrid.innerHTML = `
       <div class="empty">
         Live Server 또는 GitHub Pages로 실행하세요.<br>
-        파일을 더블클릭해서 열면 JSON을 못 불러올 수 있습니다.
+        파일을 더블클릭해서 열면 JSON을 불러오지 못할 수 있습니다.
       </div>
     `;
   }
 }
 
+function makeItemKey(item) {
+  return [
+    item.grade,
+    item.subject,
+    item.year,
+    item.month,
+    item.number,
+    item.image
+  ].join("|");
+}
+
+function loadSavedEdits() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+      return {};
+    }
+
+    return JSON.parse(saved);
+  } catch (error) {
+    console.error("수정 내용 로딩 실패", error);
+    return {};
+  }
+}
+
+function saveEdits() {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(SAVED_EDITS)
+  );
+}
+
 function buildSubjectOptions() {
-  const subjects = unique(DATA.map(item => item.subject));
+  const previousValue = subjectSelect.value;
+
+  const subjects = unique(
+    DATA.map(item => item.subject)
+  );
 
   subjectSelect.innerHTML = `
     <option value="">전체 과목</option>
   `;
 
   subjects.forEach(subject => {
-    subjectSelect.innerHTML += `
-      <option value="${escapeHtml(subject)}">
-        ${escapeHtml(subject)}
-      </option>
-    `;
+    subjectSelect.insertAdjacentHTML(
+      "beforeend",
+      `
+        <option value="${escapeHtml(subject)}">
+          ${escapeHtml(subject)}
+        </option>
+      `
+    );
   });
+
+  if (subjects.includes(previousValue)) {
+    subjectSelect.value = previousValue;
+  }
 }
 
 function buildTypeOptions() {
   const selectedSubject = subjectSelect.value;
+  const previousType = typeSelect.value;
 
-  let filtered = DATA;
+  let filteredData = DATA;
 
   if (selectedSubject) {
-    filtered = filtered.filter(
+    filteredData = DATA.filter(
       item => item.subject === selectedSubject
     );
   }
 
   const types = unique(
-    filtered.map(item => item.type || "미분류")
+    filteredData.map(
+      item => item.type || "미분류"
+    )
   );
 
   typeSelect.innerHTML = `
@@ -94,12 +178,29 @@ function buildTypeOptions() {
   `;
 
   types.forEach(type => {
-    typeSelect.innerHTML += `
-      <option value="${escapeHtml(type)}">
-        ${escapeHtml(type)}
-      </option>
-    `;
+    typeSelect.insertAdjacentHTML(
+      "beforeend",
+      `
+        <option value="${escapeHtml(type)}">
+          ${escapeHtml(type)}
+        </option>
+      `
+    );
   });
+
+  if (types.includes(previousType)) {
+    typeSelect.value = previousType;
+  } else {
+    typeSelect.value = "";
+  }
+}
+
+function getSubjectTypes(subject) {
+  return unique(
+    DATA
+      .filter(item => item.subject === subject)
+      .map(item => item.type || "미분류")
+  );
 }
 
 function applyFilters() {
@@ -107,20 +208,21 @@ function applyFilters() {
   const selectedType = typeSelect.value;
 
   CURRENT_RESULTS = DATA.filter(item => {
-    const subjectOK =
+    const subjectMatches =
       !selectedSubject ||
       item.subject === selectedSubject;
 
-    const typeOK =
+    const typeMatches =
       !selectedType ||
       (item.type || "미분류") === selectedType;
 
-    return subjectOK && typeOK;
+    return subjectMatches && typeMatches;
   });
 
   sortResults();
   renderSources();
   renderProblems();
+  updateEditedCount();
 }
 
 function sortResults() {
@@ -142,15 +244,27 @@ function sortResults() {
     const bn = Number(b.number) || 0;
 
     if (sortMode === "newest") {
-      return by - ay || bm - am || an - bn;
+      return (
+        by - ay ||
+        bm - am ||
+        an - bn
+      );
     }
 
     if (sortMode === "oldest") {
-      return ay - by || am - bm || an - bn;
+      return (
+        ay - by ||
+        am - bm ||
+        an - bn
+      );
     }
 
     if (sortMode === "number") {
-      return an - bn || ay - by || am - bm;
+      return (
+        an - bn ||
+        ay - by ||
+        am - bm
+      );
     }
 
     return 0;
@@ -160,8 +274,14 @@ function sortResults() {
 function changeColumns() {
   const value = columnSelect.value;
 
-  problemGrid.classList.remove("cols-2", "cols-3");
-  problemGrid.classList.add(`cols-${value}`);
+  problemGrid.classList.remove(
+    "cols-2",
+    "cols-3"
+  );
+
+  problemGrid.classList.add(
+    `cols-${value}`
+  );
 }
 
 function renderSources() {
@@ -179,15 +299,19 @@ function renderSources() {
 
   sourceList.innerHTML = CURRENT_RESULTS
     .map(item => {
-      const text = makeSourceText(item);
-      const searchUrl = makeExamSearchUrl(text);
+      const sourceText = makeSourceText(item);
+      const searchUrl =
+        makeExamSearchUrl(sourceText);
 
       return `
         <button
+          type="button"
           class="source-chip"
-          onclick="openExamSearch('${escapeForJs(searchUrl)}')"
+          onclick="openExamSearch(
+            '${escapeForJs(searchUrl)}'
+          )"
         >
-          ${escapeHtml(text)} 🔍
+          ${escapeHtml(sourceText)} 🔍
         </button>
       `;
     })
@@ -211,15 +335,51 @@ function renderProblems() {
 
 function makeProblemCard(item) {
   const sourceText = makeSourceText(item);
-  const typeText = item.type || "미분류";
+  const currentType = item.type || "미분류";
 
   const imageUrl = makeImagePath(item);
-  const problemUrl = makePdfPath(item, item.problem);
-  const solutionUrl = makePdfPath(item, item.solution);
-  const searchUrl = makeExamSearchUrl(sourceText);
+
+  const problemUrl = makeFilePath(
+    item,
+    item.problem
+  );
+
+  const solutionUrl = makeFilePath(
+    item,
+    item.solution
+  );
+
+  const searchUrl =
+    makeExamSearchUrl(sourceText);
+
+  const subjectTypes =
+    getSubjectTypes(item.subject);
+
+  const isEdited =
+    currentType !== item._originalType;
+
+  const typeOptions = subjectTypes
+    .map(type => {
+      const selected =
+        type === currentType
+          ? "selected"
+          : "";
+
+      return `
+        <option
+          value="${escapeHtml(type)}"
+          ${selected}
+        >
+          ${escapeHtml(type)}
+        </option>
+      `;
+    })
+    .join("");
 
   return `
-    <article class="problem-card">
+    <article
+      class="problem-card ${isEdited ? "edited-card" : ""}"
+    >
 
       <button
         type="button"
@@ -246,8 +406,23 @@ function makeProblemCard(item) {
       </button>
 
       <div class="card-main">
-        <div class="problem-title">
-          ${escapeHtml(sourceText)}
+
+        <div class="problem-title-row">
+
+          <div class="problem-title">
+            ${escapeHtml(sourceText)}
+          </div>
+
+          ${
+            isEdited
+              ? `
+                <span class="edited-badge">
+                  수정됨
+                </span>
+              `
+              : ""
+          }
+
         </div>
 
         <div class="problem-meta">
@@ -261,12 +436,44 @@ function makeProblemCard(item) {
           ${escapeHtml(item.number)}번
         </div>
 
-        <div class="problem-type">
-          ${escapeHtml(typeText)}
+        <div class="type-editor">
+
+          <label>
+            문항 유형
+
+            <select
+              class="card-type-select"
+              onchange="changeItemType(
+                '${escapeForJs(item._itemKey)}',
+                this.value
+              )"
+            >
+              ${typeOptions}
+            </select>
+          </label>
+
+          ${
+            isEdited
+              ? `
+                <button
+                  type="button"
+                  class="restore-type-btn"
+                  onclick="restoreItemType(
+                    '${escapeForJs(item._itemKey)}'
+                  )"
+                >
+                  원래 유형으로
+                </button>
+              `
+              : ""
+          }
+
         </div>
+
       </div>
 
       <div class="card-links">
+
         <a
           href="${searchUrl}"
           target="_blank"
@@ -292,22 +499,185 @@ function makeProblemCard(item) {
 
         <button
           type="button"
-          onclick="copyOne('${escapeForJs(sourceText)}')"
+          onclick="copyOne(
+            '${escapeForJs(sourceText)}'
+          )"
           title="출처 복사"
         >
           📋
         </button>
+
       </div>
 
     </article>
   `;
 }
 
-function makeSourceText(item) {
-  const yy = String(item.year).padStart(2, "0");
-  const mm = String(item.month).padStart(2, "0");
+function changeItemType(itemKey, newType) {
+  const item = DATA.find(
+    data => data._itemKey === itemKey
+  );
 
-  return `${yy} ${mm} ${item.grade} ${item.subject} ${item.number}번`;
+  if (!item) {
+    return;
+  }
+
+  item.type = newType || "미분류";
+
+  if (item.type === item._originalType) {
+    delete SAVED_EDITS[itemKey];
+  } else {
+    SAVED_EDITS[itemKey] = item.type;
+  }
+
+  saveEdits();
+  updateEditedCount();
+
+  const selectedType = typeSelect.value;
+
+  buildTypeOptions();
+
+  if (
+    selectedType &&
+    [...typeSelect.options].some(
+      option => option.value === selectedType
+    )
+  ) {
+    typeSelect.value = selectedType;
+  }
+
+  applyFilters();
+}
+
+function restoreItemType(itemKey) {
+  const item = DATA.find(
+    data => data._itemKey === itemKey
+  );
+
+  if (!item) {
+    return;
+  }
+
+  item.type = item._originalType;
+
+  delete SAVED_EDITS[itemKey];
+
+  saveEdits();
+  buildTypeOptions();
+  applyFilters();
+}
+
+function updateEditedCount() {
+  const count = DATA.filter(
+    item => item.type !== item._originalType
+  ).length;
+
+  editedCount.textContent =
+    `수정 ${count}문항`;
+
+  editedCount.classList.toggle(
+    "has-edits",
+    count > 0
+  );
+
+  downloadJsonBtn.disabled =
+    DATA.length === 0;
+}
+
+function resetAllChanges() {
+  const editedItems = DATA.filter(
+    item => item.type !== item._originalType
+  );
+
+  if (editedItems.length === 0) {
+    alert("수정된 문항이 없습니다.");
+    return;
+  }
+
+  const confirmed = confirm(
+    `수정한 ${editedItems.length}문항을 모두 원래 유형으로 되돌릴까요?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  DATA.forEach(item => {
+    item.type = item._originalType;
+  });
+
+  SAVED_EDITS = {};
+
+  localStorage.removeItem(STORAGE_KEY);
+
+  buildTypeOptions();
+  applyFilters();
+}
+
+function downloadModifiedJson() {
+  const downloadData = DATA.map(item => {
+    const {
+      _originalType,
+      _itemKey,
+      ...cleanItem
+    } = item;
+
+    return cleanItem;
+  });
+
+  const jsonText = JSON.stringify(
+    downloadData,
+    null,
+    2
+  );
+
+  const blob = new Blob(
+    [jsonText],
+    {
+      type: "application/json;charset=utf-8"
+    }
+  );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+  link.download = "index.json";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+
+  const originalText =
+    downloadJsonBtn.textContent;
+
+  downloadJsonBtn.textContent =
+    "JSON 저장 완료";
+
+  setTimeout(() => {
+    downloadJsonBtn.textContent =
+      originalText;
+  }, 1200);
+}
+
+function makeSourceText(item) {
+  const year = String(item.year)
+    .padStart(2, "0");
+
+  const month = String(item.month)
+    .padStart(2, "0");
+
+  return (
+    `${year} ${month} ` +
+    `${item.grade} ` +
+    `${item.subject} ` +
+    `${item.number}번`
+  );
 }
 
 function makeExamSearchUrl(keyword) {
@@ -321,20 +691,30 @@ function openExamSearch(url) {
   window.open(url, "_blank");
 }
 
-function makePdfPath(item, filename) {
-  const folder = getFolderName(item.subject);
+function makeFilePath(item, filename) {
+  const gradeFolder =
+    `${item.grade} 기출`;
+
+  const subjectFolder =
+    getFolderName(item.subject);
 
   return encodeURI(
-    `${BASE_DIR}${folder}/${filename}`
+    `${DATA_ROOT}` +
+    `${gradeFolder}/` +
+    `${subjectFolder}/` +
+    `${filename}`
   );
 }
 
 function makeImagePath(item) {
-  const gradeFolder = `${item.grade} 기출`;
-  const subjectFolder = getFolderName(item.subject);
+  const gradeFolder =
+    `${item.grade} 기출`;
+
+  const subjectFolder =
+    getFolderName(item.subject);
 
   return encodeURI(
-    `../exam-search/data/` +
+    `${DATA_ROOT}` +
     `${gradeFolder}/` +
     `${subjectFolder}/` +
     `문제 이미지 파일/` +
@@ -349,16 +729,24 @@ function openImagePreview(url, title) {
   const image =
     document.getElementById("modalImage");
 
-  const modalTitle =
+  const titleElement =
     document.getElementById("modalTitle");
 
-  modalTitle.textContent = title;
+  titleElement.textContent = title;
 
   image.src = url;
   image.alt = `${title} 문제 이미지`;
 
   modal.classList.add("show");
-  document.body.classList.add("modal-open");
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  document.body.classList.add(
+    "modal-open"
+  );
 }
 
 function closeImagePreview() {
@@ -369,16 +757,27 @@ function closeImagePreview() {
     document.getElementById("modalImage");
 
   modal.classList.remove("show");
+
+  modal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
   image.src = "";
 
-  document.body.classList.remove("modal-open");
+  document.body.classList.remove(
+    "modal-open"
+  );
 }
 
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    closeImagePreview();
+document.addEventListener(
+  "keydown",
+  event => {
+    if (event.key === "Escape") {
+      closeImagePreview();
+    }
   }
-});
+);
 
 function getFolderName(subject) {
   const map = {
@@ -433,7 +832,8 @@ function copyAllSources() {
   copyAllBtn.textContent = "복사됨";
 
   setTimeout(() => {
-    copyAllBtn.textContent = "전체 출처 복사";
+    copyAllBtn.textContent =
+      "전체 출처 복사";
   }, 1000);
 }
 
@@ -442,15 +842,29 @@ function copyOne(text) {
 }
 
 function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text);
+  if (
+    navigator.clipboard &&
+    window.isSecureContext
+  ) {
+    navigator.clipboard
+      .writeText(text)
+      .catch(() => {
+        fallbackCopy(text);
+      });
+
     return;
   }
 
+  fallbackCopy(text);
+}
+
+function fallbackCopy(text) {
   const textarea =
     document.createElement("textarea");
 
   textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
 
   document.body.appendChild(textarea);
 
@@ -459,23 +873,36 @@ function copyToClipboard(text) {
   textarea.remove();
 }
 
-function shuffle(arr) {
-  const copied = [...arr];
+function shuffle(array) {
+  const copied = [...array];
 
-  for (let i = copied.length - 1; i > 0; i--) {
-    const j =
-      Math.floor(Math.random() * (i + 1));
+  for (
+    let i = copied.length - 1;
+    i > 0;
+    i--
+  ) {
+    const randomIndex =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
 
-    [copied[i], copied[j]] =
-      [copied[j], copied[i]];
+    [
+      copied[i],
+      copied[randomIndex]
+    ] = [
+      copied[randomIndex],
+      copied[i]
+    ];
   }
 
   return copied;
 }
 
-function unique(arr) {
+function unique(array) {
   return [
-    ...new Set(arr.filter(Boolean))
+    ...new Set(
+      array.filter(Boolean)
+    )
   ].sort((a, b) =>
     String(a).localeCompare(
       String(b),
@@ -497,5 +924,7 @@ function escapeForJs(value) {
   return String(value ?? "")
     .replaceAll("\\", "\\\\")
     .replaceAll("'", "\\'")
-    .replaceAll('"', "&quot;");
+    .replaceAll('"', "&quot;")
+    .replaceAll("\n", "\\n")
+    .replaceAll("\r", "");
 }

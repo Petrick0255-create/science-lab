@@ -32,17 +32,20 @@
 
   <section class="hero">
     <h1>문제 아이디어</h1>
+
     <p>
-      과목과 유형을 선택하면 관련 문항을 확인하고,<br>
-      출처 검색 프로그램에서 바로 검색할 수 있습니다.
+      과목과 유형을 선택해 관련 문항을 확인하고,<br>
+      잘못 분류된 유형을 수정할 수 있습니다.
     </p>
   </section>
 
   <section class="control-panel">
+
     <div class="filters">
 
       <label>
         과목
+
         <select id="subjectSelect">
           <option value="">전체 과목</option>
         </select>
@@ -50,6 +53,7 @@
 
       <label>
         유형
+
         <select id="typeSelect">
           <option value="">전체 유형</option>
         </select>
@@ -57,6 +61,7 @@
 
       <label>
         정렬
+
         <select id="sortSelect">
           <option value="newest">최신순</option>
           <option value="oldest">오래된순</option>
@@ -67,6 +72,7 @@
 
       <label>
         보기
+
         <select id="columnSelect">
           <option value="2">2열</option>
           <option value="3" selected>3열</option>
@@ -76,29 +82,73 @@
     </div>
 
     <div class="summary-row">
-      <div id="resultCount">총 0문항</div>
-      <button id="copyAllBtn">전체 출처 복사</button>
+
+      <div class="result-summary">
+        <div id="resultCount">총 0문항</div>
+        <div id="editedCount">수정 0문항</div>
+      </div>
+
+      <div class="data-buttons">
+
+        <button
+          type="button"
+          id="copyAllBtn"
+        >
+          전체 출처 복사
+        </button>
+
+        <button
+          type="button"
+          id="resetChangesBtn"
+        >
+          수정 초기화
+        </button>
+
+        <button
+          type="button"
+          id="downloadJsonBtn"
+        >
+          수정된 JSON 다운로드
+        </button>
+
+      </div>
+
     </div>
+
   </section>
 
   <section class="source-panel">
+
     <div class="section-head">
       <h2>출처 검색용</h2>
-      <span>클릭하면 개별 복사됩니다.</span>
+
+      <span>
+        출처를 누르면 검색 페이지가 열립니다.
+      </span>
     </div>
 
     <div id="sourceList" class="source-list">
       데이터를 불러오는 중입니다.
     </div>
+
   </section>
 
   <section class="problem-panel">
+
     <div class="section-head">
       <h2>관련 문제</h2>
-      <span>문제 이미지를 클릭하면 크게 볼 수 있습니다.</span>
+
+      <span>
+        문제 이미지를 누르면 크게 볼 수 있고,
+        카드에서 유형을 수정할 수 있습니다.
+      </span>
     </div>
 
-    <div id="problemGrid" class="problem-grid cols-3"></div>
+    <div
+      id="problemGrid"
+      class="problem-grid cols-3"
+    ></div>
+
   </section>
 
 </main>
@@ -106,14 +156,22 @@
 <div
   id="imageModal"
   class="image-modal"
+  aria-hidden="true"
   onclick="closeImagePreview()"
 >
+
   <div
     class="image-modal-dialog"
+    role="dialog"
+    aria-modal="true"
     onclick="event.stopPropagation()"
   >
+
     <div class="image-modal-head">
-      <strong id="modalTitle">문제 이미지</strong>
+
+      <strong id="modalTitle">
+        문제 이미지
+      </strong>
 
       <button
         type="button"
@@ -123,18 +181,24 @@
       >
         ×
       </button>
+
     </div>
 
     <div class="image-modal-body">
+
       <img
         id="modalImage"
         src=""
         alt="문제 이미지"
       />
+
     </div>
+
   </div>
+
 </div>
 
 <script src="./app.js"></script>
+
 </body>
 </html>
