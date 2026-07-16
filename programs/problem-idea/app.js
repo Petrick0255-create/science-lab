@@ -1,4 +1,5 @@
 const BASE_DIR = "../exam-search/data/고3 기출/";
+
 const EXAM_SEARCH_URL =
   "https://petrick0255-create.github.io/science-lab/programs/exam-search/index.html";
 
@@ -20,7 +21,9 @@ async function init() {
   try {
     const res = await fetch("./index.json");
 
-    if (!res.ok) throw new Error("index.json 로딩 실패");
+    if (!res.ok) {
+      throw new Error("index.json 로딩 실패");
+    }
 
     DATA = await res.json();
 
@@ -37,7 +40,6 @@ async function init() {
     sortSelect.addEventListener("change", applyFilters);
     columnSelect.addEventListener("change", changeColumns);
     copyAllBtn.addEventListener("click", copyAllSources);
-
   } catch (err) {
     console.error(err);
 
@@ -59,11 +61,15 @@ async function init() {
 function buildSubjectOptions() {
   const subjects = unique(DATA.map(item => item.subject));
 
-  subjectSelect.innerHTML = `<option value="">전체 과목</option>`;
+  subjectSelect.innerHTML = `
+    <option value="">전체 과목</option>
+  `;
 
   subjects.forEach(subject => {
     subjectSelect.innerHTML += `
-      <option value="${escapeHtml(subject)}">${escapeHtml(subject)}</option>
+      <option value="${escapeHtml(subject)}">
+        ${escapeHtml(subject)}
+      </option>
     `;
   });
 }
@@ -74,16 +80,24 @@ function buildTypeOptions() {
   let filtered = DATA;
 
   if (selectedSubject) {
-    filtered = filtered.filter(item => item.subject === selectedSubject);
+    filtered = filtered.filter(
+      item => item.subject === selectedSubject
+    );
   }
 
-  const types = unique(filtered.map(item => item.type || "미분류"));
+  const types = unique(
+    filtered.map(item => item.type || "미분류")
+  );
 
-  typeSelect.innerHTML = `<option value="">전체 유형</option>`;
+  typeSelect.innerHTML = `
+    <option value="">전체 유형</option>
+  `;
 
   types.forEach(type => {
     typeSelect.innerHTML += `
-      <option value="${escapeHtml(type)}">${escapeHtml(type)}</option>
+      <option value="${escapeHtml(type)}">
+        ${escapeHtml(type)}
+      </option>
     `;
   });
 }
@@ -93,14 +107,18 @@ function applyFilters() {
   const selectedType = typeSelect.value;
 
   CURRENT_RESULTS = DATA.filter(item => {
-    const subjectOK = !selectedSubject || item.subject === selectedSubject;
-    const typeOK = !selectedType || (item.type || "미분류") === selectedType;
+    const subjectOK =
+      !selectedSubject ||
+      item.subject === selectedSubject;
+
+    const typeOK =
+      !selectedType ||
+      (item.type || "미분류") === selectedType;
 
     return subjectOK && typeOK;
   });
 
   sortResults();
-
   renderSources();
   renderProblems();
 }
@@ -116,8 +134,10 @@ function sortResults() {
   CURRENT_RESULTS.sort((a, b) => {
     const ay = Number(a.year) || 0;
     const by = Number(b.year) || 0;
+
     const am = Number(a.month) || 0;
     const bm = Number(b.month) || 0;
+
     const an = Number(a.number) || 0;
     const bn = Number(b.number) || 0;
 
@@ -145,31 +165,41 @@ function changeColumns() {
 }
 
 function renderSources() {
-  resultCount.textContent = `총 ${CURRENT_RESULTS.length}문항`;
+  resultCount.textContent =
+    `총 ${CURRENT_RESULTS.length}문항`;
 
   if (CURRENT_RESULTS.length === 0) {
     sourceList.innerHTML = `
-      <div class="empty">조건에 맞는 문항이 없습니다.</div>
+      <div class="empty">
+        조건에 맞는 문항이 없습니다.
+      </div>
     `;
     return;
   }
 
-  sourceList.innerHTML = CURRENT_RESULTS.map(item => {
-    const text = makeSourceText(item);
-    const searchUrl = makeExamSearchUrl(text);
+  sourceList.innerHTML = CURRENT_RESULTS
+    .map(item => {
+      const text = makeSourceText(item);
+      const searchUrl = makeExamSearchUrl(text);
 
-    return `
-      <button class="source-chip" onclick="openExamSearch('${escapeForJs(searchUrl)}')">
-        ${escapeHtml(text)} 🔍
-      </button>
-    `;
-  }).join("");
+      return `
+        <button
+          class="source-chip"
+          onclick="openExamSearch('${escapeForJs(searchUrl)}')"
+        >
+          ${escapeHtml(text)} 🔍
+        </button>
+      `;
+    })
+    .join("");
 }
 
 function renderProblems() {
   if (CURRENT_RESULTS.length === 0) {
     problemGrid.innerHTML = `
-      <div class="empty">조건에 맞는 관련 문제가 없습니다.</div>
+      <div class="empty">
+        조건에 맞는 관련 문제가 없습니다.
+      </div>
     `;
     return;
   }
@@ -183,6 +213,7 @@ function makeProblemCard(item) {
   const sourceText = makeSourceText(item);
   const typeText = item.type || "미분류";
 
+  const imageUrl = makeImagePath(item);
   const problemUrl = makePdfPath(item, item.problem);
   const solutionUrl = makePdfPath(item, item.solution);
   const searchUrl = makeExamSearchUrl(sourceText);
@@ -190,19 +221,82 @@ function makeProblemCard(item) {
   return `
     <article class="problem-card">
 
+      <button
+        type="button"
+        class="problem-preview"
+        onclick="openImagePreview(
+          '${escapeForJs(imageUrl)}',
+          '${escapeForJs(sourceText)}'
+        )"
+        aria-label="${escapeHtml(sourceText)} 이미지 크게 보기"
+      >
+        <img
+          src="${imageUrl}"
+          alt="${escapeHtml(sourceText)} 문제 이미지"
+          loading="lazy"
+          onerror="
+            this.closest('.problem-preview')
+              .classList.add('image-error')
+          "
+        />
+
+        <span class="image-error-text">
+          이미지를 불러올 수 없습니다.
+        </span>
+      </button>
+
       <div class="card-main">
-        <div class="problem-title">${escapeHtml(sourceText)}</div>
-        <div class="problem-meta">
-          ${escapeHtml(item.grade)} · ${escapeHtml(item.subject)} · ${escapeHtml(item.year)}년 ${escapeHtml(item.month)}월 · ${escapeHtml(item.number)}번
+        <div class="problem-title">
+          ${escapeHtml(sourceText)}
         </div>
-        <div class="problem-type">${escapeHtml(typeText)}</div>
+
+        <div class="problem-meta">
+          ${escapeHtml(item.grade)}
+          ·
+          ${escapeHtml(item.subject)}
+          ·
+          ${escapeHtml(item.year)}년
+          ${escapeHtml(item.month)}월
+          ·
+          ${escapeHtml(item.number)}번
+        </div>
+
+        <div class="problem-type">
+          ${escapeHtml(typeText)}
+        </div>
       </div>
 
       <div class="card-links">
-        <a href="${searchUrl}" target="_blank" class="search">출처 검색</a>
-        <a href="${problemUrl}" target="_blank">문제 PDF</a>
-        <a href="${solutionUrl}" target="_blank" class="solution">해설 PDF</a>
-        <button onclick="copyOne('${escapeForJs(sourceText)}')">📋</button>
+        <a
+          href="${searchUrl}"
+          target="_blank"
+          class="search"
+        >
+          출처 검색
+        </a>
+
+        <a
+          href="${problemUrl}"
+          target="_blank"
+        >
+          문제 PDF
+        </a>
+
+        <a
+          href="${solutionUrl}"
+          target="_blank"
+          class="solution"
+        >
+          해설 PDF
+        </a>
+
+        <button
+          type="button"
+          onclick="copyOne('${escapeForJs(sourceText)}')"
+          title="출처 복사"
+        >
+          📋
+        </button>
       </div>
 
     </article>
@@ -217,7 +311,10 @@ function makeSourceText(item) {
 }
 
 function makeExamSearchUrl(keyword) {
-  return `${EXAM_SEARCH_URL}?q=${encodeURIComponent(keyword)}`;
+  return (
+    `${EXAM_SEARCH_URL}?q=` +
+    encodeURIComponent(keyword)
+  );
 }
 
 function openExamSearch(url) {
@@ -226,8 +323,62 @@ function openExamSearch(url) {
 
 function makePdfPath(item, filename) {
   const folder = getFolderName(item.subject);
-  return encodeURI(`${BASE_DIR}${folder}/${filename}`);
+
+  return encodeURI(
+    `${BASE_DIR}${folder}/${filename}`
+  );
 }
+
+function makeImagePath(item) {
+  const gradeFolder = `${item.grade} 기출`;
+  const subjectFolder = getFolderName(item.subject);
+
+  return encodeURI(
+    `../exam-search/data/` +
+    `${gradeFolder}/` +
+    `${subjectFolder}/` +
+    `문제 이미지 파일/` +
+    `${item.image}`
+  );
+}
+
+function openImagePreview(url, title) {
+  const modal =
+    document.getElementById("imageModal");
+
+  const image =
+    document.getElementById("modalImage");
+
+  const modalTitle =
+    document.getElementById("modalTitle");
+
+  modalTitle.textContent = title;
+
+  image.src = url;
+  image.alt = `${title} 문제 이미지`;
+
+  modal.classList.add("show");
+  document.body.classList.add("modal-open");
+}
+
+function closeImagePreview() {
+  const modal =
+    document.getElementById("imageModal");
+
+  const image =
+    document.getElementById("modalImage");
+
+  modal.classList.remove("show");
+  image.src = "";
+
+  document.body.classList.remove("modal-open");
+}
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeImagePreview();
+  }
+});
 
 function getFolderName(subject) {
   const map = {
@@ -236,6 +387,7 @@ function getFolderName(subject) {
     "물리학Ⅰ": "물리학",
     "물리학1": "물리학",
     "물리": "물리학",
+    "물리학": "물리학",
 
     "화학Ⅰ": "화학",
     "화학1": "화학",
@@ -244,10 +396,12 @@ function getFolderName(subject) {
     "생명과학Ⅰ": "생명과학",
     "생명과학1": "생명과학",
     "생명": "생명과학",
+    "생명과학": "생명과학",
 
     "지구과학Ⅰ": "지구과학",
     "지구과학1": "지구과학",
     "지구": "지구과학",
+    "지구과학": "지구과학",
 
     "물리학Ⅱ": "물리학Ⅱ",
     "물리학2": "물리학Ⅱ",
@@ -266,7 +420,9 @@ function getFolderName(subject) {
 }
 
 function copyAllSources() {
-  if (CURRENT_RESULTS.length === 0) return;
+  if (CURRENT_RESULTS.length === 0) {
+    return;
+  }
 
   const text = CURRENT_RESULTS
     .map(item => makeSourceText(item))
@@ -275,6 +431,7 @@ function copyAllSources() {
   copyToClipboard(text);
 
   copyAllBtn.textContent = "복사됨";
+
   setTimeout(() => {
     copyAllBtn.textContent = "전체 출처 복사";
   }, 1000);
@@ -290,9 +447,13 @@ function copyToClipboard(text) {
     return;
   }
 
-  const textarea = document.createElement("textarea");
+  const textarea =
+    document.createElement("textarea");
+
   textarea.value = text;
+
   document.body.appendChild(textarea);
+
   textarea.select();
   document.execCommand("copy");
   textarea.remove();
@@ -302,16 +463,25 @@ function shuffle(arr) {
   const copied = [...arr];
 
   for (let i = copied.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copied[i], copied[j]] = [copied[j], copied[i]];
+    const j =
+      Math.floor(Math.random() * (i + 1));
+
+    [copied[i], copied[j]] =
+      [copied[j], copied[i]];
   }
 
   return copied;
 }
 
 function unique(arr) {
-  return [...new Set(arr.filter(Boolean))]
-    .sort((a, b) => String(a).localeCompare(String(b), "ko"));
+  return [
+    ...new Set(arr.filter(Boolean))
+  ].sort((a, b) =>
+    String(a).localeCompare(
+      String(b),
+      "ko"
+    )
+  );
 }
 
 function escapeHtml(value) {

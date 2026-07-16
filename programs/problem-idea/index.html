@@ -95,13 +95,45 @@
   <section class="problem-panel">
     <div class="section-head">
       <h2>관련 문제</h2>
-      <span>출처 검색 버튼을 누르면 exam-search에서 바로 검색됩니다.</span>
+      <span>문제 이미지를 클릭하면 크게 볼 수 있습니다.</span>
     </div>
 
     <div id="problemGrid" class="problem-grid cols-3"></div>
   </section>
 
 </main>
+
+<div
+  id="imageModal"
+  class="image-modal"
+  onclick="closeImagePreview()"
+>
+  <div
+    class="image-modal-dialog"
+    onclick="event.stopPropagation()"
+  >
+    <div class="image-modal-head">
+      <strong id="modalTitle">문제 이미지</strong>
+
+      <button
+        type="button"
+        class="modal-close"
+        onclick="closeImagePreview()"
+        aria-label="닫기"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="image-modal-body">
+      <img
+        id="modalImage"
+        src=""
+        alt="문제 이미지"
+      />
+    </div>
+  </div>
+</div>
 
 <script src="./app.js"></script>
 </body>

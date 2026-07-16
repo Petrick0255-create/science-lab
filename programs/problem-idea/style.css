@@ -4,7 +4,8 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Noto Sans KR", Arial, sans-serif;
   background: #eef3f8;
   color: #1f2937;
 }
@@ -20,22 +21,21 @@ header {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
-.home-btn{
-  color:white;
-  text-decoration:none;
-  padding:8px 12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.15);
-  transition:.2s;
+.jb-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  text-decoration: none;
 }
 
-.brand {
+.jb-brand {
   font-size: 23px;
   font-weight: 900;
   letter-spacing: -1px;
 }
 
-.badge {
+.jb-badge {
   background: #4f8cff;
   padding: 4px 9px;
   border-radius: 999px;
@@ -43,9 +43,23 @@ header {
   font-weight: 900;
 }
 
-.header-title {
+.jb-title {
   font-size: 15px;
+  font-weight: 800;
   opacity: 0.9;
+}
+
+.jb-home {
+  color: white;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: 0.2s;
+}
+
+.jb-home:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .container {
@@ -214,6 +228,55 @@ button:hover {
   box-shadow: 0 8px 20px rgba(30, 60, 120, 0.08);
 }
 
+.problem-preview {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 260px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #f8fafc;
+  cursor: zoom-in;
+}
+
+.problem-preview:hover {
+  background: #f8fafc;
+}
+
+.problem-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.problem-preview:hover img {
+  transform: scale(1.02);
+}
+
+.image-error-text {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.problem-preview.image-error img {
+  display: none;
+}
+
+.problem-preview.image-error .image-error-text {
+  display: flex;
+}
+
 .card-main {
   padding: 18px;
 }
@@ -287,6 +350,76 @@ button:hover {
   font-weight: 900;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
+.image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.image-modal.show {
+  display: flex;
+}
+
+.image-modal-dialog {
+  width: min(1000px, 96vw);
+  max-height: 94vh;
+  overflow: hidden;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.image-modal-head {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px 10px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.image-modal-head strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-close {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.image-modal-body {
+  max-height: calc(94vh - 58px);
+  overflow: auto;
+  padding: 18px;
+  background: #eef2f7;
+}
+
+.image-modal-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: white;
+}
+
 @media (max-width: 1000px) {
   .filters {
     grid-template-columns: 1fr 1fr;
@@ -305,6 +438,10 @@ button:hover {
 @media (max-width: 640px) {
   header {
     padding: 0 18px;
+  }
+
+  .jb-title {
+    display: none;
   }
 
   .filters {
@@ -327,5 +464,17 @@ button:hover {
 
   .hero h1 {
     font-size: 29px;
+  }
+
+  .problem-preview {
+    height: 220px;
+  }
+
+  .image-modal {
+    padding: 8px;
+  }
+
+  .image-modal-body {
+    padding: 8px;
   }
 }
