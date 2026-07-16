@@ -250,7 +250,8 @@ button:hover {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: top center;
   transition: transform 0.2s ease;
 }
 
@@ -467,7 +468,7 @@ body.modal-open {
   }
 
   .problem-preview {
-    height: 220px;
+    height: auto;
   }
 
   .image-modal {
