@@ -187,6 +187,7 @@ th{background:#f3f4f6}
 <button class="secondary" onclick="gridXMinus()">가로 격자 -</button>
 <button class="secondary" onclick="gridYPlus()">세로 격자 +</button>
 <button class="secondary" onclick="gridYMinus()">세로 격자 -</button>
+<button class="secondary" onclick="addTopGridRow()">위쪽 격자 한 칸 추가</button>
 <button class="warn" onclick="resetAll()">초기화</button>
 </div>
 
@@ -227,6 +228,7 @@ let frame = 0;
 let timer = null;
 let extraCols = 0;
 let extraRows = 0;
+let topExtraRows = 0;
 
 function num(id){ return Number(document.getElementById(id).value); }
 function txt(id){ return document.getElementById(id).value; }
@@ -317,7 +319,7 @@ function getGrid(){
   const final = getFinalData();
 
   let cols = Math.ceil(final.x / s.dx) + 4 + extraCols;
-  let rows = Math.ceil(s.h / s.dy) + 1 + extraRows;
+  let rows = Math.ceil(s.h / s.dy) + 1 + extraRows + topExtraRows;
 
   cols = Math.max(cols, 5);
   rows = Math.max(rows, 5);
@@ -339,6 +341,7 @@ function draw(){
 
   const gridW = grid.cols * cell;
   const gridH = grid.rows * cell;
+  const contentTop = top + topExtraRows * cell;
 
   canvas.width = left + gridW + rightSpace;
   canvas.height = top + gridH + bottomSpace;
@@ -351,14 +354,14 @@ function draw(){
   drawSurface(left, top + gridH, gridW, s);
 
   if(s.viewMode === "all"){
-    drawPoints(0, data.length-1, left, top, cell, s);
+    drawPoints(0, data.length-1, left, contentTop, cell, s);
   }else if(s.viewMode === "trail"){
-    drawPoints(0, frame, left, top, cell, s);
+    drawPoints(0, frame, left, contentTop, cell, s);
   }else{
-    drawPoints(frame, frame, left, top, cell, s);
+    drawPoints(frame, frame, left, contentTop, cell, s);
   }
 
-  drawGuide(left, top, cell, s);
+  drawGuide(left, contentTop, cell, s);
   updateInfo();
 }
 
@@ -636,6 +639,12 @@ function gridXMinus(){ extraCols--; draw(); }
 function gridYPlus(){ extraRows++; draw(); }
 function gridYMinus(){ extraRows--; draw(); }
 
+function addTopGridRow(){
+  stop();
+  topExtraRows++;
+  draw();
+}
+
 function makeTable(){
   const tbody = document.getElementById("table");
   tbody.innerHTML = "";
@@ -673,7 +682,8 @@ B의 수평 이동 거리 = ${now.x.toFixed(3)} m
 가로 1칸 dₓ = ${s.dx} m
 세로 1칸 dᵧ = ${s.dy} m
 가로 칸 수 = ${grid.cols}
-세로 칸 수 = ${grid.rows}`;
+세로 칸 수 = ${grid.rows}
+위쪽 추가 격자 = ${topExtraRows}칸`;
 }
 
 function saveImage(){
@@ -689,6 +699,7 @@ function resetAll(){
   frame = 0;
   extraCols = 0;
   extraRows = 0;
+  topExtraRows = 0;
 
   document.getElementById("height").value = 0.5;
   document.getElementById("speed").value = 0.5;
