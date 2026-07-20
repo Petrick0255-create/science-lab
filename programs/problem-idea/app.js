@@ -1,3 +1,8 @@
+const MAX_RENDER_COUNT = 300;
+const DEFAULT_SUBJECT = "통합과학";
+
+let TOTAL_MATCH_COUNT = 0;
+
 const DATA_ROOT = "../exam-search/data/";
 
 const EXAM_SEARCH_URL =
@@ -49,14 +54,23 @@ async function init() {
       };
     });
 
-    buildSubjectOptions();
-    buildTypeOptions();
-    applyFilters();
-    updateEditedCount();
+  buildSubjectOptions();
 
-    subjectSelect.addEventListener("change", () => {
-      buildTypeOptions();
-      applyFilters();
+  if (
+    [...subjectSelect.options].some(
+      option => option.value === DEFAULT_SUBJECT
+    )
+  ) {
+    subjectSelect.value = DEFAULT_SUBJECT;
+  }
+
+  buildTypeOptions();
+  applyFilters();
+      updateEditedCount();
+
+      subjectSelect.addEventListener("change", () => {
+        buildTypeOptions();
+        applyFilters();
     });
 
     typeSelect.addEventListener("change", applyFilters);
@@ -208,21 +222,23 @@ function applyFilters() {
   const selectedType = typeSelect.value;
 
   CURRENT_RESULTS = DATA.filter(item => {
-    const subjectMatches =
-      !selectedSubject ||
-      item.subject === selectedSubject;
+    const subjectOK =
+      !selectedSubject || item.subject === selectedSubject;
 
-    const typeMatches =
+    const typeOK =
       !selectedType ||
       (item.type || "미분류") === selectedType;
 
-    return subjectMatches && typeMatches;
+    return subjectOK && typeOK;
   });
 
   sortResults();
+
+  TOTAL_MATCH_COUNT = CURRENT_RESULTS.length;
+  CURRENT_RESULTS = CURRENT_RESULTS.slice(0, MAX_RENDER_COUNT);
+
   renderSources();
   renderProblems();
-  updateEditedCount();
 }
 
 function sortResults() {
@@ -286,36 +302,30 @@ function changeColumns() {
 
 function renderSources() {
   resultCount.textContent =
-    `총 ${CURRENT_RESULTS.length}문항`;
+    TOTAL_MATCH_COUNT > CURRENT_RESULTS.length
+      ? `총 ${TOTAL_MATCH_COUNT}문항 중 ${CURRENT_RESULTS.length}문항 표시`
+      : `총 ${TOTAL_MATCH_COUNT}문항`;
 
   if (CURRENT_RESULTS.length === 0) {
     sourceList.innerHTML = `
-      <div class="empty">
-        조건에 맞는 문항이 없습니다.
-      </div>
+      <div class="empty">조건에 맞는 문항이 없습니다.</div>
     `;
     return;
   }
 
-  sourceList.innerHTML = CURRENT_RESULTS
-    .map(item => {
-      const sourceText = makeSourceText(item);
-      const searchUrl =
-        makeExamSearchUrl(sourceText);
+  sourceList.innerHTML = CURRENT_RESULTS.map(item => {
+    const text = makeSourceText(item);
+    const searchUrl = makeExamSearchUrl(text);
 
-      return `
-        <button
-          type="button"
-          class="source-chip"
-          onclick="openExamSearch(
-            '${escapeForJs(searchUrl)}'
-          )"
-        >
-          ${escapeHtml(sourceText)} 🔍
-        </button>
-      `;
-    })
-    .join("");
+    return `
+      <button
+        class="source-chip"
+        onclick="openExamSearch('${escapeForJs(searchUrl)}')"
+      >
+        ${escapeHtml(text)} 🔍
+      </button>
+    `;
+  }).join("");
 }
 
 function renderProblems() {
@@ -565,6 +575,7 @@ function restoreItemType(itemKey) {
   saveEdits();
   buildTypeOptions();
   applyFilters();
+  updateEditedCount();
 }
 
 function updateEditedCount() {
@@ -612,6 +623,7 @@ function resetAllChanges() {
 
   buildTypeOptions();
   applyFilters();
+  updateEditedCount();
 }
 
 function downloadModifiedJson() {
