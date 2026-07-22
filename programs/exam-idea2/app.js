@@ -2040,116 +2040,348 @@ function renderMakerTable(
  * 현재 문항에서 선택할 수 있는
  * 유형 목록을 만듭니다.
  */
-function renderTypeOptions(select, question, questionIndex, round) {
-  const usedTypeCounts = new Map();
+function renderTypeOptions(
+  select,
+  question,
+  questionIndex,
+  round,
+) {
+  /*
+   * 처음 만들어졌을 때의 배치를
+   * 추천 기준으로 사용합니다.
+   *
+   * 사용자가 다른 유형을 골라도
+   * 원래 추천 목록은 유지됩니다.
+   */
+  const recommendedTeacher =
+    question.recommendedTeacher ||
+    question.teacher;
 
-  round.questions.forEach((item, index) => {
-    if (index === questionIndex) return;
+  const recommendedCourse =
+    question.recommendedCourse ||
+    question.course;
 
-    const key = normalizeForMatch(item.type);
-    usedTypeCounts.set(key, (usedTypeCounts.get(key) || 0) + 1);
-  });
+  const recommendedMajorUnit =
+    question.recommendedMajorUnit ||
+    question.majorUnit;
 
-  const compatibleByType = new Map();
-
-  state.units.forEach((unit) => {
-    // 정T/백T 비율 유지
-    if (unit.teacher !== question.teacher) return;
-
-    // 통과1/통과2 비율 유지
-    if (unit.course !== question.course) return;
-
-    // 산·염기처럼 번호가 엄격히 정해진 유형은 번호 제한 유지
-    if (!isUnitPositionAllowed(unit, question.number)) return;
-
-    const typeName = unit.type || unit.smallUnit;
-    const typeKey = normalizeForMatch(typeName);
-
-    if (!typeKey) return;
-
-    const sameMajor = majorUnitMatches(
-      unit.majorUnit,
-      question.majorUnit
-    );
-
-    const candidate = {
-      unit,
-      sameMajor,
-      positionScore: scoreUnitPosition(
-        unit,
-        question.number
-      )
-    };
-
-    const existing = compatibleByType.get(typeKey);
-
-    // 동일 유형이 여러 개라면
-    // 현재 대단원에 속하거나 번호 적합도가 높은 항목을 사용
-    if (
-      !existing ||
-      (sameMajor && !existing.sameMajor) ||
-      (
-        sameMajor === existing.sameMajor &&
-        candidate.positionScore < existing.positionScore
-      )
-    ) {
-      compatibleByType.set(typeKey, candidate);
-    }
-  });
-
-  const compatible = [...compatibleByType.values()].sort(
-    (a, b) => {
-      // 같은 대단원의 추천 유형을 먼저 표시
-      if (a.sameMajor !== b.sameMajor) {
-        return a.sameMajor ? -1 : 1;
-      }
-
-      // 해당 문제 번호에 잘 맞는 유형을 먼저 표시
-      if (a.positionScore !== b.positionScore) {
-        return a.positionScore - b.positionScore;
-      }
+  /*
+   * 현재 문제 번호에서 선택 가능한
+   * 모든 단원 정보를 가져옵니다.
+   *
+   * 산·염기와 중화 반응처럼 번호가
+   * 엄격하게 정해진 유형의 제한만 유지합니다.
+   */
+  const availableUnits =
+    state.units.filter((unit) => {
+      const isCurrentUnit =
+        unit.id === question.unitId;
 
       return (
-        a.unit.type || a.unit.smallUnit
-      ).localeCompare(
-        b.unit.type || b.unit.smallUnit,
-        "ko",
-        { numeric: true }
+        isCurrentUnit ||
+        isUnitPositionAllowed(
+          unit,
+          question.number,
+        )
       );
-    }
-  );
+    });
+
+  /*
+   * 추천 유형:
+   * 처음 배정된 출제자, 통과, 대단원과
+   * 모두 일치하는 유형
+   */
+  const recommendedUnits =
+    availableUnits
+      .filter((unit) => {
+        return (
+          unit.teacher ===
+            recommendedTeacher &&
+          unit.course ===
+            recommendedCourse &&
+          majorUnitMatches(
+            unit.majorUnit,
+            recommendedMajorUnit,
+          )
+        );
+      })
+      .sort((a, b) => {
+        const scoreDifference =
+          scoreUnitPosition(
+            a,
+            question.number,
+          ) -
+          scoreUnitPosition(
+            b,
+            question.number,
+          );
+
+        if (scoreDifference !== 0) {
+          return scoreDifference;
+        }
+
+        return (
+          a.type || a.smallUnit
+        ).localeCompare(
+          b.type || b.smallUnit,
+          "ko",
+          {
+            numeric: true,
+          },
+        );
+      });
+
+  /*
+   * 추천에 포함되지 않은 나머지 유형은
+   * 자유 선택 목록으로 보여줍니다.
+   */
+  const recommendedIds =
+    new Set(
+      recommendedUnits.map(
+        (unit) => unit.id,
+      ),
+    );
+
+  const freeUnits =
+    availableUnits
+      .filter(
+        (unit) =>
+          !recommendedIds.has(
+            unit.id,
+          ),
+      )
+      .sort((a, b) => {
+        /*
+         * 통과1 → 통과2 순서
+         */
+        const courseCompare =
+          String(
+            a.course,
+          ).localeCompare(
+            String(
+              b.course,
+            ),
+            "ko",
+            {
+              numeric: true,
+            },
+          );
+
+        if (courseCompare !== 0) {
+          return courseCompare;
+        }
+
+        /*
+         * 정T → 백T 순서
+         */
+        const teacherCompare =
+          String(
+            a.teacher,
+          ).localeCompare(
+            String(
+              b.teacher,
+            ),
+            "ko",
+          );
+
+        if (teacherCompare !== 0) {
+          return teacherCompare;
+        }
+
+        const majorCompare =
+          String(
+            a.majorUnit,
+          ).localeCompare(
+            String(
+              b.majorUnit,
+            ),
+            "ko",
+            {
+              numeric: true,
+            },
+          );
+
+        if (majorCompare !== 0) {
+          return majorCompare;
+        }
+
+        return (
+          a.type || a.smallUnit
+        ).localeCompare(
+          b.type || b.smallUnit,
+          "ko",
+          {
+            numeric: true,
+          },
+        );
+      });
 
   select.replaceChildren();
 
-  compatible.forEach(({ unit, sameMajor }) => {
-    const typeName = unit.type || unit.smallUnit;
-    const typeKey = normalizeForMatch(typeName);
-    const usedCount = usedTypeCounts.get(typeKey) || 0;
+  /*
+   * 중복된 단원 행이 드롭다운에
+   * 반복해서 표시되지 않도록 합니다.
+   */
+  const addedKeys = new Set();
 
-    const option = document.createElement("option");
+  const makeOption = (
+    unit,
+    isRecommended,
+  ) => {
+    const typeName =
+      unit.type ||
+      unit.smallUnit;
+
+    /*
+     * 같은 유형이라도 정T/백T 또는
+     * 통과가 다르면 별도 선택지로 유지합니다.
+     */
+    const optionKey = [
+      unit.teacher,
+      unit.course,
+      unit.majorUnit,
+      typeName,
+    ]
+      .map(normalizeForMatch)
+      .join("|");
+
+    if (
+      addedKeys.has(optionKey) &&
+      unit.id !== question.unitId
+    ) {
+      return null;
+    }
+
+    addedKeys.add(optionKey);
+
+    const option =
+      document.createElement(
+        "option",
+      );
 
     option.value = unit.id;
 
-    option.textContent = sameMajor
-      ? `[추천] ${typeName}`
-      : `[확장 · ${unit.majorUnit}] ${typeName}`;
+    if (isRecommended) {
+      option.textContent =
+        `★ ${typeName}`;
+    } else {
+      option.textContent =
+        `${typeName} · ${unit.teacher} · ${unit.course} · ${unit.majorUnit}`;
+    }
 
     option.selected =
-      normalizeForMatch(question.type) === typeKey;
+      unit.id === question.unitId;
 
-    option.disabled =
-      usedCount >= MAX_TYPE_PER_ROUND &&
-      !option.selected;
+    /*
+     * 기존 데이터에 unitId가 없는 경우를 위한
+     * 보조 선택 조건입니다.
+     */
+    if (
+      !question.unitId &&
+      normalizeForMatch(typeName) ===
+        normalizeForMatch(
+          question.type,
+        ) &&
+      unit.teacher ===
+        question.teacher &&
+      unit.course ===
+        question.course
+    ) {
+      option.selected = true;
+    }
 
-    option.title = sameMajor
-      ? `${unit.majorUnit} · ${unit.middleUnit}`
-      : `대단원 변경: ${question.majorUnit} → ${unit.majorUnit}`;
+    option.title = [
+      unit.teacher,
+      unit.course,
+      unit.majorUnit,
+      unit.middleUnit,
+      typeName,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
-    select.append(option);
-  });
+    return option;
+  };
 
-  select.disabled = compatible.length <= 1;
-  select.title = `${compatible.length}개 유형 선택 가능`;
+  /*
+   * 추천 유형 그룹
+   */
+  if (recommendedUnits.length > 0) {
+    const recommendedGroup =
+      document.createElement(
+        "optgroup",
+      );
+
+    recommendedGroup.label =
+      `추천 · ${recommendedTeacher} · ${recommendedCourse} · ${recommendedMajorUnit}`;
+
+    recommendedUnits.forEach(
+      (unit) => {
+        const option =
+          makeOption(
+            unit,
+            true,
+          );
+
+        if (option) {
+          recommendedGroup.append(
+            option,
+          );
+        }
+      },
+    );
+
+    if (
+      recommendedGroup.children
+        .length > 0
+    ) {
+      select.append(
+        recommendedGroup,
+      );
+    }
+  }
+
+  /*
+   * 전체 자유 선택 그룹
+   */
+  if (freeUnits.length > 0) {
+    const freeGroup =
+      document.createElement(
+        "optgroup",
+      );
+
+    freeGroup.label =
+      "전체 유형 · 자유 선택";
+
+    freeUnits.forEach(
+      (unit) => {
+        const option =
+          makeOption(
+            unit,
+            false,
+          );
+
+        if (option) {
+          freeGroup.append(
+            option,
+          );
+        }
+      },
+    );
+
+    if (
+      freeGroup.children.length >
+      0
+    ) {
+      select.append(freeGroup);
+    }
+  }
+
+  select.disabled =
+    availableUnits.length <= 1;
+
+  select.title =
+    `추천 ${recommendedUnits.length}개 · 전체 ${availableUnits.length}개 중 선택`;
 }
 
 function renderDetailOptions(
@@ -2267,69 +2499,138 @@ function handleMakerTableChange(
 /*
  * 유형 변경
  */
-function handleQuestionTypeChange(event) {
-  const select = event.target.closest(
-    ".question-type-select"
-  );
+function handleQuestionTypeChange(
+  event,
+) {
+  const select =
+    event.target.closest(
+      ".question-type-select",
+    );
 
-  if (!select) return;
+  if (!select) {
+    return;
+  }
 
-  const questionIndex = Number(
-    select.dataset.questionIndex
-  );
+  const questionIndex =
+    Number(
+      select.dataset
+        .questionIndex,
+    );
 
   const round =
-    state.rounds[state.currentRoundIndex];
+    state.rounds[
+      state.currentRoundIndex
+    ];
 
   const question =
-    round?.questions[questionIndex];
+    round?.questions[
+      questionIndex
+    ];
 
-  const unit = state.units.find(
-    (item) => item.id === select.value
-  );
+  const unit =
+    state.units.find(
+      (item) =>
+        item.id === select.value,
+    );
 
-  if (!question || !unit) return;
+  if (
+    !question ||
+    !unit
+  ) {
+    return;
+  }
 
+  /*
+   * 처음 자동 배정된 값은
+   * 추천 기준으로 따로 보존합니다.
+   */
+  if (
+    !question.recommendedTeacher
+  ) {
+    question.recommendedTeacher =
+      question.teacher;
+  }
+
+  if (
+    !question.recommendedCourse
+  ) {
+    question.recommendedCourse =
+      question.course;
+  }
+
+  if (
+    !question.recommendedMajorUnit
+  ) {
+    question.recommendedMajorUnit =
+      question.majorUnit;
+  }
+
+  /*
+   * 출제자와 통과 비율은 자유롭게 바꿀 수 있지만,
+   * 산·염기처럼 엄격한 번호 제한은 유지합니다.
+   */
   const valid =
-    // 출제자 비율은 변경하지 않음
-    unit.teacher === question.teacher &&
-
-    // 통과1/통과2 비율도 변경하지 않음
-    unit.course === question.course &&
-
-    // 엄격한 문제 번호 제한은 유지
     isUnitPositionAllowed(
       unit,
-      question.number
+      question.number,
     );
 
   if (!valid) {
+    alert(
+      `${question.number}번에는 해당 유형을 배치할 수 없습니다.`,
+    );
+
     renderMakerTable(round);
     return;
   }
 
-  question.unitId = unit.id;
+  /*
+   * 선택한 유형의 모든 분류 정보를 반영합니다.
+   * 이에 따라 정T/백T 및 통과 비율도 달라집니다.
+   */
+  question.unitId =
+    unit.id;
 
-  // 확장 유형을 골랐다면 단원 정보도 함께 변경
-  question.majorUnit = unit.majorUnit;
-  question.middleUnit = unit.middleUnit;
-  question.smallUnit = unit.smallUnit;
+  question.teacher =
+    unit.teacher;
+
+  question.course =
+    unit.course;
+
+  question.majorUnit =
+    unit.majorUnit;
+
+  question.middleUnit =
+    unit.middleUnit;
+
+  question.smallUnit =
+    unit.smallUnit;
+
   question.type =
-    unit.type || unit.smallUnit;
+    unit.type ||
+    unit.smallUnit;
 
+  /*
+   * 변경된 유형에 맞는 세부 유형을
+   * 자동으로 다시 선택합니다.
+   */
   const usedElsewhere =
     getUsedSourceKeys(
       state.currentRoundIndex,
-      questionIndex
+      questionIndex,
     );
 
   question.source =
     chooseDetailSource(
       question.type,
       usedElsewhere,
-      new Set()
+      new Set(),
     );
 
+  /*
+   * 상단 요약의 정T/백T 및
+   * 통과1/통과2 개수를 다시 계산합니다.
+   */
   renderMakerSummary(round);
   renderMakerTable(round);
 }
