@@ -1184,6 +1184,10 @@ function selectUnitsForSlots(
                 unit,
                 slot.number,
               ) +
+              scorePreviousRoundPosition(
+                unit,
+                slot.number,
+              ) +
               scoreTeacherBalance(
                 unit.teacher,
                 teacherCounts,
@@ -1379,6 +1383,65 @@ function isUnitPositionAllowed(
   return rule.positions.includes(
     questionNumber,
   );
+}
+
+function scorePreviousRoundPosition(
+  unit,
+  questionNumber,
+) {
+  const unitType =
+    normalizeForMatch(
+      unit.type ||
+      unit.smallUnit,
+    );
+
+  let penalty = 0;
+
+  state.rounds.forEach(
+    (round, roundIndex) => {
+      const previousQuestion =
+        round.questions.find(
+          (question) =>
+            Number(
+              question.number,
+            ) ===
+            Number(
+              questionNumber,
+            ),
+        );
+
+      if (!previousQuestion) {
+        return;
+      }
+
+      const previousType =
+        normalizeForMatch(
+          previousQuestion.type ||
+          previousQuestion.smallUnit,
+        );
+
+      if (
+        unitType !== previousType
+      ) {
+        return;
+      }
+
+      /*
+       * 바로 이전 회차와 같은 번호·같은 유형이면
+       * 가장 큰 감점을 줍니다.
+       */
+      const isLatestRound =
+        roundIndex ===
+        state.rounds.length - 1;
+
+      penalty +=
+        isLatestRound
+          ? 120
+          : 45;
+    },
+  );
+
+  return penalty;
 }
 
 /*
