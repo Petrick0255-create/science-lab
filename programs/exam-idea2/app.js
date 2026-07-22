@@ -4267,3 +4267,46 @@ function formatNumber(number) {
     "ko-KR",
   ).format(number);
 }
+
+function downloadText() {
+  const round =
+    state.rounds[
+      state.currentRoundIndex
+    ];
+
+  if (!round) {
+    alert("먼저 메이킹을 해주세요.");
+    return;
+  }
+
+  const text =
+    round.questions
+      .map(
+        (question) =>
+          `${question.number}번-${question.type}-${question.teacher}`,
+      )
+      .join("\r\n");
+
+  const blob =
+    new Blob(
+      ["\uFEFF" + text],
+      {
+        type:
+          "text/plain;charset=utf-8",
+      },
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+  link.download =
+    `${round.number}회차-유형.txt`;
+
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
