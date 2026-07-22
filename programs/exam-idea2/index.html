@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="J&B LAB 모의고사 샘플 메이킹 및 유형별 문항 아이디어 아카이브"
+    />
+    <meta name="theme-color" content="#07111f" />
+
+    <title>문항 메이킹 LAB | J&amp;B LAB</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#mainContent">본문 바로가기</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./" aria-label="J&B LAB 홈">
+          <span class="brand-mark" aria-hidden="true">
+            <span>J</span><i>&amp;</i><span>B</span>
+          </span>
+          <span class="brand-text">
+            <strong>J&amp;B LAB</strong>
+            <small>SCIENCE CONTENT STUDIO</small>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="주요 기능">
+          <a class="nav-link is-active" href="#makerSection">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h7" />
+            </svg>
+            샘플 메이킹
+          </a>
+          <a class="nav-link" href="#ideaSection">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.7 14c-.9.7-1.4 1.5-1.5 2.5h-4.4c-.1-.8-.5-1.5-1.3-2Z" />
+            </svg>
+            유형별 아이디어
+          </a>
+        </nav>
+
+        <div class="header-status" id="dataStatus" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>데이터 확인 중</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section class="hero" aria-labelledby="pageTitle">
+        <div class="hero-glow hero-glow-left" aria-hidden="true"></div>
+        <div class="hero-glow hero-glow-right" aria-hidden="true"></div>
+
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <p class="eyebrow">QUESTION MAKING SYSTEM</p>
+            <h1 id="pageTitle">
+              출제 자료를 연결해<br />
+              <em>25문항의 뼈대</em>를 설계합니다.
+            </h1>
+            <p class="hero-description">
+              정T·백T 출제 비율과 통합과학 1·2 구성을 맞추고, 대단원과 중단원이
+              치우치지 않도록 유형별 세부 소스를 자동 배치합니다.
+            </p>
+          </div>
+
+          <div class="hero-index" aria-label="제공 기능 요약">
+            <div class="hero-index-item">
+              <span>01</span>
+              <div>
+                <strong>모의고사 샘플 메이킹</strong>
+                <small>25문항 × 최대 10회</small>
+              </div>
+            </div>
+            <div class="hero-index-item">
+              <span>02</span>
+              <div>
+                <strong>유형별 아이디어</strong>
+                <small>상황·보기·출처 분석</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="maker-section section-block" id="makerSection" aria-labelledby="makerTitle">
+        <div class="content-inner">
+          <div class="section-heading maker-heading">
+            <div>
+              <p class="section-kicker">01 · MOCK TEST MAKER</p>
+              <h2 id="makerTitle">모의고사 샘플 메이킹</h2>
+              <p>단원 분포를 맞춘 뒤 각 유형에 겹치지 않는 세부 유형을 배치합니다.</p>
+            </div>
+
+            <div class="round-indicator" aria-label="현재 제작 회차">
+              <span>CURRENT ROUND</span>
+              <strong><b id="makerRound">0</b><small>/10</small></strong>
+            </div>
+          </div>
+
+          <div class="maker-control-card">
+            <div class="control-copy">
+              <span class="control-number">SETTING</span>
+              <div>
+                <h3>통합과학 1·2 문항 비율</h3>
+                <p>정T 13문항, 백T 12문항은 고정이며 통합과학 비율만 선택합니다.</p>
+              </div>
+            </div>
+
+            <fieldset class="ratio-options">
+              <legend class="sr-only">통합과학 1과 2의 문항 수 선택</legend>
+
+              <label class="ratio-option">
+                <input type="radio" name="courseRatio" value="12-13" checked />
+                <span class="ratio-card">
+                  <span class="ratio-check" aria-hidden="true"></span>
+                  <span>
+                    <small>기본 구성</small>
+                    <strong>통과1 <b>12</b> · 통과2 <b>13</b></strong>
+                  </span>
+                </span>
+              </label>
+
+              <label class="ratio-option">
+                <input type="radio" name="courseRatio" value="13-12" />
+                <span class="ratio-card">
+                  <span class="ratio-check" aria-hidden="true"></span>
+                  <span>
+                    <small>반전 구성</small>
+                    <strong>통과1 <b>13</b> · 통과2 <b>12</b></strong>
+                  </span>
+                </span>
+              </label>
+            </fieldset>
+
+            <div class="maker-actions">
+              <button class="button button-primary button-large" id="makerButton" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3v18M3 12h18" />
+                </svg>
+                메이킹
+              </button>
+              <button class="button button-secondary button-large" id="nextMakerButton" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M14 7l5 5-5 5" />
+                </svg>
+                Next 메이킹
+              </button>
+              <button class="icon-button" id="resetMakerButton" type="button" disabled aria-label="메이킹 초기화" title="메이킹 초기화">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 4v6h6M20 20v-6h-6" />
+                  <path d="M5.5 15a7 7 0 0 0 11.7 2.3L20 14M4 10l2.8-3.3A7 7 0 0 1 18.5 9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="maker-dashboard" id="makerDashboard" hidden>
+            <div class="maker-summary-grid" aria-label="모의고사 구성 요약">
+              <article class="summary-card summary-total">
+                <span>전체 문항</span>
+                <strong><b id="makerTotalCount">25</b>문항</strong>
+                <div class="summary-progress"><span style="width: 100%"></span></div>
+              </article>
+
+              <article class="summary-card">
+                <span>출제자 비율</span>
+                <strong>정T <b id="jungCount">13</b> · 백T <b id="baekCount">12</b></strong>
+                <div class="dual-progress" aria-hidden="true">
+                  <span class="progress-jung" style="width: 52%"></span>
+                  <span class="progress-baek" style="width: 48%"></span>
+                </div>
+              </article>
+
+              <article class="summary-card">
+                <span>과목 비율</span>
+                <strong>통과1 <b id="course1Count">12</b> · 통과2 <b id="course2Count">13</b></strong>
+                <div class="dual-progress" aria-hidden="true">
+                  <span class="progress-course1" id="course1Progress" style="width: 48%"></span>
+                  <span class="progress-course2" id="course2Progress" style="width: 52%"></span>
+                </div>
+              </article>
+
+              <article class="summary-card">
+                <span>단원 분포</span>
+                <strong><b id="majorUnitCount">-</b> 대단원 · <b id="middleUnitCount">-</b> 중단원</strong>
+                <div class="summary-progress summary-progress-mint"><span id="unitBalanceProgress"></span></div>
+              </article>
+            </div>
+
+            <div class="round-history-bar">
+              <div class="history-title">
+                <span>MAKING HISTORY</span>
+                <strong>제작 회차</strong>
+              </div>
+              <div class="history-list" id="makerHistory" role="list" aria-label="제작된 모의고사 회차">
+                <button class="history-chip is-empty" type="button" disabled>아직 제작된 회차가 없습니다.</button>
+              </div>
+              <p>회차를 선택하면 이전 편성표를 다시 확인할 수 있습니다.</p>
+            </div>
+
+            <article class="maker-table-card" aria-labelledby="makerTableTitle">
+              <div class="table-card-heading">
+                <div>
+                  <span class="section-kicker">QUESTION MAP</span>
+                  <h3 id="makerTableTitle"><b id="tableRoundNumber">1</b>회차 모의고사 구성표</h3>
+                </div>
+                <div class="table-legend" aria-label="구성표 색상 안내">
+                  <span><i class="legend-jung"></i>정T</span>
+                  <span><i class="legend-baek"></i>백T</span>
+                  <span><i class="legend-course1"></i>통과1</span>
+                  <span><i class="legend-course2"></i>통과2</span>
+                </div>
+              </div>
+
+              <div class="maker-table-wrap">
+                <table class="maker-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">번호</th>
+                      <th scope="col">출제자</th>
+                      <th scope="col">과목</th>
+                      <th scope="col">대단원</th>
+                      <th scope="col">중단원</th>
+                      <th scope="col">유형</th>
+                      <th scope="col">세부 유형</th>
+                    </tr>
+                  </thead>
+                  <tbody id="makerTableBody">
+                    <tr class="table-empty">
+                      <td colspan="7">
+                        <div class="empty-table-content">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h7" />
+                          </svg>
+                          <strong>메이킹 버튼을 눌러 첫 모의고사를 만들어 주세요.</strong>
+                          <span>25개의 유형과 세부 유형이 여기에 배치됩니다.</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 11v5M12 8h.01" />
+                </svg>
+                <p>
+                  세부 유형은 각 행의 선택 상자에서 직접 변경할 수 있습니다.
+                  변경 내용은 현재 회차에만 저장됩니다.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <div class="maker-empty-state" id="makerEmptyState">
+            <span class="empty-state-number">01</span>
+            <div>
+              <strong>아직 만들어진 모의고사가 없습니다.</strong>
+              <p>비율을 선택하고 ‘메이킹’ 버튼을 누르면 1회차 편성이 시작됩니다.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="idea-section section-block" id="ideaSection" aria-labelledby="ideaTitle">
+        <div class="content-inner">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">02 · IDEA ARCHIVE</p>
+              <h2 id="ideaTitle">유형별 출제 아이디어</h2>
+              <p>실제 교재에서 반복되는 상황과 보기를 분석하고 아이디어를 뽑습니다.</p>
+            </div>
+
+            <div class="archive-summary" aria-label="현재 유형 데이터 요약">
+              <div>
+                <span>전체 자료</span>
+                <strong id="totalCount">-</strong>
+              </div>
+              <i aria-hidden="true"></i>
+              <div>
+                <span>상황 종류</span>
+                <strong id="situationCount">-</strong>
+              </div>
+              <i aria-hidden="true"></i>
+              <div>
+                <span>보기 종류</span>
+                <strong id="choiceCount">-</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="idea-generator" aria-labelledby="generatorTitle">
+            <div class="generator-heading">
+              <div>
+                <span class="section-kicker">IDEA GENERATOR</span>
+                <h3 id="generatorTitle">어떤 유형의 아이디어가 필요한가요?</h3>
+              </div>
+              <span class="generator-status" id="ideaDataStatus">
+                <span aria-hidden="true"></span>
+                유형별 출처 연결 대기
+              </span>
+            </div>
+
+            <div class="generator-controls">
+              <label class="select-field" for="typeSelect">
+                <span class="field-label">문항 유형</span>
+                <span class="select-wrap">
+                  <select id="typeSelect" name="type" disabled>
+                    <option value="">유형을 선택해 주세요</option>
+                  </select>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m7 9.5 5 5 5-5" />
+                  </svg>
+                </span>
+              </label>
+
+              <button class="button button-mint button-large" id="ideaButton" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.7 14c-.9.7-1.4 1.5-1.5 2.5h-4.4c-.1-.8-.5-1.5-1.3-2Z" />
+                  <path d="M12 2V.5M4.9 4.9 3.8 3.8M19.1 4.9l1.1-1.1" />
+                </svg>
+                아이디어
+              </button>
+            </div>
+
+            <div class="idea-result" id="ideaResult" hidden aria-live="polite">
+              <div class="result-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+              </div>
+              <div class="result-copy">
+                <span class="result-label">추천 아이디어</span>
+                <p id="ideaMessage"></p>
+                <p class="result-source">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
+                    <path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20" />
+                  </svg>
+                  <span id="ideaSource"></span>
+                </p>
+              </div>
+              <button class="result-close" id="resultClose" type="button" aria-label="아이디어 닫기">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="selected-type-bar" id="selectedTypeBar">
+            <div>
+              <span>SELECTED TYPE</span>
+              <strong id="selectedTypeName">유형을 선택해 주세요</strong>
+            </div>
+            <p id="selectedTypeSummary">선택한 유형의 데이터가 여기에 정리됩니다.</p>
+          </div>
+
+          <div class="pattern-grid">
+            <article class="pattern-panel" aria-labelledby="situationTitle">
+              <div class="panel-heading">
+                <div class="panel-title-group">
+                  <span class="panel-icon situation-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M4 5h16v14H4zM8 9h8M8 13h5" />
+                    </svg>
+                  </span>
+                  <div>
+                    <span>CONTEXT</span>
+                    <h3 id="situationTitle">자주 출제되는 상황</h3>
+                  </div>
+                </div>
+                <span class="panel-count" id="situationTotal">0건</span>
+              </div>
+              <ol class="frequency-list" id="situationList">
+                <li class="empty-row">
+                  <span class="empty-number">01</span>
+                  <p>유형을 선택하면 출제 상황이 표시됩니다.</p>
+                </li>
+              </ol>
+            </article>
+
+            <article class="pattern-panel" aria-labelledby="choiceTitle">
+              <div class="panel-heading">
+                <div class="panel-title-group">
+                  <span class="panel-icon choice-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M9 6h11M9 12h11M9 18h11" />
+                      <path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2" />
+                    </svg>
+                  </span>
+                  <div>
+                    <span>CHOICE</span>
+                    <h3 id="choiceTitle">자주 활용되는 보기</h3>
+                  </div>
+                </div>
+                <span class="panel-count" id="choiceTotal">0건</span>
+              </div>
+              <ol class="frequency-list" id="choiceList">
+                <li class="empty-row">
+                  <span class="empty-number">01</span>
+                  <p>유형을 선택하면 보기 내용이 표시됩니다.</p>
+                </li>
+              </ol>
+            </article>
+          </div>
+
+          <article class="source-section" aria-labelledby="sourceTitle">
+            <div class="source-heading">
+              <div>
+                <p class="section-kicker">SOURCE LIST</p>
+                <h3 id="sourceTitle">관련 출처</h3>
+              </div>
+              <label class="search-field" for="sourceSearch">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-4-4" />
+                </svg>
+                <span class="sr-only">출처 검색</span>
+                <input
+                  id="sourceSearch"
+                  type="search"
+                  placeholder="교재명 또는 출처 검색"
+                  autocomplete="off"
+                  disabled
+                />
+              </label>
+            </div>
+
+            <div class="source-table-wrap">
+              <table class="source-table">
+                <thead>
+                  <tr>
+                    <th scope="col">교재</th>
+                    <th scope="col">상황</th>
+                    <th scope="col">보기</th>
+                    <th scope="col">출처</th>
+                  </tr>
+                </thead>
+                <tbody id="sourceTableBody">
+                  <tr class="table-empty">
+                    <td colspan="4">유형을 선택하면 관련 출처를 확인할 수 있습니다.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="system-error" id="errorState" hidden role="alert">
+        <div class="content-inner">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6M12 17h.01" />
+          </svg>
+          <div>
+            <strong>데이터를 불러오지 못했습니다.</strong>
+            <p><code>index.json</code> 파일의 위치와 데이터 형식을 확인해 주세요.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <strong>J&amp;B LAB</strong>
+          <span>SCIENCE CONTENT STUDIO</span>
+        </div>
+        <p>출제 자료를 분석하고, 더 나은 문항의 구조를 설계합니다.</p>
+      </div>
+    </footer>
+
+    <template id="makerRowTemplate">
+      <tr class="maker-question-row">
+        <td class="question-number"></td>
+        <td><span class="teacher-badge"></span></td>
+        <td><span class="course-badge"></span></td>
+        <td class="major-unit"></td>
+        <td class="middle-unit"></td>
+        <td class="question-type"></td>
+        <td>
+          <label class="detail-select-wrap">
+            <span class="sr-only">세부 유형 변경</span>
+            <select class="detail-type-select"></select>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 9.5 5 5 5-5" />
+            </svg>
+          </label>
+        </td>
+      </tr>
+    </template>
+
+    <noscript>
+      <div class="noscript-message">
+        이 페이지의 기능을 사용하려면 브라우저에서 JavaScript를 활성화해야 합니다.
+      </div>
+    </noscript>
+  </body>
+</html>
