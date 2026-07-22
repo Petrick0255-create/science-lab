@@ -1151,6 +1151,11 @@ svg {
     font-size: 14px;
   }
 
+  .idea-data {
+    color: #2563eb;
+    font-weight: 800;
+  }
+
   .analysis-section {
     padding: 54px 0 65px;
   }

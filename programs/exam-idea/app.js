@@ -507,10 +507,7 @@ function showRandomIdea() {
 
   const { row } = selected;
 
-  elements.ideaMessage.textContent =
-    `${row.type} 유형에서는 ` +
-    `${row.situation} 상황을 주고 ` +
-    `${row.choice} 보기를 주는 방법이 있습니다.`;
+  renderIdeaMessage(row);
 
   elements.ideaSource.textContent =
     formatSource(
@@ -524,6 +521,28 @@ function showRandomIdea() {
     behavior: "smooth",
     block: "nearest",
   });
+}
+
+function renderIdeaMessage(row) {
+  elements.ideaMessage.replaceChildren(
+    createIdeaDataSpan(row.type),
+    document.createTextNode(" 유형에서는 "),
+    createIdeaDataSpan(row.situation),
+    document.createTextNode(" 상황을 주고 "),
+    createIdeaDataSpan(row.choice),
+    document.createTextNode(
+      " 보기를 주는 방법이 있습니다.",
+    ),
+  );
+}
+
+function createIdeaDataSpan(text) {
+  const span = document.createElement("span");
+
+  span.className = "idea-data";
+  span.textContent = text;
+
+  return span;
 }
 
 function formatSource(book, source) {
