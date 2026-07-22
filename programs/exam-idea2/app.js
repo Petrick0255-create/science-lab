@@ -4365,3 +4365,110 @@ function downloadText() {
 
   URL.revokeObjectURL(url);
 }
+
+function downloadCsv() {
+  const round =
+    state.rounds[
+      state.currentRoundIndex
+    ];
+
+  if (!round) {
+    alert("먼저 메이킹을 해주세요.");
+    return;
+  }
+
+  const headers = [
+    "번호",
+    "출제자",
+    "과목",
+    "대단원",
+    "중단원",
+    "유형",
+    "세부 유형",
+  ];
+
+  /*
+   * 쉼표, 큰따옴표, 줄바꿈이 있는 값도
+   * CSV에서 깨지지 않게 처리합니다.
+   */
+  const escapeCsv = (value) => {
+    const text =
+      String(value ?? "");
+
+    return (
+      `"${text.replace(
+        /"/g,
+        '""',
+      )}"`
+    );
+  };
+
+  const rows =
+    round.questions
+      .slice()
+      .sort(
+        (a, b) =>
+          Number(a.number) -
+          Number(b.number),
+      )
+      .map((question) => {
+        return [
+          question.number,
+          question.teacher,
+          question.course,
+          question.majorUnit,
+          question.middleUnit,
+          question.type ||
+            question.smallUnit,
+          question.source?.subtype ||
+            "",
+        ]
+          .map(escapeCsv)
+          .join(",");
+      });
+
+  const csvText = [
+    headers
+      .map(escapeCsv)
+      .join(","),
+    ...rows,
+  ].join("\r\n");
+
+  /*
+   * BOM을 추가해 엑셀에서
+   * 한글이 깨지지 않도록 합니다.
+   */
+  const blob =
+    new Blob(
+      [
+        "\uFEFF",
+        csvText,
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8",
+      },
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+
+  link.download =
+    `${round.number}회차-모의고사-구성표.csv`;
+
+  document.body.append(link);
+  link.click();
+  link.remove();
+
+  setTimeout(
+    () => {
+      URL.revokeObjectURL(url);
+    },
+    1000,
+  );
+}
