@@ -162,7 +162,6 @@ const UNIT_POSITION_RULES = [
   {
     name: "산 염기와 중화 반응",
     positions: [7, 9, 23, 24, 25],
-    strict: true,
   },
   {
     name: "물리 변화에서 에너지의 출입",
@@ -2364,6 +2363,62 @@ function renderTypeOptions(
   );
 
   select.append(allGroup);
+
+  /*
+   * 현재 문항을 제외하고 이미 사용된 유형은
+   * 회색으로 표시하되 선택은 허용합니다.
+   */
+  const usedTypes =
+    new Set(
+      round.questions
+        .filter(
+          (_, index) =>
+            index !== questionIndex,
+        )
+        .map(
+          (item) =>
+            normalizeForMatch(
+              item.type,
+            ),
+        ),
+    );
+
+  [...select.options].forEach(
+    (option) => {
+      const unit =
+        state.units.find(
+          (item) =>
+            item.id ===
+            option.value,
+        );
+
+      if (!unit) return;
+
+      const typeName =
+        unit.type ||
+        unit.smallUnit;
+  
+      const alreadyUsed =
+        usedTypes.has(
+          normalizeForMatch(
+            typeName,
+          ),
+        );
+
+      if (alreadyUsed) {
+        option.style.color =
+          "#9ca3af";
+
+        option.title =
+          `${option.title} · 이미 배정됨, 선택 가능`;
+
+        /*
+         * 회색이어도 선택할 수 있습니다.
+         */
+        option.disabled = false;
+      }
+    },
+  );
 
   select.disabled =
     sortedAllUnits.length === 0;
