@@ -6,6 +6,8 @@ const MAX_ROUNDS = 10;
 const JUNG_COUNT = 13;
 const BAEK_COUNT = 12;
 const MAX_PATTERN_ITEMS = 7;
+const MAX_MAJOR_UNIT_COUNT = 3;
+const MAX_GENERATION_ATTEMPTS = 200;
 
 const elements = {
   dataStatus: document.querySelector("#dataStatus"),
@@ -851,8 +853,33 @@ function pickBalancedUnits(
       ...picked,
     ];
 
+    /*
+     * 이미 3문항이 선택된 대단원은
+     * 이후 후보에서 제외합니다.
+     */
+    const available =
+      remaining.filter((unit) => {
+        const majorCount =
+          currentSelection.filter(
+            (item) =>
+              item.majorUnit ===
+              unit.majorUnit,
+          ).length;
+
+        return (
+          majorCount <
+          MAX_MAJOR_UNIT_COUNT
+        );
+      });
+
+    if (available.length === 0) {
+      throw new Error(
+        `대단원당 최대 ${MAX_MAJOR_UNIT_COUNT}문항 조건을 만족하는 후보가 부족합니다.`,
+      );
+    }
+
     const scored =
-      remaining.map((unit) => ({
+      available.map((unit) => ({
         unit,
 
         score:
@@ -871,6 +898,10 @@ function pickBalancedUnits(
     const bestScore =
       scored[0].score;
 
+    /*
+     * 점수가 거의 같은 후보 중 하나를
+     * 무작위로 선택합니다.
+     */
     const nearBest =
       scored.filter(
         (item) =>
@@ -883,14 +914,23 @@ function pickBalancedUnits(
 
     picked.push(selected);
 
-    remaining.splice(
+    /*
+     * 같은 단원 분류 행이 한 회차에
+     * 다시 선택되지 않도록 제거합니다.
+     */
+    const selectedIndex =
       remaining.findIndex(
         (unit) =>
           unit.id ===
           selected.id,
-      ),
-      1,
-    );
+      );
+
+    if (selectedIndex !== -1) {
+      remaining.splice(
+        selectedIndex,
+        1,
+      );
+    }
   }
 
   return picked;
