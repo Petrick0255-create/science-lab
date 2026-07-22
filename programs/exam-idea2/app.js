@@ -3151,6 +3151,531 @@ function renderSourceTable(
     .append(fragment);
 }
 
+function createBookCell(
+  book,
+  type,
+) {
+  const cell =
+    document.createElement(
+      "td",
+    );
+
+  const bookText =
+    cleanText(book);
+
+  if (!bookText) {
+    cell.textContent = "-";
+    return cell;
+  }
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+      type,
+    );
+
+  if (!url) {
+    cell.textContent =
+      bookText;
+
+    return cell;
+  }
+
+  cell.append(
+    createBookDriveLink(
+      bookText,
+      url,
+    ),
+  );
+
+  return cell;
+}
+
+function renderLinkedSource(
+  container,
+  book,
+  source,
+  type,
+) {
+  container.replaceChildren();
+
+  const bookText =
+    cleanText(book) ||
+    "교재 정보 없음";
+
+  const pageText =
+    cleanText(source)
+      ? formatPageOnly(
+          source,
+        )
+      : "";
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+      type,
+    );
+
+  if (url) {
+    container.append(
+      createBookDriveLink(
+        bookText,
+        url,
+      ),
+    );
+  } else {
+    container.append(
+      document.createTextNode(
+        bookText,
+      ),
+    );
+  }
+
+  if (pageText) {
+    container.append(
+      document.createTextNode(
+        ` ${pageText}`,
+      ),
+    );
+  }
+}
+
+function createBookDriveLink(
+  book,
+  url,
+) {
+  const link =
+    document.createElement(
+      "a",
+    );
+
+  link.className =
+    "book-drive-link";
+
+  link.href = url;
+  link.target = "_blank";
+
+  link.rel =
+    "noopener noreferrer";
+
+  link.textContent =
+    book;
+
+  link.title =
+    `${book} 교재를 Google Drive에서 열기`;
+
+  link.setAttribute(
+    "aria-label",
+    `${book} 교재 새 탭에서 열기`,
+  );
+
+  return link;
+}
+
+/*
+ * 단원 분류 데이터에서
+ * 해당 유형의 통과1·2를 찾습니다.
+ */
+function resolveCourseFromType(
+  type,
+) {
+  const target =
+    normalizeForMatch(
+      type,
+    );
+
+  if (!target) {
+    return "";
+  }
+
+  const matchedUnit =
+    state.units.find(
+      (unit) => {
+        const unitType =
+          normalizeForMatch(
+            unit.type ||
+            unit.smallUnit,
+          );
+
+        return (
+          unitType &&
+          (
+            target.includes(
+              unitType,
+            ) ||
+            unitType.includes(
+              target,
+            )
+          )
+        );
+      },
+    );
+
+  return (
+    matchedUnit?.course ||
+    ""
+  );
+}
+
+function getBookDriveUrl(
+  book,
+  type,
+) {
+  const target =
+    normalizeForMatch(
+      book,
+    );
+
+  if (!target) {
+    return "";
+  }
+
+  /*
+   * 교재명에 통과1·2가 있으면 그것을 사용하고,
+   * 없으면 유형의 단원 분류에서 찾습니다.
+   */
+  const course =
+    normalizeCourse(book) ||
+    resolveCourseFromType(
+      type,
+    );
+
+  if (!course) {
+    return "";
+  }
+
+  let product = "";
+
+  /*
+   * 완자 기출PICK을 일반 완자보다
+   * 먼저 판별합니다.
+   */
+  if (
+    target.includes(
+      "완자",
+    ) &&
+    (
+      target.includes(
+        "기출pick",
+      ) ||
+      target.includes(
+        "기출픽",
+      )
+    )
+  ) {
+    product =
+      "완자 기출pick";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "시험대비",
+    )
+  ) {
+    product =
+      "하이탑 시험대비";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "진도",
+    )
+  ) {
+    product =
+      "하이탑 진도";
+  } else if (
+    target.includes(
+      "오투",
+    )
+  ) {
+    product = "오투";
+  } else if (
+    target.includes(
+      "완자",
+    )
+  ) {
+    product = "완자";
+  }
+
+  if (!product) {
+    return "";
+  }
+
+  return (
+    BOOK_DRIVE_LINKS[
+      `${course} ${product}`
+    ] || ""
+  );
+}
+
+function createBookCell(
+  book,
+  type,
+) {
+  const cell =
+    document.createElement(
+      "td",
+    );
+
+  const bookText =
+    cleanText(book);
+
+  if (!bookText) {
+    cell.textContent = "-";
+    return cell;
+  }
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+      type,
+    );
+
+  /*
+   * 링크를 찾지 못해도 기존 교재명은
+   * 반드시 표시합니다.
+   */
+  if (!url) {
+    cell.textContent =
+      bookText;
+
+    return cell;
+  }
+
+  cell.append(
+    createBookDriveLink(
+      bookText,
+      url,
+    ),
+  );
+
+  return cell;
+}
+
+function renderLinkedSource(
+  container,
+  book,
+  source,
+  type,
+) {
+  container.replaceChildren();
+
+  const bookText =
+    cleanText(book) ||
+    "교재 정보 없음";
+
+  const pageText =
+    cleanText(source)
+      ? formatPageOnly(
+          source,
+        )
+      : "";
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+      type,
+    );
+
+  if (url) {
+    container.append(
+      createBookDriveLink(
+        bookText,
+        url,
+      ),
+    );
+  } else {
+    /*
+     * 링크가 없더라도 기존 출처는 표시합니다.
+     */
+    container.append(
+      document.createTextNode(
+        bookText,
+      ),
+    );
+  }
+
+  if (pageText) {
+    container.append(
+      document.createTextNode(
+        ` ${pageText}`,
+      ),
+    );
+  }
+}
+
+function createBookDriveLink(
+  book,
+  url,
+) {
+  const link =
+    document.createElement(
+      "a",
+    );
+
+  link.className =
+    "book-drive-link";
+
+  link.href = url;
+  link.target = "_blank";
+
+  link.rel =
+    "noopener noreferrer";
+
+  link.textContent =
+    book;
+
+  link.title =
+    `${book} 교재를 Google Drive에서 열기`;
+
+  link.setAttribute(
+    "aria-label",
+    `${book} 교재 새 탭에서 열기`,
+  );
+
+  return link;
+}
+
+function resolveCourseFromType(
+  type,
+) {
+  const target =
+    normalizeForMatch(
+      type,
+    );
+
+  if (!target) {
+    return "";
+  }
+
+  /*
+   * 단원 분류에서 현재 유형을 찾아
+   * 통과1·통과2를 확인합니다.
+   */
+  const matchedUnit =
+    state.units.find(
+      (unit) => {
+        const unitType =
+          normalizeForMatch(
+            unit.type ||
+            unit.smallUnit,
+          );
+
+        return (
+          unitType &&
+          (
+            target.includes(
+              unitType,
+            ) ||
+            unitType.includes(
+              target,
+            )
+          )
+        );
+      },
+    );
+
+  return (
+    matchedUnit?.course ||
+    ""
+  );
+}
+
+function getBookDriveUrl(
+  book,
+  type,
+) {
+  const target =
+    normalizeForMatch(
+      book,
+    );
+
+  if (!target) {
+    return "";
+  }
+
+  /*
+   * 교재명에 통과1·2가 없으면
+   * 현재 유형의 단원 분류에서 찾습니다.
+   */
+  const course =
+    normalizeCourse(book) ||
+    resolveCourseFromType(
+      type,
+    );
+
+  if (!course) {
+    return "";
+  }
+
+  let product = "";
+
+  /*
+   * 완자 기출PICK은 일반 완자보다
+   * 먼저 판별해야 합니다.
+   */
+  if (
+    target.includes(
+      "완자",
+    ) &&
+    (
+      target.includes(
+        "기출pick",
+      ) ||
+      target.includes(
+        "기출픽",
+      )
+    )
+  ) {
+    product =
+      "완자 기출pick";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "시험대비",
+    )
+  ) {
+    product =
+      "하이탑 시험대비";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "진도",
+    )
+  ) {
+    product =
+      "하이탑 진도";
+  } else if (
+    target.includes(
+      "오투",
+    )
+  ) {
+    product = "오투";
+  } else if (
+    target.includes(
+      "완자",
+    )
+  ) {
+    product = "완자";
+  }
+
+  if (!product) {
+    return "";
+  }
+
+  return (
+    BOOK_DRIVE_LINKS[
+      `${course} ${product}`
+    ] || ""
+  );
+}
+
 function resetIdeaSelection() {
   state.selectedType = "";
   state.selectedTypeRows = [];
