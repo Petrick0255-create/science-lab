@@ -1228,3 +1228,22 @@ svg {
     transition-duration: 0.01ms !important;
   }
 }
+
+.book-drive-link {
+  color: #2563eb;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.book-drive-link:hover {
+  color: #1d4ed8;
+}
+
+.book-drive-link:focus-visible {
+  border-radius: 3px;
+  outline: 3px solid
+    rgba(79, 140, 255, 0.25);
+  outline-offset: 2px;
+}

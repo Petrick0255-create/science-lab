@@ -3,6 +3,38 @@
 const DATA_URL = "index.json";
 const MAX_PATTERN_ITEMS = 7;
 
+const BOOK_DRIVE_LINKS = {
+  "통과1 오투":
+    "https://drive.google.com/file/d/1d818o2nnF8P0tM36hHeJzb99fUQUtAW4/view?usp=drive_link",
+
+  "통과1 완자":
+    "https://drive.google.com/file/d/1Jes6H7zoQ31bt_nHJX-b2X1XLKy9_7Eq/view?usp=drive_link",
+
+  "통과1 하이탑 시험대비":
+    "https://drive.google.com/file/d/1ktsTD4z69fc6ighY9Aa6I-eqboFYqfCP/view?usp=drive_link",
+
+  "통과1 하이탑 진도":
+    "https://drive.google.com/file/d/1-tRoBfMzsKSxMX0yuhySOmtxJi5NnYzo/view?usp=drive_link",
+
+  "통과1 완자 기출pick":
+    "https://drive.google.com/file/d/1AJVY9UGEHJzpI-q9CJPhBzVuBi8vZAHq/view?usp=drive_link",
+
+  "통과2 오투":
+    "https://drive.google.com/file/d/1bbyn9SKfVPGuWpG8Fst3hyh5gX1BJBGL/view?usp=drive_link",
+
+  "통과2 완자":
+    "https://drive.google.com/file/d/1mX-MJNgxWtIXQSUy7TnCZmG2r5MBqZ2A/view?usp=drive_link",
+
+  "통과2 하이탑 시험대비":
+    "https://drive.google.com/file/d/1AsoI7RK82GTh2GOR-xMPH-T9QDZtXhU5/view?usp=drive_link",
+
+  "통과2 하이탑 진도":
+    "https://drive.google.com/file/d/1NK5k9a-ng_1qtES6fij8SPGonrMdTiYY/view?usp=drive_link",
+
+  "통과2 완자 기출pick":
+    "https://drive.google.com/file/d/1nD_dUYKtnwtgJopt5At2s-wN0B1qUJGh/view?usp=drive_link",
+};
+
 const elements = {
   typeSelect: document.querySelector("#typeSelect"),
   ideaButton: document.querySelector("#ideaButton"),
@@ -90,7 +122,9 @@ function bindEvents() {
   );
 }
 
-function getRowsFromJson(json) {
+function getRowsFromJson(
+  json,
+) {
   if (Array.isArray(json)) {
     return json;
   }
@@ -103,7 +137,10 @@ function getRowsFromJson(json) {
     json?.records,
   ];
 
-  const found = possibleArrays.find(Array.isArray);
+  const found =
+    possibleArrays.find(
+      Array.isArray,
+    );
 
   if (found) {
     return found;
@@ -187,6 +224,18 @@ function cleanText(value) {
   return String(value ?? "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeForMatch(
+  value,
+) {
+  return cleanText(value)
+    .normalize("NFKC")
+    .toLocaleLowerCase("ko")
+    .replace(
+      /[^\p{L}\p{N}]/gu,
+      "",
+    );
 }
 
 function isUsableRow(row) {
@@ -461,66 +510,72 @@ function showRandomIdea() {
     return;
   }
 
-  const candidates = state.selectedRows
-    .map((row, index) => ({
-      row,
-      index,
-    }))
-    .filter(
-      ({ row }) =>
-        row.situation &&
-        row.choice,
-    );
+  const candidates =
+    state.selectedRows
+      .map(
+        (row, index) => ({
+          row,
+          index,
+        }),
+      )
+      .filter(
+        ({ row }) =>
+          row.situation &&
+          row.choice,
+      );
 
-  if (candidates.length === 0) {
-    elements.ideaMessage.textContent =
-      `${state.selectedType} 유형에는 ` +
-      "상황과 보기가 모두 입력된 행이 없습니다.";
+  if (
+    candidates.length === 0
+  ) {
+    elements.ideaMessage
+      .textContent =
+      `${state.selectedType} 유형에는 상황과 보기가 모두 입력된 행이 없습니다.`;
 
-    elements.ideaSource.textContent =
+    elements.ideaSource
+      .textContent =
       "출처 정보 없음";
 
-    elements.ideaResult.hidden = false;
+    elements.ideaResult
+      .hidden = false;
 
     return;
   }
 
-  let selected;
-
-  if (candidates.length === 1) {
-    selected = candidates[0];
-  } else {
-    const available = candidates.filter(
-      ({ index }) =>
-        index !== state.lastIdeaIndex,
-    );
-
-    selected =
-      available[
-        Math.floor(
-          Math.random() * available.length,
+  const available =
+    candidates.length > 1
+      ? candidates.filter(
+          ({ index }) =>
+            index !==
+            state.lastIdeaIndex,
         )
-      ];
-  }
+      : candidates;
 
-  state.lastIdeaIndex = selected.index;
-
-  const { row } = selected;
-
-  renderIdeaMessage(row);
-
-  elements.ideaSource.textContent =
-    formatSource(
-      row.book,
-      row.source,
+  const selected =
+    randomItem(
+      available,
     );
 
-  elements.ideaResult.hidden = false;
+  state.lastIdeaIndex =
+    selected.index;
 
-  elements.ideaResult.scrollIntoView({
-    behavior: "smooth",
-    block: "nearest",
-  });
+  renderIdeaMessage(
+    selected.row,
+  );
+
+  renderLinkedSource(
+    elements.ideaSource,
+    selected.row.book,
+    selected.row.source,
+  );
+
+  elements.ideaResult
+    .hidden = false;
+
+  elements.ideaResult
+    .scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
 }
 
 function renderIdeaMessage(row) {
@@ -608,23 +663,34 @@ function handleSourceSearch(event) {
 
 function renderSourceTable(
   rows,
-  emptyMessage = "관련 출처가 없습니다.",
+  emptyMessage =
+    "관련 출처가 없습니다.",
 ) {
-  elements.sourceTableBody.replaceChildren();
+  elements.sourceTableBody
+    .replaceChildren();
 
   if (rows.length === 0) {
     const tr =
-      document.createElement("tr");
+      document.createElement(
+        "tr",
+      );
+
+    tr.className =
+      "table-empty";
 
     const td =
-      document.createElement("td");
+      document.createElement(
+        "td",
+      );
 
-    tr.className = "table-empty";
     td.colSpan = 4;
-    td.textContent = emptyMessage;
+    td.textContent =
+      emptyMessage;
 
     tr.append(td);
-    elements.sourceTableBody.append(tr);
+
+    elements.sourceTableBody
+      .append(tr);
 
     return;
   }
@@ -634,40 +700,59 @@ function renderSourceTable(
 
   rows.forEach((row) => {
     const tr =
-      document.createElement("tr");
+      document.createElement(
+        "tr",
+      );
 
-    const bookCell = createCell(
-      row.book || "-",
-    );
-
-    const situationCell = createCell(
-      row.situation || "-",
-    );
-
-    const choiceCell = createCell(
-      row.choice || "-",
-    );
-
-    const sourceCell =
-      document.createElement("td");
+    /*
+     * 교재명 셀을 링크로 생성합니다.
+     */
+    const bookCell =
+      createBookCell(
+        row.book,
+      );
 
     bookCell.classList.add(
       "source-book",
     );
 
+    const situationCell =
+      createCell(
+        row.situation ||
+        "-",
+      );
+
+    const choiceCell =
+      createCell(
+        row.choice ||
+        "-",
+      );
+
+    const sourceCell =
+      document.createElement(
+        "td",
+      );
+
     if (row.source) {
       const badge =
-        document.createElement("span");
+        document.createElement(
+          "span",
+        );
 
       badge.className =
         "source-page";
 
       badge.textContent =
-        formatPageOnly(row.source);
+        formatPageOnly(
+          row.source,
+        );
 
-      sourceCell.append(badge);
+      sourceCell.append(
+        badge,
+      );
     } else {
-      sourceCell.textContent = "-";
+      sourceCell.textContent =
+        "-";
     }
 
     tr.append(
@@ -680,10 +765,280 @@ function renderSourceTable(
     fragment.append(tr);
   });
 
-  elements.sourceTableBody.append(
-    fragment,
+  elements.sourceTableBody
+    .append(fragment);
+}
+
+function createBookCell(
+  book,
+) {
+  const cell =
+    document.createElement(
+      "td",
+    );
+
+  const bookText =
+    cleanText(book);
+
+  if (!bookText) {
+    cell.textContent = "-";
+    return cell;
+  }
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+    );
+
+  /*
+   * 링크가 등록되지 않은 교재는
+   * 기존처럼 일반 글자로 표시합니다.
+   */
+  if (!url) {
+    cell.textContent =
+      bookText;
+
+    return cell;
+  }
+
+  const link =
+    createBookDriveLink(
+      bookText,
+      url,
+    );
+
+  cell.append(link);
+
+  return cell;
+}
+
+function renderLinkedSource(
+  container,
+  book,
+  source,
+) {
+  container.replaceChildren();
+
+  const bookText =
+    cleanText(book) ||
+    "교재 정보 없음";
+
+  const pageText =
+    cleanText(source)
+      ? formatPageOnly(
+          source,
+        )
+      : "";
+
+  const url =
+    getBookDriveUrl(
+      bookText,
+    );
+
+  if (url) {
+    const link =
+      createBookDriveLink(
+        bookText,
+        url,
+      );
+
+    container.append(link);
+  } else {
+    container.append(
+      document.createTextNode(
+        bookText,
+      ),
+    );
+  }
+
+  if (pageText) {
+    container.append(
+      document.createTextNode(
+        ` ${pageText}`,
+      ),
+    );
+  }
+}
+
+function createBookDriveLink(
+  book,
+  url,
+) {
+  const link =
+    document.createElement(
+      "a",
+    );
+
+  link.className =
+    "book-drive-link";
+
+  link.href = url;
+  link.target = "_blank";
+
+  link.rel =
+    "noopener noreferrer";
+
+  link.textContent =
+    book;
+
+  link.title =
+    `${book} 교재를 Google Drive에서 열기`;
+
+  link.setAttribute(
+    "aria-label",
+    `${book} 교재 새 탭에서 열기`,
+  );
+
+  return link;
+}
+
+
+function getBookDriveUrl(
+  book,
+) {
+  const target =
+    normalizeForMatch(
+      book,
+    );
+
+  const entries =
+    Object.entries(
+      BOOK_DRIVE_LINKS,
+    );
+
+  /*
+   * 정확히 같은 교재명부터 찾습니다.
+   */
+  for (
+    const [
+      name,
+      url,
+    ] of entries
+  ) {
+    const normalizedName =
+      normalizeForMatch(
+        name,
+      );
+
+    if (
+      target ===
+      normalizedName
+    ) {
+      return url;
+    }
+  }
+
+  /*
+   * 통과1 또는 통합과학1을
+   * 같은 교재로 처리합니다.
+   */
+  const course =
+    /통과1|통합과학1/.test(
+      target,
+    )
+      ? "통과1"
+      : /통과2|통합과학2/.test(
+            target,
+          )
+        ? "통과2"
+        : "";
+
+  if (!course) {
+    return "";
+  }
+
+  let product = "";
+
+  /*
+   * 완자 기출pick을 일반 완자보다
+   * 먼저 검사해야 합니다.
+   */
+  if (
+    /완자.*(?:기출pick|기출픽)|(?:기출pick|기출픽).*완자/.test(
+      target,
+    )
+  ) {
+    product =
+      "완자 기출pick";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "시험대비",
+    )
+  ) {
+    product =
+      "하이탑 시험대비";
+  } else if (
+    target.includes(
+      "하이탑",
+    ) &&
+    target.includes(
+      "진도",
+    )
+  ) {
+    product =
+      "하이탑 진도";
+  } else if (
+    target.includes(
+      "오투",
+    )
+  ) {
+    product = "오투";
+  } else if (
+    target.includes(
+      "완자",
+    )
+  ) {
+    product = "완자";
+  }
+
+  const flexibleMatch =
+    BOOK_DRIVE_LINKS[
+      `${course} ${product}`
+    ];
+
+  if (flexibleMatch) {
+    return flexibleMatch;
+  }
+
+  /*
+   * 교재명 뒤에 연도나 설명이 붙어 있는 경우
+   * 가장 긴 일치 항목을 사용합니다.
+   */
+  const contained =
+    entries
+      .map(
+        ([
+          name,
+          url,
+        ]) => ({
+          name:
+            normalizeForMatch(
+              name,
+            ),
+          url,
+        }),
+      )
+      .filter(
+        (item) =>
+          target.includes(
+            item.name,
+          ),
+      )
+      .sort(
+        (a, b) =>
+          b.name.length -
+          a.name.length,
+      );
+
+  return (
+    contained[0]?.url ||
+    ""
   );
 }
+
 
 function createCell(text) {
   const td =
