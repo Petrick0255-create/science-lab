@@ -945,12 +945,16 @@ function createHistoricalMajorSlots(
  * 각 번호에 정해진 통과·대단원 조건에 맞는
  * 실제 단원 분류 행을 하나씩 선택합니다.
  */
+
 function selectUnitsForSlots(
   slots,
   usedSourceKeys,
 ) {
   const selected = [];
 
+  /*
+   * 같은 유형이 몇 번 선택됐는지 저장합니다.
+   */
   const unitSelectionCounts =
     new Map();
 
@@ -960,8 +964,7 @@ function selectUnitsForSlots(
   };
 
   /*
-   * 선택 가능한 유형이 적은 대단원부터 먼저 처리하면
-   * 뒤에서 후보가 부족해질 가능성이 줄어듭니다.
+   * 후보가 적은 대단원부터 먼저 처리합니다.
    */
   const orderedSlots = [
     ...slots,
@@ -976,13 +979,25 @@ function selectUnitsForSlots(
       const candidates =
         state.units.filter(
           (unit) => {
+            /*
+             * 단원 행 id가 아니라
+             * 실제 유형 문자열을 기준으로 셉니다.
+             */
+            const unitKey =
+              normalizeForMatch(
+                unit.type ||
+                unit.smallUnit ||
+                unit.id,
+              );
+
             const selectedCount =
               unitSelectionCounts.get(
-                unit.id,
+                unitKey,
               ) || 0;
 
             /*
-             * 같은 유형은 한 회차에 최대 2문항입니다.
+             * 같은 유형은 한 회차에
+             * 최대 2문항까지만 선택합니다.
              */
             if (
               selectedCount >=
@@ -992,7 +1007,7 @@ function selectUnitsForSlots(
             }
 
             /*
-             * 같은 유형을 다시 쓸 경우
+             * 같은 유형을 두 번 사용할 때는
              * 서로 다른 세부 유형이 있어야 합니다.
              */
             if (
@@ -1011,6 +1026,10 @@ function selectUnitsForSlots(
               }
             }
 
+            /*
+             * 해당 번호에 지정된
+             * 통과1·통과2가 일치해야 합니다.
+             */
             if (
               unit.course !==
               slot.course
@@ -1018,6 +1037,10 @@ function selectUnitsForSlots(
               return false;
             }
 
+            /*
+             * 해당 번호에 지정된
+             * 대단원이 일치해야 합니다.
+             */
             if (
               !majorUnitMatches(
                 unit.majorUnit,
@@ -1026,7 +1049,11 @@ function selectUnitsForSlots(
             ) {
               return false;
             }
-            
+
+            /*
+             * 산·염기와 중화 반응처럼
+             * 번호가 제한된 유형인지 확인합니다.
+             */
             if (
               !isUnitPositionAllowed(
                 unit,
@@ -1036,6 +1063,9 @@ function selectUnitsForSlots(
               return false;
             }
 
+            /*
+             * 정T는 최대 13문항입니다.
+             */
             if (
               unit.teacher ===
                 "정T" &&
@@ -1045,6 +1075,9 @@ function selectUnitsForSlots(
               return false;
             }
 
+            /*
+             * 백T는 최대 12문항입니다.
+             */
             if (
               unit.teacher ===
                 "백T" &&
@@ -1062,10 +1095,14 @@ function selectUnitsForSlots(
         candidates.length === 0
       ) {
         throw new Error(
-          `${slot.course}·${slot.majorUnit}의 선택 가능한 유형이 부족합니다.`,
+          `${slot.number}번에 배치할 ${slot.course}·${slot.majorUnit} 유형이 부족합니다.`,
         );
       }
 
+      /*
+       * 단원 중복, 번호 적합도,
+       * 정T·백T 비율을 함께 계산합니다.
+       */
       const scored =
         candidates.map(
           (unit) => ({
@@ -1086,11 +1123,6 @@ function selectUnitsForSlots(
                 teacherCounts,
                 selected.length + 1,
               ),
-                unit.teacher,
-                teacherCounts,
-                selected.length +
-                  1,
-              ),
           }),
         );
 
@@ -1102,6 +1134,10 @@ function selectUnitsForSlots(
       const bestScore =
         scored[0].score;
 
+      /*
+       * 점수가 비슷한 후보 중에서
+       * 무작위로 하나를 선택합니다.
+       */
       const nearBest =
         scored.filter(
           (item) =>
@@ -1120,10 +1156,20 @@ function selectUnitsForSlots(
           slot.number,
       });
 
+      /*
+       * 선택된 유형의 사용 횟수를 올립니다.
+       */
+      const chosenKey =
+        normalizeForMatch(
+          chosen.type ||
+            chosen.smallUnit ||
+            chosen.id,
+        );
+
       unitSelectionCounts.set(
-        chosen.id,
+        chosenKey,
         (unitSelectionCounts.get(
-          chosen.id,
+          chosenKey,
         ) || 0) + 1,
       );
 
@@ -1133,6 +1179,10 @@ function selectUnitsForSlots(
     },
   );
 
+  /*
+   * 최종적으로 정T 13문항,
+   * 백T 12문항인지 검사합니다.
+   */
   if (
     teacherCounts.정T !==
       JUNG_COUNT ||
@@ -1147,10 +1197,6 @@ function selectUnitsForSlots(
   return selected;
 }
 
-/*
- * 해당 통과·대단원에 몇 개의 유형을
- * 배치할 수 있는지 계산합니다.
- */
 function countSlotCandidates(
   slot,
 ) {
