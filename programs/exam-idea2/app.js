@@ -6,8 +6,75 @@ const MAX_ROUNDS = 10;
 const JUNG_COUNT = 13;
 const BAEK_COUNT = 12;
 const MAX_PATTERN_ITEMS = 7;
-const MAX_MAJOR_UNIT_COUNT = 3;
-const MAX_GENERATION_ATTEMPTS = 200;
+const MAX_GENERATION_ATTEMPTS = 500;
+const MAX_TYPE_PER_ROUND = 2;
+
+/*
+ * 한 배열이 실제 모의고사 한 회차의 1~25번 배치입니다.
+ *
+ * "13-12": 통과1 13문항, 통과2 12문항
+ *           → 25 고3 예시문항 열의 번호별 배치
+ *
+ * "12-13": 통과1 12문항, 통과2 13문항
+ *           → 26 고2 3월 열의 번호별 배치
+ */
+const ROUND_POSITION_TEMPLATES = {
+  "13-12": [
+    ["통과2", "환경과 에너지"],       // 1
+    ["통과1", "과학의 기초"],         // 2
+    ["통과1", "과학의 기초"],         // 3
+    ["통과1", "물질과 규칙성"],       // 4
+    ["통과2", "환경과 에너지"],       // 5
+    ["통과2", "과학과 미래사회"],     // 6
+    ["통과2", "변화와 다양성"],       // 7
+    ["통과2", "변화와 다양성"],       // 8
+    ["통과2", "과학과 미래사회"],     // 9
+    ["통과2", "환경과 에너지"],       // 10
+    ["통과1", "물질과 규칙성"],       // 11
+    ["통과2", "변화와 다양성"],       // 12
+    ["통과1", "물질과 규칙성"],       // 13
+    ["통과1", "물질과 규칙성"],       // 14
+    ["통과1", "시스템과 상호작용"],   // 15
+    ["통과2", "환경과 에너지"],       // 16
+    ["통과2", "변화와 다양성"],       // 17
+    ["통과1", "시스템과 상호작용"],   // 18
+    ["통과1", "시스템과 상호작용"],   // 19
+    ["통과1", "시스템과 상호작용"],   // 20
+    ["통과1", "물질과 규칙성"],       // 21
+    ["통과1", "시스템과 상호작용"],   // 22
+    ["통과1", "시스템과 상호작용"],   // 23
+    ["통과2", "변화와 다양성"],       // 24
+    ["통과2", "환경과 에너지"],       // 25
+  ],
+
+  "12-13": [
+    ["통과2", "환경과 에너지"],       // 1
+    ["통과1", "물질과 규칙성"],       // 2
+    ["통과1", "과학의 기초"],         // 3
+    ["통과2", "변화와 다양성"],       // 4
+    ["통과1", "물질과 규칙성"],       // 5
+    ["통과1", "시스템과 상호작용"],   // 6
+    ["통과2", "변화와 다양성"],       // 7
+    ["통과2", "변화와 다양성"],       // 8
+    ["통과2", "환경과 에너지"],       // 9
+    ["통과2", "환경과 에너지"],       // 10
+    ["통과2", "과학과 미래사회"],     // 11
+    ["통과1", "물질과 규칙성"],       // 12
+    ["통과1", "시스템과 상호작용"],   // 13
+    ["통과2", "변화와 다양성"],       // 14
+    ["통과2", "환경과 에너지"],       // 15
+    ["통과2", "변화와 다양성"],       // 16
+    ["통과1", "시스템과 상호작용"],   // 17
+    ["통과1", "시스템과 상호작용"],   // 18
+    ["통과2", "과학과 미래사회"],     // 19
+    ["통과1", "물질과 규칙성"],       // 20
+    ["통과1", "물질과 규칙성"],       // 21
+    ["통과2", "환경과 에너지"],       // 22
+    ["통과1", "시스템과 상호작용"],   // 23
+    ["통과1", "시스템과 상호작용"],   // 24
+    ["통과2", "변화와 다양성"],       // 25
+  ],
+};
 
 const elements = {
   dataStatus: document.querySelector("#dataStatus"),
@@ -590,33 +657,58 @@ function generateRound(roundNumber) {
     course2,
   } = getSelectedCourseRatio();
 
-  const bucketTargets =
-    createBucketTargets(course1);
+  let lastError = null;
 
-  const selectedUnits = [];
+  /*
+   * 정T·백T 비율까지 정확히 맞는 결과가 나올 때까지
+   * 최대 500번 새로 구성합니다.
+   */
+  for (
+    let attempt = 0;
+    attempt < MAX_GENERATION_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      return generateRoundAttempt(
+        roundNumber,
+        course1,
+        course2,
+      );
+    } catch (error) {
+      lastError = error;
+    }
+  }
 
+  throw new Error(
+    "기존 모의고사와 유사한 대단원 분포로 25문항을 구성하지 못했습니다. " +
+      "단원 분류의 대단원명과 정T·백T 배치를 확인해 주세요. " +
+      `${lastError?.message || ""}`,
+  );
+}
+
+function generateRoundAttempt(
+  roundNumber,
+  course1,
+  course2,
+) {
   const usedKeys =
     getUsedSourceKeys();
 
-  bucketTargets.forEach((target) => {
-    const pool = state.units.filter(
-      (unit) =>
-        unit.teacher ===
-          target.teacher &&
-        unit.course ===
-          target.course,
+  /*
+   * 선택한 통과1·통과2 비율에 맞는
+   * 실제 기출 번호별 대단원 배치를 가져옵니다.
+   */
+  const slots =
+    createHistoricalMajorSlots(
+      course1,
+      course2,
     );
 
-    const picked =
-      pickBalancedUnits(
-        pool,
-        target.count,
-        selectedUnits,
-        usedKeys,
-      );
-
-    selectedUnits.push(...picked);
-  });
+  const selectedUnits =
+    selectUnitsForSlots(
+      slots,
+      usedKeys,
+    );
 
   if (
     selectedUnits.length !==
@@ -627,10 +719,20 @@ function generateRound(roundNumber) {
     );
   }
 
-  const arrangedUnits =
-    arrangeQuestions(selectedUnits);
+  /*
+   * 후보를 뽑을 때 순서가 섞였으므로
+   * 원래 1~25번 순서로 되돌립니다.
+   */
+  const arrangedUnits = [
+    ...selectedUnits,
+  ].sort(
+    (a, b) =>
+      a.assignedNumber -
+      b.assignedNumber,
+  );
 
-  const newRoundKeys = new Set();
+  const newRoundKeys =
+    new Set();
 
   const questions =
     arrangedUnits.map(
@@ -649,7 +751,9 @@ function generateRound(roundNumber) {
         }
 
         return {
-          number: index + 1,
+          number:
+            unit.assignedNumber ||
+            index + 1,
           teacher: unit.teacher,
           course: unit.course,
           majorUnit:
@@ -672,6 +776,332 @@ function generateRound(roundNumber) {
   };
 }
 
+/*
+ * 선택한 통과1·통과2 비율에 맞는
+ * 번호별 대단원 배치를 반환합니다.
+ */
+function createHistoricalMajorSlots(
+  course1Count,
+  course2Count,
+) {
+  const key =
+    `${course1Count}-${course2Count}`;
+
+  const template =
+    ROUND_POSITION_TEMPLATES[key];
+
+  if (
+    !template ||
+    template.length !==
+      QUESTION_COUNT
+  ) {
+    throw new Error(
+      `통과1·2 ${key} 비율의 25문항 배치 템플릿이 없습니다.`,
+    );
+  }
+
+  return template.map(
+    (
+      [
+        course,
+        majorUnit,
+      ],
+      index,
+    ) => ({
+      number: index + 1,
+      course,
+      majorUnit,
+    }),
+  );
+}
+
+/*
+ * 각 번호에 정해진 통과·대단원 조건에 맞는
+ * 실제 단원 분류 행을 하나씩 선택합니다.
+ */
+function selectUnitsForSlots(
+  slots,
+  usedSourceKeys,
+) {
+  const selected = [];
+
+  const unitSelectionCounts =
+    new Map();
+
+  const teacherCounts = {
+    정T: 0,
+    백T: 0,
+  };
+
+  /*
+   * 선택 가능한 유형이 적은 대단원부터 먼저 처리하면
+   * 뒤에서 후보가 부족해질 가능성이 줄어듭니다.
+   */
+  const orderedSlots = [
+    ...slots,
+  ].sort(
+    (a, b) =>
+      countSlotCandidates(a) -
+      countSlotCandidates(b),
+  );
+
+  orderedSlots.forEach(
+    (slot) => {
+      const candidates =
+        state.units.filter(
+          (unit) => {
+            const selectedCount =
+              unitSelectionCounts.get(
+                unit.id,
+              ) || 0;
+
+            /*
+             * 같은 유형은 한 회차에 최대 2문항입니다.
+             */
+            if (
+              selectedCount >=
+              MAX_TYPE_PER_ROUND
+            ) {
+              return false;
+            }
+
+            /*
+             * 같은 유형을 다시 쓸 경우
+             * 서로 다른 세부 유형이 있어야 합니다.
+             */
+            if (
+              selectedCount > 0
+            ) {
+              const sourceCount =
+                getSourcesForType(
+                  unit.type,
+                ).length;
+
+              if (
+                sourceCount <=
+                selectedCount
+              ) {
+                return false;
+              }
+            }
+
+            if (
+              unit.course !==
+              slot.course
+            ) {
+              return false;
+            }
+
+            if (
+              !majorUnitMatches(
+                unit.majorUnit,
+                slot.majorUnit,
+              )
+            ) {
+              return false;
+            }
+
+            if (
+              unit.teacher ===
+                "정T" &&
+              teacherCounts.정T >=
+                JUNG_COUNT
+            ) {
+              return false;
+            }
+
+            if (
+              unit.teacher ===
+                "백T" &&
+              teacherCounts.백T >=
+                BAEK_COUNT
+            ) {
+              return false;
+            }
+
+            return true;
+          },
+        );
+
+      if (
+        candidates.length === 0
+      ) {
+        throw new Error(
+          `${slot.course}·${slot.majorUnit}의 선택 가능한 유형이 부족합니다.`,
+        );
+      }
+
+      const scored =
+        candidates.map(
+          (unit) => ({
+            unit,
+
+            score:
+              scoreUnitCandidate(
+                unit,
+                selected,
+                usedSourceKeys,
+              ) +
+              scoreTeacherBalance(
+                unit.teacher,
+                teacherCounts,
+                selected.length +
+                  1,
+              ),
+          }),
+        );
+
+      scored.sort(
+        (a, b) =>
+          a.score - b.score,
+      );
+
+      const bestScore =
+        scored[0].score;
+
+      const nearBest =
+        scored.filter(
+          (item) =>
+            item.score <=
+            bestScore + 2.5,
+        );
+
+      const chosen =
+        randomItem(
+          nearBest,
+        ).unit;
+
+      selected.push({
+        ...chosen,
+        assignedNumber:
+          slot.number,
+      });
+
+      unitSelectionCounts.set(
+        chosen.id,
+        (unitSelectionCounts.get(
+          chosen.id,
+        ) || 0) + 1,
+      );
+
+      teacherCounts[
+        chosen.teacher
+      ] += 1;
+    },
+  );
+
+  if (
+    teacherCounts.정T !==
+      JUNG_COUNT ||
+    teacherCounts.백T !==
+      BAEK_COUNT
+  ) {
+    throw new Error(
+      `출제자 비율이 정T ${teacherCounts.정T}문항·백T ${teacherCounts.백T}문항으로 선택되었습니다.`,
+    );
+  }
+
+  return selected;
+}
+
+/*
+ * 해당 통과·대단원에 몇 개의 유형을
+ * 배치할 수 있는지 계산합니다.
+ */
+function countSlotCandidates(
+  slot,
+) {
+  return state.units
+    .filter((unit) => {
+      return (
+        unit.course ===
+          slot.course &&
+        majorUnitMatches(
+          unit.majorUnit,
+          slot.majorUnit,
+        )
+      );
+    })
+    .reduce(
+      (
+        capacity,
+        unit,
+      ) => {
+        const sourceCount =
+          Math.max(
+            1,
+            getSourcesForType(
+              unit.type,
+            ).length,
+          );
+
+        return (
+          capacity +
+          Math.min(
+            MAX_TYPE_PER_ROUND,
+            sourceCount,
+          )
+        );
+      },
+      0,
+    );
+}
+
+/*
+ * 특수기호와 숫자 차이를 제거하고
+ * 대단원 문자열을 비교합니다.
+ */
+function majorUnitMatches(
+  actualMajorUnit,
+  targetMajorUnit,
+) {
+  const actual =
+    normalizeForMatch(
+      actualMajorUnit,
+    );
+
+  const target =
+    normalizeForMatch(
+      targetMajorUnit,
+    );
+
+  return (
+    actual.includes(target) ||
+    target.includes(actual)
+  );
+}
+
+/*
+ * 25문항 전체에서 정T 13, 백T 12가
+ * 자연스럽게 배치되도록 점수를 부여합니다.
+ */
+function scoreTeacherBalance(
+  teacher,
+  teacherCounts,
+  selectedCountAfterPick,
+) {
+  const target =
+    teacher === "정T"
+      ? JUNG_COUNT
+      : BAEK_COUNT;
+
+  const expected =
+    (selectedCountAfterPick *
+      target) /
+    QUESTION_COUNT;
+
+  const nextCount =
+    teacherCounts[teacher] +
+    1;
+
+  return (
+    Math.max(
+      0,
+      nextCount - expected,
+    ) * 7
+  );
+}
+
 function getSelectedCourseRatio() {
   const checked =
     document.querySelector(
@@ -691,249 +1121,6 @@ function getSelectedCourseRatio() {
     course1,
     course2,
   };
-}
-
-function createBucketTargets(
-  course1Target,
-) {
-  const minimumJungCourse1 =
-    Math.max(
-      0,
-      course1Target - BAEK_COUNT,
-    );
-
-  const maximumJungCourse1 =
-    Math.min(
-      JUNG_COUNT,
-      course1Target,
-    );
-
-  const possible = [];
-
-  for (
-    let count =
-      minimumJungCourse1;
-    count <=
-    maximumJungCourse1;
-    count += 1
-  ) {
-    const targets = [
-      {
-        teacher: "정T",
-        course: "통과1",
-        count,
-      },
-      {
-        teacher: "정T",
-        course: "통과2",
-        count:
-          JUNG_COUNT - count,
-      },
-      {
-        teacher: "백T",
-        course: "통과1",
-        count:
-          course1Target - count,
-      },
-      {
-        teacher: "백T",
-        course: "통과2",
-        count:
-          BAEK_COUNT -
-          (course1Target -
-            count),
-      },
-    ];
-
-    const feasible =
-      targets.every((target) => {
-        const poolSize =
-          state.units.filter(
-            (unit) =>
-              unit.teacher ===
-                target.teacher &&
-              unit.course ===
-                target.course,
-          ).length;
-
-        return (
-          poolSize >=
-          target.count
-        );
-      });
-
-    if (feasible) {
-      possible.push(targets);
-    }
-  }
-
-  if (possible.length === 0) {
-    throw new Error(
-      "단원 분류 데이터만으로 정T 13문항·백T 12문항과 선택한 통과1·2 비율을 동시에 맞출 수 없습니다.",
-    );
-  }
-
-  possible.sort(
-    (a, b) =>
-      bucketBalanceScore(a) -
-      bucketBalanceScore(b),
-  );
-
-  const bestScore =
-    bucketBalanceScore(
-      possible[0],
-    );
-
-  const best = possible.filter(
-    (item) =>
-      bucketBalanceScore(
-        item,
-      ) === bestScore,
-  );
-
-  return randomItem(best);
-}
-
-function bucketBalanceScore(
-  targets,
-) {
-  return targets.reduce(
-    (sum, target) => {
-      const teacherTarget =
-        target.teacher === "정T"
-          ? JUNG_COUNT
-          : BAEK_COUNT;
-
-      const ideal =
-        teacherTarget / 2;
-
-      return (
-        sum +
-        Math.abs(
-          target.count - ideal,
-        )
-      );
-    },
-    0,
-  );
-}
-
-function pickBalancedUnits(
-  pool,
-  count,
-  alreadySelected,
-  usedSourceKeys,
-) {
-  if (count === 0) {
-    return [];
-  }
-
-  if (pool.length < count) {
-    const sample = pool[0];
-
-    const label = sample
-      ? `${sample.teacher}·${sample.course}`
-      : "해당 구분";
-
-    throw new Error(
-      `${label} 단원 데이터가 ${count}개보다 적습니다.`,
-    );
-  }
-
-  const remaining =
-    shuffle([...pool]);
-
-  const picked = [];
-
-  while (
-    picked.length < count
-  ) {
-    const currentSelection = [
-      ...alreadySelected,
-      ...picked,
-    ];
-
-    /*
-     * 이미 3문항이 선택된 대단원은
-     * 이후 후보에서 제외합니다.
-     */
-    const available =
-      remaining.filter((unit) => {
-        const majorCount =
-          currentSelection.filter(
-            (item) =>
-              item.majorUnit ===
-              unit.majorUnit,
-          ).length;
-
-        return (
-          majorCount <
-          MAX_MAJOR_UNIT_COUNT
-        );
-      });
-
-    if (available.length === 0) {
-      throw new Error(
-        `대단원당 최대 ${MAX_MAJOR_UNIT_COUNT}문항 조건을 만족하는 후보가 부족합니다.`,
-      );
-    }
-
-    const scored =
-      available.map((unit) => ({
-        unit,
-
-        score:
-          scoreUnitCandidate(
-            unit,
-            currentSelection,
-            usedSourceKeys,
-          ),
-      }));
-
-    scored.sort(
-      (a, b) =>
-        a.score - b.score,
-    );
-
-    const bestScore =
-      scored[0].score;
-
-    /*
-     * 점수가 거의 같은 후보 중 하나를
-     * 무작위로 선택합니다.
-     */
-    const nearBest =
-      scored.filter(
-        (item) =>
-          item.score <=
-          bestScore + 2.5,
-      );
-
-    const selected =
-      randomItem(nearBest).unit;
-
-    picked.push(selected);
-
-    /*
-     * 같은 단원 분류 행이 한 회차에
-     * 다시 선택되지 않도록 제거합니다.
-     */
-    const selectedIndex =
-      remaining.findIndex(
-        (unit) =>
-          unit.id ===
-          selected.id,
-      );
-
-    if (selectedIndex !== -1) {
-      remaining.splice(
-        selectedIndex,
-        1,
-      );
-    }
-  }
-
-  return picked;
 }
 
 function scoreUnitCandidate(
