@@ -202,6 +202,38 @@ const UNIT_POSITION_RULES = [
   },
 ];
 
+const BOOK_DRIVE_LINKS = {
+  "통과1 오투":
+    "https://drive.google.com/file/d/1d818o2nnF8P0tM36hHeJzb99fUQUtAW4/view?usp=drive_link",
+
+  "통과1 완자":
+    "https://drive.google.com/file/d/1Jes6H7zoQ31bt_nHJX-b2X1XLKy9_7Eq/view?usp=drive_link",
+
+  "통과1 하이탑 시험대비":
+    "https://drive.google.com/file/d/1ktsTD4z69fc6ighY9Aa6I-eqboFYqfCP/view?usp=drive_link",
+
+  "통과1 하이탑 진도":
+    "https://drive.google.com/file/d/1-tRoBfMzsKSxMX0yuhySOmtxJi5NnYzo/view?usp=drive_link",
+
+  "통과1 완자 기출pick":
+    "https://drive.google.com/file/d/1AJVY9UGEHJzpI-q9CJPhBzVuBi8vZAHq/view?usp=drive_link",
+
+  "통과2 오투":
+    "https://drive.google.com/file/d/1bbyn9SKfVPGuWpG8Fst3hyh5gX1BJBGL/view?usp=drive_link",
+
+  "통과2 완자":
+    "https://drive.google.com/file/d/1mX-MJNgxWtIXQSUy7TnCZmG2r5MBqZ2A/view?usp=drive_link",
+
+  "통과2 하이탑 시험대비":
+    "https://drive.google.com/file/d/1AsoI7RK82GTh2GOR-xMPH-T9QDZtXhU5/view?usp=drive_link",
+
+  "통과2 하이탑 진도":
+    "https://drive.google.com/file/d/1NK5k9a-ng_1qtES6fij8SPGonrMdTiYY/view?usp=drive_link",
+
+  "통과2 완자 기출pick":
+    "https://drive.google.com/file/d/1nD_dUYKtnwtgJopt5At2s-wN0B1qUJGh/view?usp=drive_link",
+};
+
 const elements = {
   dataStatus: document.querySelector("#dataStatus"),
   errorState: document.querySelector("#errorState"),
@@ -2849,18 +2881,19 @@ function createEmptyListItem(
 function showRandomIdea() {
   if (
     !state.selectedType ||
-    state.selectedTypeRows
-      .length === 0
+    state.selectedTypeRows.length === 0
   ) {
     return;
   }
 
   const candidates =
     state.selectedTypeRows
-      .map((row, index) => ({
-        row,
-        index,
-      }))
+      .map(
+        (row, index) => ({
+          row,
+          index,
+        }),
+      )
       .filter(
         ({ row }) =>
           row.situation &&
@@ -2893,7 +2926,9 @@ function showRandomIdea() {
       : candidates;
 
   const selected =
-    randomItem(available);
+    randomItem(
+      available,
+    );
 
   state.lastIdeaIndex =
     selected.index;
@@ -2902,19 +2937,24 @@ function showRandomIdea() {
     selected.row,
   );
 
-  elements.ideaSource.textContent =
-    formatSource(
-      selected.row.book,
-      selected.row.source,
-    );
+  /*
+   * 교재 링크와 페이지를 표시합니다.
+   */
+  renderLinkedSource(
+    elements.ideaSource,
+    selected.row.book,
+    selected.row.source,
+    selected.row.type,
+  );
 
   elements.ideaResult.hidden =
     false;
 
-  elements.ideaResult.scrollIntoView({
-    behavior: "smooth",
-    block: "nearest",
-  });
+  elements.ideaResult
+    .scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
 }
 
 function renderIdeaMessage(row) {
@@ -3004,19 +3044,25 @@ function handleSourceSearch(event) {
 
 function renderSourceTable(
   rows,
-  emptyMessage = "관련 출처가 없습니다.",
+  emptyMessage =
+    "관련 출처가 없습니다.",
 ) {
-  elements.sourceTableBody.replaceChildren();
+  elements.sourceTableBody
+    .replaceChildren();
 
   if (rows.length === 0) {
     const tr =
-      document.createElement("tr");
+      document.createElement(
+        "tr",
+      );
 
     tr.className =
       "table-empty";
 
     const td =
-      document.createElement("td");
+      document.createElement(
+        "td",
+      );
 
     td.colSpan = 4;
     td.textContent =
@@ -3024,9 +3070,8 @@ function renderSourceTable(
 
     tr.append(td);
 
-    elements.sourceTableBody.append(
-      tr,
-    );
+    elements.sourceTableBody
+      .append(tr);
 
     return;
   }
@@ -3036,11 +3081,17 @@ function renderSourceTable(
 
   rows.forEach((row) => {
     const tr =
-      document.createElement("tr");
+      document.createElement(
+        "tr",
+      );
 
+    /*
+     * 교재명과 유형을 함께 전달합니다.
+     */
     const bookCell =
-      createCell(
-        row.book || "-",
+      createBookCell(
+        row.book,
+        row.type,
       );
 
     bookCell.classList.add(
@@ -3049,16 +3100,20 @@ function renderSourceTable(
 
     const situationCell =
       createCell(
-        row.situation || "-",
+        row.situation ||
+        "-",
       );
 
     const choiceCell =
       createCell(
-        row.choice || "-",
+        row.choice ||
+        "-",
       );
 
     const sourceCell =
-      document.createElement("td");
+      document.createElement(
+        "td",
+      );
 
     if (row.source) {
       const badge =
@@ -3074,7 +3129,9 @@ function renderSourceTable(
           row.source,
         );
 
-      sourceCell.append(badge);
+      sourceCell.append(
+        badge,
+      );
     } else {
       sourceCell.textContent =
         "-";
@@ -3090,9 +3147,8 @@ function renderSourceTable(
     fragment.append(tr);
   });
 
-  elements.sourceTableBody.append(
-    fragment,
-  );
+  elements.sourceTableBody
+    .append(fragment);
 }
 
 function resetIdeaSelection() {
