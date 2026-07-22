@@ -320,7 +320,7 @@ function bindEvents() {
 
   elements.makerTableBody.addEventListener(
     "change",
-    handleDetailTypeChange,
+    handleMakerTableChange,
   );
 
   elements.typeSelect.addEventListener(
@@ -1892,14 +1892,20 @@ function renderMakerHistory() {
   );
 }
 
-function renderMakerTable(round) {
-  elements.makerTableBody.replaceChildren();
+function renderMakerTable(
+  round,
+) {
+  elements.makerTableBody
+    .replaceChildren();
 
   const fragment =
     document.createDocumentFragment();
 
   round.questions.forEach(
-    (question, questionIndex) => {
+    (
+      question,
+      questionIndex,
+    ) => {
       const row =
         elements.makerRowTemplate
           .content
@@ -1952,21 +1958,39 @@ function renderMakerTable(round) {
       ).textContent =
         question.middleUnit;
 
-      row.querySelector(
-        ".question-type",
-      ).textContent =
-        question.type;
+      /*
+       * 유형 선택 상자
+       */
+      const typeSelect =
+        row.querySelector(
+          ".question-type-select",
+        );
 
-      const select =
+      typeSelect.dataset
+        .questionIndex =
+        questionIndex;
+
+      renderTypeOptions(
+        typeSelect,
+        question,
+        questionIndex,
+        round,
+      );
+
+      /*
+       * 세부 유형 선택 상자
+       */
+      const detailSelect =
         row.querySelector(
           ".detail-type-select",
         );
 
-      select.dataset.questionIndex =
+      detailSelect.dataset
+        .questionIndex =
         questionIndex;
 
       renderDetailOptions(
-        select,
+        detailSelect,
         question,
         questionIndex,
       );
@@ -1978,6 +2002,174 @@ function renderMakerTable(round) {
   elements.makerTableBody.append(
     fragment,
   );
+}
+
+/*
+ * 현재 문항에서 선택할 수 있는
+ * 유형 목록을 만듭니다.
+ */
+function renderTypeOptions(
+  select,
+  question,
+  questionIndex,
+  round,
+) {
+  const usedTypeCounts =
+    new Map();
+
+  /*
+   * 현재 문항을 제외하고
+   * 다른 문항의 유형 사용 횟수를 셉니다.
+   */
+  round.questions.forEach(
+    (item, index) => {
+      if (
+        index === questionIndex
+      ) {
+        return;
+      }
+
+      const key =
+        normalizeForMatch(
+          item.type,
+        );
+
+      usedTypeCounts.set(
+        key,
+        (usedTypeCounts.get(
+          key,
+        ) || 0) + 1,
+      );
+    },
+  );
+
+  /*
+   * 현재 문항과 출제자·통과·대단원이 같고
+   * 번호 규칙을 만족하는 유형만 찾습니다.
+   */
+  const compatibleByType =
+    new Map();
+
+  state.units.forEach(
+    (unit) => {
+      if (
+        unit.teacher !==
+        question.teacher
+      ) {
+        return;
+      }
+
+      if (
+        unit.course !==
+        question.course
+      ) {
+        return;
+      }
+
+      if (
+        !majorUnitMatches(
+          unit.majorUnit,
+          question.majorUnit,
+        )
+      ) {
+        return;
+      }
+
+      if (
+        !isUnitPositionAllowed(
+          unit,
+          question.number,
+        )
+      ) {
+        return;
+      }
+
+      const key =
+        normalizeForMatch(
+          unit.type ||
+          unit.smallUnit,
+        );
+
+      if (
+        !key ||
+        compatibleByType.has(key)
+      ) {
+        return;
+      }
+
+      compatibleByType.set(
+        key,
+        unit,
+      );
+    },
+  );
+
+  const compatible = [
+    ...compatibleByType.values(),
+  ].sort(
+    (a, b) =>
+      (
+        a.type ||
+        a.smallUnit
+      ).localeCompare(
+        b.type ||
+        b.smallUnit,
+        "ko",
+        {
+          numeric: true,
+        },
+      ),
+  );
+
+  select.replaceChildren();
+
+  compatible.forEach(
+    (unit) => {
+      const key =
+        normalizeForMatch(
+          unit.type ||
+          unit.smallUnit,
+        );
+
+      const option =
+        document.createElement(
+          "option",
+        );
+
+      option.value =
+        unit.id;
+
+      option.textContent =
+        unit.type ||
+        unit.smallUnit;
+
+      option.selected =
+        normalizeForMatch(
+          question.type,
+        ) === key;
+
+      /*
+       * 같은 유형이 이미 2문항이면
+       * 추가 선택을 막습니다.
+       */
+      option.disabled =
+        (
+          usedTypeCounts.get(
+            key,
+          ) || 0
+        ) >=
+          MAX_TYPE_PER_ROUND &&
+        !option.selected;
+
+      select.append(option);
+    },
+  );
+
+  /*
+   * 선택지가 하나뿐이면 비활성화합니다.
+   */
+  select.disabled =
+    compatible.length <= 1;
 }
 
 function renderDetailOptions(
@@ -2063,6 +2255,155 @@ function makeSourceDescription(
     .join(" · ");
 }
 
+/*
+ * 유형과 세부 유형의 변경을 구분합니다.
+ */
+function handleMakerTableChange(
+  event,
+) {
+  if (
+    event.target.matches(
+      ".question-type-select",
+    )
+  ) {
+    handleQuestionTypeChange(
+      event,
+    );
+
+    return;
+  }
+
+  if (
+    event.target.matches(
+      ".detail-type-select",
+    )
+  ) {
+    handleDetailTypeChange(
+      event,
+    );
+  }
+}
+
+/*
+ * 유형 변경
+ */
+function handleQuestionTypeChange(
+  event,
+) {
+  const select =
+    event.target.closest(
+      ".question-type-select",
+    );
+
+  if (!select) {
+    return;
+  }
+
+  const questionIndex =
+    Number(
+      select.dataset
+        .questionIndex,
+    );
+
+  const round =
+    state.rounds[
+      state.currentRoundIndex
+    ];
+
+  const question =
+    round?.questions[
+      questionIndex
+    ];
+
+  const unit =
+    state.units.find(
+      (item) =>
+        item.id ===
+        select.value,
+    );
+
+  if (
+    !question ||
+    !unit
+  ) {
+    return;
+  }
+
+  /*
+   * 비율이나 번호 규칙을 깨는 변경인지
+   * 한 번 더 검사합니다.
+   */
+  const valid =
+    unit.teacher ===
+      question.teacher &&
+    unit.course ===
+      question.course &&
+    majorUnitMatches(
+      unit.majorUnit,
+      question.majorUnit,
+    ) &&
+    isUnitPositionAllowed(
+      unit,
+      question.number,
+    );
+
+  if (!valid) {
+    renderMakerTable(
+      round,
+    );
+
+    return;
+  }
+
+  /*
+   * 선택한 유형의 단원 정보를 반영합니다.
+   */
+  question.unitId =
+    unit.id;
+
+  question.middleUnit =
+    unit.middleUnit;
+
+  question.smallUnit =
+    unit.smallUnit;
+
+  question.type =
+    unit.type ||
+    unit.smallUnit;
+
+  /*
+   * 새 유형에 맞는 세부 유형을
+   * 자동으로 하나 선택합니다.
+   */
+  const usedElsewhere =
+    getUsedSourceKeys(
+      state.currentRoundIndex,
+      questionIndex,
+    );
+
+  question.source =
+    chooseDetailSource(
+      question.type,
+      usedElsewhere,
+      new Set(),
+    );
+
+  /*
+   * 중단원 개수가 달라질 수 있으므로
+   * 요약과 표를 다시 그립니다.
+   */
+  renderMakerSummary(
+    round,
+  );
+
+  renderMakerTable(
+    round,
+  );
+}
+
+/*
+ * 세부 유형 변경
+ */
 function handleDetailTypeChange(
   event,
 ) {
@@ -2108,9 +2449,12 @@ function handleDetailTypeChange(
     return;
   }
 
-  question.source = source;
+  question.source =
+    source;
 
-  renderMakerTable(round);
+  renderMakerTable(
+    round,
+  );
 }
 
 function handleHistoryClick(event) {
