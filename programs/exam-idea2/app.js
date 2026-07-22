@@ -76,6 +76,132 @@ const ROUND_POSITION_TEMPLATES = {
   ],
 };
 
+/*
+ * 제공된 모의고사 4회에서
+ * 각 소단원이 실제로 출제된 문항 번호입니다.
+ *
+ * strict: true
+ * → 적힌 번호에서만 출제
+ *
+ * strict가 없을 때
+ * → 적힌 번호를 우선하지만 다른 번호도 허용
+ */
+const UNIT_POSITION_RULES = [
+  {
+    name: "과학의 기본량",
+    positions: [3, 6, 7],
+  },
+  {
+    name: "측정 표준과 정보",
+    positions: [2, 3, 4],
+  },
+  {
+    name: "우주의 시작과 원소의 생성",
+    positions: [13, 17, 20],
+  },
+  {
+    name: "지구와 생명체를 구성하는 원소의 생성",
+    positions: [2, 11, 13],
+  },
+  {
+    name: "원소의 규칙성",
+    positions: [8, 12, 14, 19, 21],
+  },
+  {
+    name: "화학 결합과 물질의 성질",
+    positions: [6, 20],
+  },
+  {
+    name: "지각과 생명체 구성 물질의 규칙성",
+    positions: [1, 4, 5, 7, 12, 20],
+  },
+  {
+    name: "물질의 전기적 성질",
+    positions: [21],
+  },
+  {
+    name: "지구 시스템의 구성과 상호 작용",
+    positions: [5, 13, 15, 17],
+  },
+  {
+    name: "지권의 변화와 영향",
+    positions: [3, 22, 24],
+  },
+  {
+    name: "중력의 작용",
+    positions: [11, 13, 14, 20],
+  },
+  {
+    name: "운동과 충돌",
+    positions: [18, 22, 23],
+  },
+  {
+    name: "생명 시스템과 세포",
+    positions: [6, 15],
+  },
+  {
+    name: "생명 시스템에서 일어나는 화학 반응",
+    positions: [10, 18],
+  },
+  {
+    name: "생명 시스템에서 정보의 흐름",
+    positions: [18, 19, 23, 24],
+  },
+  {
+    name: "지질 시대의 환경과 생물 변화",
+    positions: [8, 14, 17],
+  },
+  {
+    name: "진화와 생물 다양성",
+    positions: [2, 8, 15],
+  },
+  {
+    name: "산화와 환원",
+    positions: [4, 12, 16],
+  },
+  {
+    name: "산 염기와 중화 반응",
+    positions: [7, 9, 23, 24, 25],
+    strict: true,
+  },
+  {
+    name: "물리 변화에서 에너지의 출입",
+    positions: [2, 7, 16],
+  },
+  {
+    name: "생태계 구성과 환경",
+    positions: [1, 5, 21],
+  },
+  {
+    name: "생태계 평형",
+    positions: [1, 5],
+  },
+  {
+    name: "지구 환경 변화와 인간 생활",
+    positions: [19, 21, 22, 25],
+  },
+  {
+    name: "태양에너지의 생성과 전환",
+    positions: [10],
+  },
+  {
+    name: "전기 에너지의 생산",
+    positions: [9, 16, 18, 24],
+  },
+  {
+    name: "에너지 효율과 신재생 에너지",
+    positions: [10, 11, 14, 15],
+  },
+  {
+    name: "과학 기술의 활용",
+    positions: [4, 6, 9, 19],
+  },
+  {
+    name: "과학 기술의 발전과 쟁점",
+    positions: [11],
+  },
+];
+
 const elements = {
   dataStatus: document.querySelector("#dataStatus"),
   errorState: document.querySelector("#errorState"),
@@ -900,6 +1026,15 @@ function selectUnitsForSlots(
             ) {
               return false;
             }
+            
+            if (
+              !isUnitPositionAllowed(
+                unit,
+                slot.number,
+              )
+            ) {
+              return false;
+            }
 
             if (
               unit.teacher ===
@@ -942,7 +1077,15 @@ function selectUnitsForSlots(
                 selected,
                 usedSourceKeys,
               ) +
+              scoreUnitPosition(
+                unit,
+                slot.number,
+              ) +
               scoreTeacherBalance(
+                unit.teacher,
+                teacherCounts,
+                selected.length + 1,
+              ),
                 unit.teacher,
                 teacherCounts,
                 selected.length +
@@ -1075,6 +1218,106 @@ function majorUnitMatches(
  * 25문항 전체에서 정T 13, 백T 12가
  * 자연스럽게 배치되도록 점수를 부여합니다.
  */
+
+/*
+ * 유형 또는 소단원 문자열에 맞는
+ * 번호 규칙을 찾습니다.
+ */
+function getUnitPositionRule(
+  unit,
+) {
+  const target =
+    normalizeForMatch(
+      `${unit.type} ${unit.smallUnit}`,
+    );
+
+  return UNIT_POSITION_RULES.find(
+    (rule) => {
+      const name =
+        normalizeForMatch(
+          rule.name,
+        );
+
+      return (
+        name &&
+        (
+          target.includes(name) ||
+          name.includes(target)
+        )
+      );
+    },
+  );
+}
+
+/*
+ * strict 유형은 지정된 번호에서만
+ * 선택할 수 있습니다.
+ */
+function isUnitPositionAllowed(
+  unit,
+  questionNumber,
+) {
+  const rule =
+    getUnitPositionRule(unit);
+
+  if (!rule?.strict) {
+    return true;
+  }
+
+  return rule.positions.includes(
+    questionNumber,
+  );
+}
+
+/*
+ * 실제 출제 번호에 가까울수록
+ * 낮은 점수를 주어 우선 선택합니다.
+ */
+function scoreUnitPosition(
+  unit,
+  questionNumber,
+) {
+  const rule =
+    getUnitPositionRule(unit);
+
+  if (
+    !rule ||
+    rule.positions.length === 0
+  ) {
+    return 0;
+  }
+
+  const distance =
+    Math.min(
+      ...rule.positions.map(
+        (position) =>
+          Math.abs(
+            position -
+            questionNumber,
+          ),
+      ),
+    );
+
+  /*
+   * 기존 출제 번호와 정확히 같으면
+   * 강하게 우선합니다.
+   */
+  if (distance === 0) {
+    return -18;
+  }
+
+  if (distance === 1) {
+    return -7;
+  }
+
+  if (distance === 2) {
+    return 3;
+  }
+
+  return 12 + distance * 5;
+}
+
+
 function scoreTeacherBalance(
   teacher,
   teacherCounts,
