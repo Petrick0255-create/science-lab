@@ -8,7 +8,8 @@ const BAEK_COUNT = 12;
 const MAX_PATTERN_ITEMS = 7;
 const MAX_GENERATION_ATTEMPTS = 500;
 const MAX_TYPE_PER_ROUND = 2;
-
+const MAKER_STORAGE_KEY =
+  "jnb-lab-maker-history-v1";
 /*
  * 한 배열이 실제 모의고사 한 회차의 1~25번 배치입니다.
  *
@@ -313,6 +314,7 @@ async function init() {
 
     loadData(json);
     initializeFeatures();
+    restoreMakerState();
   } catch (error) {
     console.error(error);
 
@@ -351,7 +353,10 @@ function bindEvents() {
 
   elements.makerTableBody.addEventListener(
     "change",
-    handleMakerTableChange,
+    (event) => {
+      handleMakerTableChange(event);
+      saveMakerState();
+    },
   );
 
   elements.typeSelect.addEventListener(
@@ -836,6 +841,8 @@ function createAndStoreRound() {
     state.currentRoundIndex =
       state.rounds.length - 1;
 
+    saveMakerState();
+    renderCurrentRound();
     renderCurrentRound();
   } catch (error) {
     console.error(error);
@@ -2852,6 +2859,8 @@ function resetMaker() {
 
   elements.resetMakerButton.disabled =
     true;
+
+  clearSavedMakerState();
 }
 
 function populateTypeSelect() {
@@ -4533,5 +4542,103 @@ function downloadCsv() {
       URL.revokeObjectURL(url);
     },
     1000,
+  );
+}
+
+function saveMakerState() {
+  try {
+    const checkedRatio =
+      document.querySelector(
+        'input[name="courseRatio"]:checked',
+      );
+
+    const savedData = {
+      rounds: state.rounds,
+      currentRoundIndex:
+        state.currentRoundIndex,
+      courseRatio:
+        checkedRatio?.value ||
+        "12-13",
+    };
+
+    localStorage.setItem(
+      MAKER_STORAGE_KEY,
+      JSON.stringify(savedData),
+    );
+  } catch (error) {
+    console.error(
+      "메이킹 기록 저장 실패",
+      error,
+    );
+  }
+}
+
+function restoreMakerState() {
+  try {
+    const savedText =
+      localStorage.getItem(
+        MAKER_STORAGE_KEY,
+      );
+
+    if (!savedText) {
+      return;
+    }
+
+    const savedData =
+      JSON.parse(savedText);
+
+    if (
+      !Array.isArray(
+        savedData.rounds,
+      ) ||
+      savedData.rounds.length === 0
+    ) {
+      return;
+    }
+
+    state.rounds =
+      savedData.rounds.slice(
+        0,
+        MAX_ROUNDS,
+      );
+
+    const savedIndex =
+      Number(
+        savedData.currentRoundIndex,
+      );
+
+    state.currentRoundIndex =
+      Number.isInteger(savedIndex) &&
+      savedIndex >= 0 &&
+      savedIndex <
+        state.rounds.length
+        ? savedIndex
+        : state.rounds.length - 1;
+
+    const ratioInput =
+      document.querySelector(
+        `input[name="courseRatio"][value="${savedData.courseRatio}"]`,
+      );
+
+    if (ratioInput) {
+      ratioInput.checked = true;
+    }
+
+    renderCurrentRound();
+  } catch (error) {
+    console.error(
+      "메이킹 기록 복원 실패",
+      error,
+    );
+
+    localStorage.removeItem(
+      MAKER_STORAGE_KEY,
+    );
+  }
+}
+
+function clearSavedMakerState() {
+  localStorage.removeItem(
+    MAKER_STORAGE_KEY,
   );
 }
