@@ -656,6 +656,37 @@ function normalizeUnit(
     ]),
   );
 
+  /*
+   * 모의고사 소스의 유형명과
+   * 소단원 문자열을 비교합니다.
+   */
+  const matchedType =
+    resolveContainedType(
+      smallUnit,
+      makerTypes,
+    );
+
+  /*
+   * 모의고사 소스에서 일치하는 유형을
+   * 찾지 못해도 소단원 이름 자체를
+   * 유형으로 사용할 수 있게 합니다.
+   *
+   * 예:
+   * "★ 01 과학의 기본량"
+   * → "과학의 기본량"
+   */
+  const fallbackType =
+    smallUnit
+      .replace(
+        /^[\s★☆◆◇■□●○◎※✓✔·•*]+/g,
+        "",
+      )
+      .replace(
+        /^\s*\d+\s*[.)\-_:]?\s*/,
+        "",
+      )
+      .trim();
+
   return {
     id: `unit-${index}`,
 
@@ -695,12 +726,16 @@ function normalizeUnit(
       ]),
     ),
 
+    /*
+     * 우선순위:
+     * 1. JSON에 명시된 유형
+     * 2. 모의고사 소스와 연결된 유형
+     * 3. 숫자·특수기호를 제거한 소단원명
+     */
     type:
       explicitType ||
-      resolveContainedType(
-        smallUnit,
-        makerTypes,
-      ),
+      matchedType ||
+      fallbackType,
   };
 }
 
