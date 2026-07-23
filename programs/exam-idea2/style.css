@@ -1925,3 +1925,51 @@ svg {
     rgba(79, 140, 255, 0.25);
   outline-offset: 2px;
 }
+
+.jnb-home-button {
+  flex: 0 0 auto;
+  margin-left: 16px;
+  padding: 10px 16px;
+  color: #ffffff;
+  background: #596477;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.jnb-home-button:hover {
+  color: #ffffff;
+  background: #6a768a;
+  transform: translateY(-1px);
+}
+
+.jnb-home-button:active {
+  transform: translateY(0);
+}
+
+/* 데이터 상태와 홈 버튼을 오른쪽으로 보냅니다. */
+.header-status {
+  margin-left: auto;
+}
+
+@media (max-width: 850px) {
+  .jnb-home-button {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .jnb-home-button {
+    padding: 9px 11px;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+}
