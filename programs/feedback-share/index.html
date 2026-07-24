@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>강의 피드백 기록실</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">▤</div>
+    <strong>강의 피드백</strong>
+    <span>J&amp;B LAB</span>
+    <div class="connection" id="connection"><i></i><b>서버 연결 중</b></div>
+    <button class="primary" id="downloadBtn">CSV 다운로드</button>
+  </header>
+
+  <main class="layout">
+    <aside class="lecture-panel">
+      <div class="panel-title"><h2>강의 선택</h2><span id="lectureCount"></span></div>
+      <label class="search"><span>⌕</span><input id="searchInput" placeholder="강의명 검색"></label>
+      <div class="filters">
+        <button class="active" data-filter="전체">전체</button>
+        <button data-filter="통과 1">통과 1</button>
+        <button data-filter="통과 2">통과 2</button>
+      </div>
+      <div class="lecture-list" id="lectureList"></div>
+    </aside>
+
+    <section class="editor">
+      <div class="editor-title">
+        <div><p id="courseLabel"></p><h1>강의별 피드백 기록실</h1></div>
+        <span class="badge empty" id="statusBadge">● 미작성</span>
+      </div>
+
+      <div class="meta">
+        <label>담당자
+          <select id="ownerInput"><option>범</option><option>혬</option><option>준범</option><option>기타</option></select>
+        </label>
+        <label>러닝타임
+          <span class="minutes"><input id="minutesInput" inputmode="numeric"><b>분</b></span>
+        </label>
+      </div>
+
+      <h2 class="lecture-name" id="lectureName"></h2>
+      <div class="feedback-grid">
+        <label class="feedback-card">
+          <span><i class="coral"></i>아쉬운점 <small data-count="weak">0 / 1000</small></span>
+          <textarea id="weakInput" maxlength="1000" placeholder="개선이 필요하거나 아쉬웠던 부분을 기록하세요."></textarea>
+        </label>
+        <label class="feedback-card">
+          <span><i class="teal"></i>좋은점 <small data-count="good">0 / 1000</small></span>
+          <textarea id="goodInput" maxlength="1000" placeholder="설명이 명확했거나 효과적이었던 부분을 기록하세요."></textarea>
+        </label>
+        <label class="feedback-card">
+          <span><i class="amber"></i>암기법 <small data-count="memory">0 / 1000</small></span>
+          <textarea id="memoryInput" maxlength="1000" placeholder="강의에서 사용한 암기법을 기록하세요."></textarea>
+        </label>
+        <label class="feedback-card">
+          <span><i class="teal"></i>놀라운 사실 <small data-count="surprise">0 / 1000</small></span>
+          <textarea id="surpriseInput" maxlength="1000" placeholder="새롭게 알게 된 내용이나 인상적인 사실을 기록하세요."></textarea>
+        </label>
+        <label class="feedback-card wide">
+          <span><i class="amber"></i>보완 방안 <small data-count="improve">0 / 1000</small></span>
+          <textarea id="improveInput" maxlength="1000" placeholder="어떻게 고치거나 보강할지 구체적으로 기록하세요."></textarea>
+        </label>
+      </div>
+
+      <div class="savebar">
+        <span id="saveMessage">입력 내용은 Firebase 서버에 자동 저장됩니다.</span>
+        <button class="secondary" id="draftBtn">임시 저장</button>
+        <button class="primary" id="saveBtn">피드백 저장</button>
+      </div>
+    </section>
+
+    <aside class="status-panel">
+      <div class="panel-title"><h2>공동 작업 현황</h2><span>실시간</span></div>
+      <div class="progress">
+        <div class="ring" id="progressRing"><div><strong id="doneCount">0</strong><small id="totalCount">/ 0</small><span>강의 완료</span></div></div>
+        <ul>
+          <li><i class="teal"></i>완료 <b id="doneLegend">0</b></li>
+          <li><i class="amber"></i>부분 저장 <b id="draftLegend">0</b></li>
+          <li><i></i>미작성 <b id="emptyLegend">0</b></li>
+        </ul>
+      </div>
+      <p class="rate">완료율 <strong id="rate">0%</strong></p>
+      <div class="recent-title"><h3>최근 수정 강의</h3><span>최근 5개</span></div>
+      <div class="recent-list" id="recentList"></div>
+      <label class="writer">작성자 이름<input id="writerInput" placeholder="예: 준범"></label>
+      <button class="import" id="importBtn">CSV 가져오기</button>
+      <input hidden type="file" id="fileInput" accept=".csv,text/csv">
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
