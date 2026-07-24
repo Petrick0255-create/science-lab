@@ -327,14 +327,11 @@ async function save(status, quiet = false) {
     }
   }
 
-    renderList();
-    renderStatus();
+  const badge = $("#statusBadge");
 
-    const badge = $("#statusBadge");
-
-    badge.className = `badge ${item.status}`;
-    badge.textContent = `● ${statusText[item.status]}`;
-  }
+  badge.className = `badge ${item.status}`;
+  badge.textContent = `● ${statusText[item.status]}`;
+}
 
 function scheduleSave(event) {
   editing = true;
@@ -574,13 +571,25 @@ function escapeHtml(value) {
 
 $("#lectureList").addEventListener(
   "click",
-  event => {
+  async event => {
     const button =
       event.target.closest("[data-id]");
 
     if (!button) return;
 
-    selectedId = button.dataset.id;
+    const nextId = button.dataset.id;
+
+    if (nextId === selectedId) return;
+
+    // 이전 강의에 예약된 자동 저장 취소
+    clearTimeout(saveTimer);
+
+    // 현재 입력 내용을 현재 강의에 먼저 저장
+    if (editing) {
+      await save("draft", true);
+    }
+
+    selectedId = nextId;
     editing = false;
 
     renderAll();
@@ -589,13 +598,24 @@ $("#lectureList").addEventListener(
 
 $("#recentList").addEventListener(
   "click",
-  event => {
+  async event => {
     const button =
       event.target.closest("[data-id]");
 
     if (!button) return;
 
-    selectedId = button.dataset.id;
+    const nextId = button.dataset.id;
+
+    if (nextId === selectedId) return;
+
+    clearTimeout(saveTimer);
+
+    if (editing) {
+      await save("draft", true);
+    }
+
+    selectedId = nextId;
+    editing = false;
 
     renderAll();
   }
@@ -635,11 +655,6 @@ document
 ].forEach(id => {
   $(`#${id}`).addEventListener(
     "input",
-    scheduleSave
-  );
-
-  $(`#${id}`).addEventListener(
-    "change",
     scheduleSave
   );
 });
@@ -741,7 +756,13 @@ if (!isFirebaseConfigured()) {
       $("#connection b").textContent =
         "실시간 공유 연결됨";
 
-      renderAll();
+      renderList();
+      renderStatus();
+
+      // 입력 중이 아닐 때만 서버 내용을 편집창에 표시
+      if (!editing) {
+        renderEditor();
+      }
     },
     error => {
       $("#connection").className =
