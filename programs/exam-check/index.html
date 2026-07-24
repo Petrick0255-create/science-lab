@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>J&B 문항 최종 점검</title>
+  <style>
+    :root{
+      --navy:#09243b;
+      --blue:#176aa6;
+      --yellow:#f4c447;
+      --paper:#f5f2eb;
+      --white:#fff;
+      --ink:#172534;
+      --muted:#697887;
+      --line:#dce3e8;
+      --red:#d85c4d;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--paper);
+      color:var(--ink);
+      font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;
+    }
+    button,input{font:inherit}
+
+    header{
+      height:68px;
+      padding:0 max(24px,5vw);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:var(--white);
+      border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex;align-items:center;gap:13px;color:var(--navy)}
+    .logo{font:900 27px Georgia,serif;letter-spacing:-2px}
+    .logo i{font-style:normal;color:var(--yellow);font-size:20px}
+    .brand-name{
+      padding-left:13px;
+      border-left:1px solid var(--line);
+      font-size:13px;
+      font-weight:800;
+    }
+    .reset{
+      padding:8px 14px;
+      border:1px solid var(--line);
+      border-radius:30px;
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .hero{background:var(--navy);color:#fff}
+    .hero-inner{
+      max-width:1100px;
+      margin:auto;
+      padding:56px 24px 52px;
+      display:grid;
+      grid-template-columns:1fr 300px;
+      gap:70px;
+      align-items:end;
+    }
+    .eyebrow{
+      margin:0 0 14px;
+      color:var(--yellow);
+      font:800 10px Arial,sans-serif;
+      letter-spacing:.18em;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(38px,5vw,62px);
+      line-height:1.1;
+      letter-spacing:-.055em;
+    }
+    h1 em{color:var(--yellow);font-style:normal}
+    .hero-copy{
+      margin:18px 0 0;
+      color:#b9c7d2;
+      font-size:14px;
+      line-height:1.7;
+    }
+    .progress-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      margin-bottom:11px;
+    }
+    .progress-head span{font-size:12px;color:#aebeca}
+    .progress-head strong{font-size:30px;color:var(--yellow)}
+    .track{height:7px;background:rgba(255,255,255,.14);border-radius:10px;overflow:hidden}
+    .bar{height:100%;width:0;background:var(--yellow);transition:.25s}
+    .progress-note{margin:10px 0 0;color:#8198a9;font-size:11px}
+
+    main{max-width:1100px;margin:auto;padding:38px 24px 80px}
+    .gate{
+      margin-bottom:18px;
+      padding:15px 18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      background:#fff7d8;
+      border-left:5px solid var(--yellow);
+      color:#605636;
+      font-size:13px;
+      line-height:1.5;
+    }
+    .gate b{color:var(--navy)}
+
+    .columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .panel{
+      overflow:hidden;
+      background:var(--white);
+      border:1px solid var(--line);
+      box-shadow:0 8px 26px rgba(18,40,59,.05);
+    }
+    .panel-head{
+      padding:23px 25px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      border-bottom:1px solid var(--line);
+    }
+    .panel-label{
+      margin:0 0 5px;
+      color:var(--blue);
+      font:800 9px Arial,sans-serif;
+      letter-spacing:.15em;
+    }
+    h2{margin:0;color:var(--navy);font-size:23px;letter-spacing:-.04em}
+    .score{color:var(--blue);font-size:26px;font-weight:850}
+    .score small{color:#9aa7b2;font-size:12px}
+
+    .list{padding:8px 24px 16px}
+    .item{border-bottom:1px solid #edf1f3}
+    .item:last-child{border-bottom:0}
+    .check-row{
+      min-height:69px;
+      display:grid;
+      grid-template-columns:26px 27px 1fr;
+      align-items:center;
+      gap:10px;
+      cursor:pointer;
+    }
+    .check-row input{position:absolute;opacity:0;pointer-events:none}
+    .number{
+      color:#9aa7b2;
+      font:800 10px Arial,sans-serif;
+    }
+    .box{
+      width:23px;
+      height:23px;
+      display:grid;
+      place-items:center;
+      border:1.5px solid #aab8c3;
+      color:transparent;
+      font-size:12px;
+    }
+    .text{font-size:13.5px;line-height:1.55}
+    .item.done .box{background:var(--blue);border-color:var(--blue);color:#fff}
+    .item.done .text{color:#82909b;text-decoration:line-through}
+
+    .example{
+      margin:-3px 0 15px 63px;
+      padding:10px 12px;
+      background:#f2f5f7;
+      border-left:3px solid #b9c4cc;
+      color:var(--muted);
+      font-size:11.5px;
+      line-height:1.55;
+    }
+    .example strong{color:var(--red)}
+    .example-title{display:block;margin-bottom:6px;color:var(--red);font-size:10px;letter-spacing:.04em}
+    .example ul{margin:0;padding-left:17px}
+    .example li{margin:4px 0}
+    .example b{color:var(--navy)}
+    .arrow{padding:0 5px;color:#9aa7b2}
+
+    .finish{
+      margin-top:18px;
+      padding:18px 22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      background:var(--navy);
+      color:#fff;
+    }
+    .finish span{color:var(--yellow);font:800 9px Arial,sans-serif;letter-spacing:.16em}
+    .finish strong{font-size:13px}
+
+    footer{
+      padding:28px 24px;
+      text-align:center;
+      color:#81909c;
+      background:#fff;
+      border-top:1px solid var(--line);
+      font-size:11px;
+    }
+
+    @media(max-width:760px){
+      .hero-inner{grid-template-columns:1fr;gap:35px;padding-top:44px}
+      .columns{grid-template-columns:1fr}
+      .panel-head{padding:21px 20px 18px}
+      .list{padding:7px 19px 14px}
+      .example{margin-left:63px}
+    }
+    @media(max-width:430px){
+      .brand-name{display:none}
+      .hero-inner{padding-left:19px;padding-right:19px}
+      main{padding:24px 12px 60px}
+      .check-row{grid-template-columns:21px 25px 1fr;gap:8px}
+      .example{margin-left:54px}
+      .finish{align-items:flex-start;flex-direction:column;gap:7px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">J<i>&</i>B</span>
+      <span class="brand-name">문항 최종 점검</span>
+    </div>
+    <button class="reset" id="reset">초기화</button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">FINAL CHECK · 10 ITEMS</p>
+        <h1>고치기 전에<br><em>걸러내기.</em></h1>
+        <p class="hero-copy">
+          문제편 5개, 해설편 5개만 확인합니다.<br>
+          해석이 필요한 원칙이 아니라 실제 오류를 찾는 질문입니다.
+        </p>
+      </div>
+      <div>
+        <div class="progress-head">
+          <span>점검 진행률</span>
+          <strong id="percent">0%</strong>
+        </div>
+        <div class="track"><div class="bar" id="bar"></div></div>
+        <p class="progress-note" id="status">0 / 10 확인 · 체크 기록 자동 저장</p>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="gate">
+      <b>제작 중간에는 체크하지 않습니다.</b>
+      문제와 해설을 완성한 뒤, 실제 문장을 보면서 하나씩 확인합니다.
+    </div>
+
+    <div class="columns">
+      <section class="panel">
+        <div class="panel-head">
+          <div><p class="panel-label">QUESTION</p><h2>문제편</h2></div>
+          <div class="score"><span id="questionScore">0</span><small>/5</small></div>
+        </div>
+        <div class="list">
+          <div class="item" data-group="question">
+            <label class="check-row">
+              <span class="number">01</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">발문만 읽었을 때 묻는 대상과 판단 기준이 하나로 확정되는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 17번</b> — 기온이 오를 때 많이 팔린다는 상식만으로 ㉠이 Y라고 판단해야 해, ㉠의 근거가 부족함.</li>
+                <li><b>[중력의 작용 문제]</b> — “곧이어 B가 떨어진다.”가 발사 직후인지, A가 지표에 도달한 뒤인지 시점이 불분명함.</li>
+                <li><b>[운동과 충돌 문제]</b> — “힘을 받은 시간”이 외력 F가 작용한 시간인지 벽과 충돌한 시간인지 중의적으로 읽힘.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="question">
+            <label class="check-row">
+              <span class="number">02</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">그림·표에 나온 기호, 수치, 구간이 발문에서 빠짐없이 설명됐는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 2번</b> — 과정에는 시간 측정이 없는데 그림에는 타이머가 들어가 있어 삭제함.</li>
+                <li><b>[중력의 작용 문제]</b> — 문제에서는 높이를 H, 그림에서는 h로 표시해 기호를 통일하라는 수정이 달림.</li>
+                <li><b>[전기 에너지 해설]</b> — 해설에서 ㉡ 방향을 사용하지만 문제 그림에는 ㉡ 화살표가 없어, 그림 또는 조건을 추가하도록 수정함.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="question">
+            <label class="check-row">
+              <span class="number">03</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">각 보기는 제시된 조건과 통합과학 범위만으로 참·거짓을 판정할 수 있는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 5번</b> — 펩타이드 결합을 보고 아미노산을 판별하게 한 부분이 통합과학 범위를 벗어남.</li>
+                <li><b>[모의고사 0회] 13번</b> — 통합과학에서 직접 배우지 않는 ‘별의 수명’을 ‘진화의 마지막 단계’로 고침.</li>
+                <li><b>[중력의 작용 문제]</b> — 빗변과 등가속도 운동을 직접 계산하는 문항이 해당 단원·교육과정에 적합하지 않아 제외됨.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="question">
+            <label class="check-row">
+              <span class="number">04</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">조건이나 보기 하나를 가려도 정답이 결정되는 부분이 없는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 17번</b> — ㄷ의 내용이 ㄴ의 정답을 알려 주는 힌트가 되어 보기 구조를 다시 설계함.</li>
+                <li><b>[운동과 충돌 문제]</b> — 보기 ㄴ과 ㄷ이 같은 내용을 물어 한 보기를 수정하고 해설도 함께 고치도록 지적받음.</li>
+                <li><b>[중력의 작용 해설]</b> — 문제 분석에서 이미 설명한 내용을 정답 풀이에서 그대로 반복해 삭제하라는 메모가 반복됨.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="question">
+            <label class="check-row">
+              <span class="number">05</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">수정이 끝난 문제를 처음부터 다시 풀어 정답 번호를 확정했는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 3·6번</b> — 수정 후 정답이 각각 ③→⑤, ①→⑤로 바뀜.</li>
+                <li><b>[운동과 충돌 해설]</b> — 문제의 정답은 ②, 해설 계산 결과는 ④여서 “문제랑 답이 달라요”라는 메모가 달림.</li>
+                <li><b>[운동과 충돌 문제]</b> — 보기 ㄷ을 고친 뒤 기존 ⑤ 조합이 더는 맞지 않아 현재 보기 조합을 다시 수정함.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><p class="panel-label">SOLUTION</p><h2>해설편</h2></div>
+          <div class="score"><span id="solutionScore">0</span><small>/5</small></div>
+        </div>
+        <div class="list">
+          <div class="item" data-group="solution">
+            <label class="check-row">
+              <span class="number">01</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">해설 상단의 정답 번호가 문제와 정답표의 번호와 같은가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 14번</b> — 해설 상단의 정답 ③을 ⑤로 수정함.</li>
+                <li><b>[운동과 충돌 해설]</b> — 해설에는 ④가 맞는 것으로 계산되는데 문제에는 ②로 표시되어 재확인함.</li>
+                <li><b>[운동과 충돌 문제]</b> — 선택지를 ㄴ·ㄷ으로 바꾼 뒤 정답 번호도 ⑤로 연동해 수정함.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="solution">
+            <label class="check-row">
+              <span class="number">02</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">기호를 처음 쓸 때 기호와 실제 대상을 함께 적었는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 5번</b> — ‘규소는’ <span class="arrow">→</span> ‘A(규소)는’으로 수정함.</li>
+                <li><b>[중력의 작용 해설]</b> — “물체는”, “A와 B는”처럼 문장에 빠진 주어를 앞에 넣으라는 메모가 반복됨.</li>
+                <li><b>[전기 에너지 해설]</b> — 단순히 ‘자기장’이라 쓰지 않고 N극·S극과 자석의 이동 방향을 밝혀 유도 자기장의 방향을 설명하도록 수정함.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="solution">
+            <label class="check-row">
+              <span class="number">03</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">각 보기의 판단 근거가 문제의 어느 조건에서 나온 것인지 적었는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 21번</b> — A와 B가 2초에 동시에 도달한다는 조건과 0~2초 그래프 넓이가 이동 거리라는 설명이 빠짐.</li>
+                <li><b>[중력의 작용 해설]</b> — ㉠·㉡을 구하려면 중력 가속도를 먼저 계산해야 하는데 그 과정과 ㉡ 풀이가 생략됨.</li>
+                <li><b>[전기 에너지 해설]</b> — ⓐ가 ㉠이라는 연결과, 그 판단에 사용한 자석의 극·이동 방향 설명을 추가하라는 메모가 달림.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="solution">
+            <label class="check-row">
+              <span class="number">04</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">틀린 보기는 틀린 부분을 지적한 뒤 올바른 내용으로 고쳤는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[모의고사 0회] 25번</b> — 학생 C의 입장을 ‘활용 자체 반대’로 단정한 설명을 버리고 실제 주장으로 고침.</li>
+                <li><b>[전기 에너지 해설]</b> — 두 막대자석의 방향이 달라 유도 전류 방향도 다르다고 썼지만 실제로는 같아, 옳은 내용으로 다시 작성함.</li>
+                <li><b>[중력의 작용 해설]</b> — 속력이 2배라고 썼으나 실제로는 √2배라는 오류가 발견되어 계산과 결론을 다시 고침.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="item" data-group="solution">
+            <label class="check-row">
+              <span class="number">05</span><input type="checkbox"><span class="box">✓</span>
+              <span class="text">수정한 수치·조건·기호가 계산, 그림, 보기, 해설에 모두 반영됐는가?</span>
+            </label>
+            <div class="example">
+              <strong class="example-title">실제 피드백 예시</strong>
+              <ul>
+                <li><b>[중력의 작용]</b> — 문제에서 높이 H를 h₂로 바꾼 뒤 해설의 기호도 함께 수정하라는 메모가 달림.</li>
+                <li><b>[운동과 충돌]</b> — 보기 ㄷ을 수정했는데 해설은 이전 문장으로 남아 있어, 보기와 해설을 함께 다시 고침.</li>
+                <li><b>[전기 에너지]</b> — 본문에서 자석의 극이나 이동 조건을 바꿀 때 해당 유도 전류 방향 해설도 같이 수정하라는 메모가 반복됨.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="finish">
+      <span>FULL REVIEW</span>
+      <strong>조건이나 자료를 바꿨다면 10개 항목을 처음부터 다시 확인합니다.</strong>
+    </div>
+  </main>
+
+  <footer>J&B QUESTION QUALITY CONTROL · 브라우저를 닫아도 체크 기록이 유지됩니다.</footer>
+
+  <script>
+    const KEY="jb-final-check-v2";
+    const boxes=[...document.querySelectorAll('.item input')];
+    let saved=[];
+    try{saved=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+
+    boxes.forEach((box,index)=>{
+      box.checked=!!saved[index];
+      box.closest('.item').classList.toggle('done',box.checked);
+      box.addEventListener('change',()=>{
+        box.closest('.item').classList.toggle('done',box.checked);
+        save();
+        update();
+      });
+    });
+
+    function save(){
+      localStorage.setItem(KEY,JSON.stringify(boxes.map(box=>box.checked)));
+    }
+
+    function update(){
+      const done=boxes.filter(box=>box.checked).length;
+      const question=[...document.querySelectorAll('[data-group="question"] input')].filter(box=>box.checked).length;
+      const solution=[...document.querySelectorAll('[data-group="solution"] input')].filter(box=>box.checked).length;
+      const percent=Math.round(done/boxes.length*100);
+
+      document.getElementById('percent').textContent=percent+'%';
+      document.getElementById('bar').style.width=percent+'%';
+      document.getElementById('questionScore').textContent=question;
+      document.getElementById('solutionScore').textContent=solution;
+      document.getElementById('status').textContent=
+        done===boxes.length?'10 / 10 확인 · 최종 점검 완료':`${done} / 10 확인 · 체크 기록 자동 저장`;
+    }
+
+    document.getElementById('reset').addEventListener('click',()=>{
+      if(!confirm('체크 기록을 모두 초기화할까요?'))return;
+      boxes.forEach(box=>{
+        box.checked=false;
+        box.closest('.item').classList.remove('done');
+      });
+      localStorage.removeItem(KEY);
+      update();
+    });
+
+    update();
+  </script>
+</body>
+</html>
