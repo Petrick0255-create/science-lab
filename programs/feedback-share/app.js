@@ -314,6 +314,11 @@ async function save(status, quiet = false) {
 
     $("#saveMessage").textContent =
       "모든 사용자에게 공유 저장되었습니다.";
+    localStorage.removeItem(
+      `lectureDraft:${item.id}`
+    );
+
+    editing = false;
 
     if (!quiet) {
       toast("모든 사용자에게 공유 저장했습니다.");
@@ -338,36 +343,43 @@ function scheduleSave(event) {
 
   const item = applyInputs("draft");
 
-  // 입력 중인 칸의 글자 수만 변경
+  // Firebase가 아니라 브라우저에만 즉시 임시 백업
+  localStorage.setItem(
+    `lectureDraft:${item.id}`,
+    JSON.stringify({
+      weak: item.weak,
+      good: item.good,
+      memory: item.memory,
+      surprise: item.surprise,
+      improve: item.improve,
+      owner: item.owner,
+      minutes: item.minutes,
+      savedAt: new Date().toISOString()
+    })
+  );
+
+  // 현재 입력칸의 글자 수만 변경
   if (event?.target?.id) {
-    const fieldName = event.target.id.replace("Input", "");
+    const fieldName =
+      event.target.id.replace("Input", "");
+
     const countElement = document.querySelector(
       `[data-count="${fieldName}"]`
     );
 
     if (countElement) {
-      const length = event.target.value.length;
-
       countElement.textContent =
-        `${length.toLocaleString()} / 1,000`;
+        `${event.target.value.length.toLocaleString()} / 1,000`;
     }
   }
 
-  // 상태 표시만 부분 저장으로 변경
   const badge = $("#statusBadge");
 
   badge.className = "badge draft";
-  badge.textContent = "● 부분 저장";
-
-  clearTimeout(saveTimer);
+  badge.textContent = "● 작성 중";
 
   $("#saveMessage").textContent =
-    "입력 중… 2.5초 후 자동 저장됩니다.";
-
-  saveTimer = setTimeout(async () => {
-    await save("draft", true);
-    editing = false;
-  }, 2500);
+    "브라우저에 임시 보관 중입니다. 완료되면 피드백 저장을 누르세요.";
 }
 
 function csvCell(value) {
