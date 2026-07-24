@@ -327,25 +327,50 @@ async function save(status, quiet = false) {
     }
   }
 
-  renderAll();
-}
+    renderList();
+    renderStatus();
 
-function scheduleSave() {
+    const badge = $("#statusBadge");
+
+    badge.className = `badge ${item.status}`;
+    badge.textContent = `● ${statusText[item.status]}`;
+  }
+
+function scheduleSave(event) {
   editing = true;
 
-  applyInputs("draft");
-  renderList();
-  renderStatus();
+  const item = applyInputs("draft");
+
+  // 입력 중인 칸의 글자 수만 변경
+  if (event?.target?.id) {
+    const fieldName = event.target.id.replace("Input", "");
+    const countElement = document.querySelector(
+      `[data-count="${fieldName}"]`
+    );
+
+    if (countElement) {
+      const length = event.target.value.length;
+
+      countElement.textContent =
+        `${length.toLocaleString()} / 1,000`;
+    }
+  }
+
+  // 상태 표시만 부분 저장으로 변경
+  const badge = $("#statusBadge");
+
+  badge.className = "badge draft";
+  badge.textContent = "● 부분 저장";
 
   clearTimeout(saveTimer);
 
   $("#saveMessage").textContent =
-    "입력 중… 1.2초 후 자동 저장됩니다.";
+    "입력 중… 2.5초 후 자동 저장됩니다.";
 
   saveTimer = setTimeout(async () => {
     await save("draft", true);
     editing = false;
-  }, 1200);
+  }, 2500);
 }
 
 function csvCell(value) {
