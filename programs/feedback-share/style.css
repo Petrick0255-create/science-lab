@@ -850,3 +850,7 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+.feedback-card i.blue {
+  background: var(--blue);
+}

@@ -105,6 +105,7 @@ export async function saveFeedback(
       memory: lecture.memory || "",
       improve: lecture.improve || "",
       surprise: lecture.surprise || "",
+      timeline: lecture.timeline || "",
 
       status: lecture.status || "empty",
 
@@ -177,6 +178,7 @@ export async function saveManyFeedback(
           memory: lecture.memory || "",
           improve: lecture.improve || "",
           surprise: lecture.surprise || "",
+          timeline: lecture.timeline || "",
 
           status: lecture.status || "empty",
 

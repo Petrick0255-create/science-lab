@@ -109,6 +109,7 @@ function makeCourse(text, course) {
       memory: "",
       improve: "",
       surprise: "",
+      timeline: "",
       status: "empty",
       updatedAt: "",
       updatedBy: ""
@@ -134,7 +135,8 @@ const fields = [
   "good",
   "memory",
   "surprise",
-  "improve"
+  "improve",
+  "timeline"
 ];
 
 const statusText = {
@@ -399,7 +401,8 @@ function downloadCsv() {
     "좋은점",
     "암기법",
     "보완할 방안",
-    "놀라운 사실",
+    "교재 수정",
+    "타임라인",
     "저장상태",
     "수정일시",
     "수정자"
@@ -416,6 +419,7 @@ function downloadCsv() {
     item.memory,
     item.improve,
     item.surprise,
+    item.timeline,
     statusText[item.status],
     item.updatedAt,
     item.updatedBy
@@ -534,7 +538,10 @@ async function importCsv(file) {
       row[at("보완할 방안")] || "";
 
     item.surprise =
-      row[at("놀라운 사실")] || "";
+      row[at("교재 수정")] || "";
+
+    item.timeline =
+      row[at("타임라인")] || "";
 
     const importedStatus =
       row[at("저장상태")];
