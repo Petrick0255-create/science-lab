@@ -354,6 +354,7 @@ function scheduleSave(event) {
       memory: item.memory,
       surprise: item.surprise,
       improve: item.improve,
+      timeline: item.timeline,
       owner: item.owner,
       minutes: item.minutes,
       savedAt: new Date().toISOString()
