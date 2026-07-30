@@ -233,11 +233,11 @@ button:disabled {
   background: #cbd5e1;
 }
 
-#downloadJsonBtn {
+#syncJsonBtn {
   background: #4f8cff;
 }
 
-#downloadJsonBtn:hover {
+#syncJsonBtn:hover {
   background: #2865d9;
 }
 

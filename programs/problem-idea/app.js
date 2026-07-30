@@ -3,12 +3,17 @@ const DEFAULT_SUBJECT = "통합과학";
 
 let TOTAL_MATCH_COUNT = 0;
 
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbwj4_Qt2ckHAVgnkDxo-G0VrvysG7koyIt62W83ldyRqihqclc9AP0WWCnWfWi-57L3ow/exec";
+
 const DATA_ROOT = "../exam-search/data/";
 
 const EXAM_SEARCH_URL =
   "https://petrick0255-create.github.io/science-lab/programs/exam-search/index.html";
 
 const STORAGE_KEY = "jb-problem-type-edits";
+const SYNC_TOKEN_STORAGE_KEY =
+  "jb-problem-sync-token";
 
 let DATA = [];
 let CURRENT_RESULTS = [];
@@ -21,7 +26,7 @@ const columnSelect = document.getElementById("columnSelect");
 
 const copyAllBtn = document.getElementById("copyAllBtn");
 const resetChangesBtn = document.getElementById("resetChangesBtn");
-const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+const syncJsonBtn = document.getElementById("syncJsonBtn");
 
 const sourceList = document.getElementById("sourceList");
 const problemGrid = document.getElementById("problemGrid");
@@ -32,13 +37,7 @@ init();
 
 async function init() {
   try {
-    const response = await fetch("./index.json");
-
-    if (!response.ok) {
-      throw new Error("index.json 로딩 실패");
-    }
-
-    const jsonData = await response.json();
+    const jsonData = await loadSheetData();
 
     SAVED_EDITS = loadSavedEdits();
 
@@ -87,26 +86,127 @@ async function init() {
       resetAllChanges
     );
 
-    downloadJsonBtn.addEventListener(
+    syncJsonBtn.addEventListener(
       "click",
-      downloadModifiedJson
+      syncModifiedJson
     );
   } catch (error) {
     console.error(error);
 
     sourceList.innerHTML = `
       <div class="empty">
-        index.json을 불러오지 못했습니다.
+        구글 시트 데이터를 불러오지 못했습니다.<br>
+        ${escapeHtml(error.message)}
       </div>
     `;
 
     problemGrid.innerHTML = `
       <div class="empty">
-        Live Server 또는 GitHub Pages로 실행하세요.<br>
-        파일을 더블클릭해서 열면 JSON을 불러오지 못할 수 있습니다.
+        앱스크립트 웹앱 URL과 동기화 키를 확인하세요.
       </div>
     `;
   }
+}
+
+async function loadSheetData() {
+  const result = await callSyncApi({
+    action: "loadData"
+  });
+
+  if (!Array.isArray(result.data)) {
+    throw new Error(
+      "시트 데이터 형식이 올바르지 않습니다."
+    );
+  }
+
+  return result.data;
+}
+
+async function callSyncApi(payload) {
+  if (
+    !APPS_SCRIPT_URL ||
+    APPS_SCRIPT_URL.includes(
+      "PASTE_APPS_SCRIPT_WEB_APP_URL_HERE"
+    )
+  ) {
+    throw new Error(
+      "app.js의 APPS_SCRIPT_URL에 배포 URL을 입력하세요."
+    );
+  }
+
+  const token = getSyncToken();
+
+  const response = await fetch(
+    APPS_SCRIPT_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        ...payload,
+        token: token
+      }),
+      redirect: "follow"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `동기화 서버 오류 (${response.status})`
+    );
+  }
+
+  const result = await response.json();
+
+  if (!result.ok) {
+    if (
+      String(result.error || "")
+        .includes("동기화 키")
+    ) {
+      localStorage.removeItem(
+        SYNC_TOKEN_STORAGE_KEY
+      );
+    }
+
+    const error = new Error(
+      result.error ||
+      "동기화에 실패했습니다."
+    );
+
+    error.details = result;
+    throw error;
+  }
+
+  return result;
+}
+
+function getSyncToken() {
+  const saved = localStorage.getItem(
+    SYNC_TOKEN_STORAGE_KEY
+  );
+
+  if (saved) {
+    return saved;
+  }
+
+  const token = prompt(
+    "시트 메뉴에서 설정한 웹 동기화 키를 입력하세요."
+  );
+
+  if (!token || !token.trim()) {
+    throw new Error(
+      "웹 동기화 키가 필요합니다."
+    );
+  }
+
+  localStorage.setItem(
+    SYNC_TOKEN_STORAGE_KEY,
+    token.trim()
+  );
+
+  return token.trim();
 }
 
 function makeItemKey(item) {
@@ -591,7 +691,7 @@ function updateEditedCount() {
     count > 0
   );
 
-  downloadJsonBtn.disabled =
+  syncJsonBtn.disabled =
     DATA.length === 0;
 }
 
@@ -626,55 +726,80 @@ function resetAllChanges() {
   updateEditedCount();
 }
 
-function downloadModifiedJson() {
-  const downloadData = DATA.map(item => {
-    const {
-      _originalType,
-      _itemKey,
-      ...cleanItem
-    } = item;
-
-    return cleanItem;
-  });
-
-  const jsonText = JSON.stringify(
-    downloadData,
-    null,
-    2
+async function syncModifiedJson() {
+  const editedItems = DATA.filter(
+    item => item.type !== item._originalType
   );
 
-  const blob = new Blob(
-    [jsonText],
-    {
-      type: "application/json;charset=utf-8"
-    }
-  );
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const link =
-    document.createElement("a");
-
-  link.href = url;
-  link.download = "index.json";
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  URL.revokeObjectURL(url);
+  const edits = editedItems.map(item => ({
+    grade: item.grade,
+    subject: item.subject,
+    year: item.year,
+    month: item.month,
+    number: item.number,
+    image: item.image,
+    originalType:
+      item._originalType || "미분류",
+    newType:
+      item.type || "미분류"
+  }));
 
   const originalText =
-    downloadJsonBtn.textContent;
+    syncJsonBtn.textContent;
 
-  downloadJsonBtn.textContent =
-    "JSON 저장 완료";
+  syncJsonBtn.disabled = true;
+  syncJsonBtn.textContent =
+    "시트와 동기화 중...";
 
-  setTimeout(() => {
-    downloadJsonBtn.textContent =
-      originalText;
-  }, 1200);
+  try {
+    const result = await callSyncApi({
+      action: "syncTypes",
+      edits: edits
+    });
+
+    editedItems.forEach(item => {
+      item._originalType = item.type;
+    });
+
+    SAVED_EDITS = {};
+
+    localStorage.removeItem(
+      STORAGE_KEY
+    );
+
+    buildTypeOptions();
+    applyFilters();
+    updateEditedCount();
+
+    syncJsonBtn.textContent =
+      "동기화 완료";
+
+    const message =
+      edits.length > 0
+        ? `${edits.length}문항을 시트에 반영했습니다.`
+        : "수정 사항은 없으며 현재 데이터를 백업했습니다.";
+
+    alert(
+      message +
+      "\nJSON 백업: " +
+      result.backupName
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    syncJsonBtn.textContent =
+      "동기화 실패";
+
+    alert(error.message);
+
+  } finally {
+    setTimeout(() => {
+      syncJsonBtn.textContent =
+        originalText;
+      updateEditedCount();
+    }, 1200);
+  }
 }
 
 function makeSourceText(item) {
