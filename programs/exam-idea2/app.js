@@ -268,6 +268,7 @@ const elements = {
   ideaResult: document.querySelector("#ideaResult"),
   ideaMessage: document.querySelector("#ideaMessage"),
   ideaSource: document.querySelector("#ideaSource"),
+  ideaUsedCheckbox: document.querySelector("#ideaUsedCheckbox"),
   resultClose: document.querySelector("#resultClose"),
   selectedTypeName: document.querySelector("#selectedTypeName"),
   selectedTypeSummary: document.querySelector("#selectedTypeSummary"),
@@ -441,6 +442,11 @@ function bindEvents() {
   elements.resultClose.addEventListener(
     "click",
     hideIdeaResult,
+  );
+
+  elements.ideaUsedCheckbox.addEventListener(
+    "change",
+    handleUsedChange,
   );
 
   elements.sourceSearch.addEventListener(
@@ -3465,6 +3471,15 @@ function renderIdeaMessage(row) {
       " 보기를 주는 방법이 있습니다.",
     ),
   );
+
+  elements.ideaUsedCheckbox.dataset.rowNumber =
+    String(row.rowNumber);
+
+  elements.ideaUsedCheckbox.checked =
+    getCurrentUsed(row);
+
+  elements.ideaUsedCheckbox.disabled =
+    false;
 }
 
 function createIdeaDataSpan(text) {
@@ -3487,6 +3502,9 @@ function hideIdeaResult() {
 
   elements.ideaSource.textContent =
     "";
+
+  elements.ideaUsedCheckbox.disabled =
+    true;
 }
 
 function handleSourceSearch() {
