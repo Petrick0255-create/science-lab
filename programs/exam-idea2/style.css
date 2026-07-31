@@ -1151,7 +1151,10 @@ svg {
 
 .generator-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 155px;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(180px, 0.65fr)
+    155px;
   gap: 10px;
 }
 
@@ -1980,8 +1983,7 @@ main {
 .api-setting-button {
   flex: 0 0 auto;
   margin-left: 10px;
- 
- padding: 9px 12px;
+  padding: 9px 12px;
   color: #d8e2ee;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.14);

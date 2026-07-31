@@ -220,6 +220,9 @@ const BOOK_DRIVE_LINKS = {
   "통과1 완자 기출pick":
     "https://drive.google.com/file/d/1AJVY9UGEHJzpI-q9CJPhBzVuBi8vZAHq/view?usp=drive_link",
 
+  "통과1 개념완성":
+    "https://drive.google.com/file/d/1Cy_0MbJnG6xPy2dltlH6zu8L7Fa-sfa2/view?usp=drive_link",
+
   "통과2 오투":
     "https://drive.google.com/file/d/1bbyn9SKfVPGuWpG8Fst3hyh5gX1BJBGL/view?usp=drive_link",
 
@@ -234,6 +237,9 @@ const BOOK_DRIVE_LINKS = {
 
   "통과2 완자 기출pick":
     "https://drive.google.com/file/d/1nD_dUYKtnwtgJopt5At2s-wN0B1qUJGh/view?usp=drive_link",
+
+  "통과2 개념완성":
+    "https://drive.google.com/file/d/1SmtxJ1NOIM8gTuMehdVUym-Gh8owsBUj/view?usp=drive_link",
 };
 
 const elements = {
@@ -263,6 +269,7 @@ const elements = {
   unitBalanceProgress: document.querySelector("#unitBalanceProgress"),
 
   typeSelect: document.querySelector("#typeSelect"),
+  bookSelect: document.querySelector("#bookSelect"),
   ideaButton: document.querySelector("#ideaButton"),
   ideaDataStatus: document.querySelector("#ideaDataStatus"),
   ideaResult: document.querySelector("#ideaResult"),
@@ -296,6 +303,7 @@ const state = {
   currentRoundIndex: -1,
 
   selectedType: "",
+  selectedBook: "",
   selectedTypeRows: [],
   lastIdeaIndex: -1,
   pendingUsed: new Map(),
@@ -432,6 +440,11 @@ function bindEvents() {
   elements.typeSelect.addEventListener(
     "change",
     handleTypeChange,
+  );
+
+  elements.bookSelect.addEventListener(
+    "change",
+    handleBookChange,
   );
 
   elements.ideaButton.addEventListener(
@@ -880,9 +893,16 @@ function initializeFeatures() {
     elements.typeSelect.disabled =
       false;
 
+    elements.bookSelect.disabled =
+      false;
+
     state.selectedTypeRows = [
       ...state.typeSources,
     ];
+
+    populateBookSelect(
+      state.selectedTypeRows,
+    );
 
     elements.sourceSearch.disabled =
       false;
@@ -3048,9 +3068,13 @@ function handleTypeChange(event) {
 
   if (!type) {
     state.selectedType = "";
+    state.selectedBook = "";
     state.selectedTypeRows = [
       ...state.typeSources,
     ];
+    populateBookSelect(
+      state.selectedTypeRows,
+    );
     renderAllIdeas();
     applySourceFilters();
     return;
@@ -3064,8 +3088,78 @@ function handleTypeChange(event) {
         row.type === type,
     );
 
+  state.selectedBook = "";
+  populateBookSelect(
+    state.selectedTypeRows,
+  );
+
   renderIdeaSelection();
   applySourceFilters();
+}
+
+function populateBookSelect(rows) {
+  const books = [
+    ...new Set(
+      rows
+        .map((row) => row.book)
+        .filter(Boolean),
+    ),
+  ].sort((a, b) =>
+    a.localeCompare(
+      b,
+      "ko",
+      { numeric: true },
+    ),
+  );
+
+  elements.bookSelect.replaceChildren();
+
+  const allOption =
+    document.createElement("option");
+
+  allOption.value = "";
+  allOption.textContent =
+    "전체 교재";
+
+  elements.bookSelect.append(
+    allOption,
+  );
+
+  books.forEach((book) => {
+    const option =
+      document.createElement("option");
+
+    option.value = book;
+    option.textContent = book;
+    elements.bookSelect.append(option);
+  });
+
+  elements.bookSelect.value = "";
+}
+
+function handleBookChange(event) {
+  state.selectedBook = cleanText(
+    event.target.value,
+  );
+
+  state.lastIdeaIndex = -1;
+  hideIdeaResult();
+
+  elements.ideaButton.disabled =
+    !state.selectedType ||
+    getRandomIdeaRows().length === 0;
+}
+
+function getRandomIdeaRows() {
+  if (!state.selectedBook) {
+    return state.selectedTypeRows;
+  }
+
+  return state.selectedTypeRows.filter(
+    (row) =>
+      row.book ===
+      state.selectedBook,
+  );
 }
 
 function renderAllIdeas() {
@@ -3369,13 +3463,13 @@ function createEmptyListItem(
 function showRandomIdea() {
   if (
     !state.selectedType ||
-    state.selectedTypeRows.length === 0
+    getRandomIdeaRows().length === 0
   ) {
     return;
   }
 
   const candidates =
-    state.selectedTypeRows
+    getRandomIdeaRows()
       .map(
         (row, index) => ({
           row,
@@ -4106,6 +4200,12 @@ function getBookDriveUrl(
     )
   ) {
     product = "완자";
+  } else if (
+    target.includes(
+      "개념완성",
+    )
+  ) {
+    product = "개념완성";
   }
 
   if (!product) {
