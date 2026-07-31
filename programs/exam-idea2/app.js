@@ -4472,6 +4472,12 @@ function getBookDriveUrl(
     )
   ) {
     product = "완자";
+  } else if (
+    target.includes(
+      "개념완성",
+    )
+  ) {
+    product = "개념완성";
   }
 
   if (!product) {
