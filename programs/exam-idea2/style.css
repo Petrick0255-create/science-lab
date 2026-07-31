@@ -1955,18 +1955,155 @@ svg {
   transform: translateY(0);
 }
 
+/* 아이디어 찾기를 메인으로, 모의고사 메이킹을 아래에 배치합니다. */
+main {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero {
+  order: 1;
+}
+
+.idea-section {
+  order: 2;
+}
+
+.maker-section {
+  order: 3;
+}
+
+.system-error {
+  order: 4;
+}
+
+.api-setting-button {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  padding: 9px 12px;
+  color: #d8e2ee;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.api-setting-button:hover {
+  color: #fff;
+  border-color: rgba(76, 224, 182, 0.45);
+}
+
+.source-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: min(100%, 650px);
+}
+
+.idea-section .pattern-grid {
+  grid-template-columns: 1fr;
+}
+
+.source-actions .search-field {
+  flex: 1 1 280px;
+  width: auto;
+}
+
+.source-actions .button {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.source-actions .button.is-active {
+  color: #087c60;
+  background: var(--surface-mint);
+  border-color: rgba(45, 212, 167, 0.4);
+}
+
+.sync-summary {
+  margin: -7px 22px 14px;
+  color: var(--ink-500);
+  font-size: 10px;
+  text-align: right;
+}
+
+.source-table th:nth-child(1),
+.source-table td:nth-child(1) { width: 15%; }
+.source-table th:nth-child(2),
+.source-table td:nth-child(2) { width: 25%; }
+.source-table th:nth-child(3),
+.source-table td:nth-child(3) { width: 38%; }
+.source-table th:nth-child(4),
+.source-table td:nth-child(4) { width: 14%; }
+.source-table th:nth-child(5),
+.source-table td:nth-child(5) { width: 8%; }
+
+.source-used {
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.used-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.used-check:hover {
+  background: var(--surface-mint);
+}
+
+.used-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--mint-500);
+}
+
+.used-check span {
+  color: var(--ink-600);
+  font-size: 10px;
+  font-weight: 700;
+}
+
 /* 데이터 상태와 홈 버튼을 오른쪽으로 보냅니다. */
 .header-status {
   margin-left: auto;
 }
 
 @media (max-width: 850px) {
+  .api-setting-button {
+    display: none;
+  }
+
   .jnb-home-button {
     margin-left: auto;
   }
 }
 
 @media (max-width: 680px) {
+  .source-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .source-actions .search-field {
+    flex: 0 0 auto;
+  }
+
+  .sync-summary {
+    margin-right: 16px;
+    margin-left: 16px;
+    text-align: left;
+  }
+
   .jnb-home-button {
     padding: 9px 11px;
     border-radius: 9px;

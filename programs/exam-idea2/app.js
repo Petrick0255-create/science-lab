@@ -1,6 +1,8 @@
 "use strict";
 
 const DATA_URL = "index.json";
+const API_STORAGE_KEY = "jnb-idea-apps-script-url-v1";
+const MAX_VISIBLE_SOURCES = 300;
 const QUESTION_COUNT = 25;
 const MAX_ROUNDS = 10;
 const JUNG_COUNT = 13;
@@ -237,6 +239,7 @@ const BOOK_DRIVE_LINKS = {
 const elements = {
   dataStatus: document.querySelector("#dataStatus"),
   errorState: document.querySelector("#errorState"),
+  apiSettingButton: document.querySelector("#apiSettingButton"),
 
   makerButton: document.querySelector("#makerButton"),
   nextMakerButton: document.querySelector("#nextMakerButton"),
@@ -277,6 +280,9 @@ const elements = {
   choiceList: document.querySelector("#choiceList"),
   sourceSearch: document.querySelector("#sourceSearch"),
   sourceTableBody: document.querySelector("#sourceTableBody"),
+  showUnusedButton: document.querySelector("#showUnusedButton"),
+  syncButton: document.querySelector("#syncButton"),
+  syncSummary: document.querySelector("#syncSummary"),
 };
 
 const state = {
@@ -291,6 +297,9 @@ const state = {
   selectedType: "",
   selectedTypeRows: [],
   lastIdeaIndex: -1,
+  pendingUsed: new Map(),
+  showUnusedOnly: false,
+  apiUrl: "",
 };
 
 document.addEventListener("DOMContentLoaded", init);
@@ -300,17 +309,8 @@ async function init() {
   setGlobalStatus("loading", "데이터 확인 중");
 
   try {
-    const response = await fetch(DATA_URL, {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `index.json 요청 실패: ${response.status}`,
-      );
-    }
-
-    const json = await response.json();
+    state.apiUrl = getConfiguredApiUrl();
+    const json = await fetchArchiveData();
 
     loadData(json);
     initializeFeatures();
@@ -328,6 +328,75 @@ async function init() {
         "index.json을 불러오지 못했습니다.",
     );
   }
+}
+
+function getConfiguredApiUrl() {
+  return cleanText(
+    localStorage.getItem(API_STORAGE_KEY) ||
+    window.JNB_CONFIG?.appsScriptUrl ||
+    "",
+  ).replace(/\/+$/, "");
+}
+
+async function fetchArchiveData() {
+  if (state.apiUrl) {
+    try {
+      const response = await fetch(
+        `${state.apiUrl}?action=data&t=${Date.now()}`,
+        { cache: "no-store" },
+      );
+
+      if (!response.ok) {
+        throw new Error(`시트 요청 실패: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.ok === false) {
+        throw new Error(result.message || "시트 데이터를 불러오지 못했습니다.");
+      }
+
+      return result.data || result;
+    } catch (error) {
+      console.warn("시트 연결 실패, index.json으로 대체합니다.", error);
+    }
+  }
+
+  const response = await fetch(DATA_URL, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`index.json 요청 실패: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function configureApiUrl() {
+  const next = window.prompt(
+    "Apps Script 웹 앱의 /exec 주소를 입력해 주세요.\n비워 두면 index.json을 사용합니다.",
+    state.apiUrl,
+  );
+
+  if (next === null) {
+    return;
+  }
+
+  const normalized = cleanText(next).replace(/\/+$/, "");
+
+  if (normalized && !/^https:\/\/script\.google\.com\/macros\/s\//.test(normalized)) {
+    window.alert("Apps Script 배포 후 받은 /exec 주소를 입력해 주세요.");
+    return;
+  }
+
+  if (normalized) {
+    localStorage.setItem(API_STORAGE_KEY, normalized);
+  } else {
+    localStorage.removeItem(API_STORAGE_KEY);
+  }
+
+  window.location.reload();
 }
 
 function bindEvents() {
@@ -379,6 +448,26 @@ function bindEvents() {
     handleSourceSearch,
   );
 
+  elements.sourceTableBody.addEventListener(
+    "change",
+    handleUsedChange,
+  );
+
+  elements.showUnusedButton.addEventListener(
+    "click",
+    toggleUnusedOnly,
+  );
+
+  elements.syncButton.addEventListener(
+    "click",
+    syncUsedIdeas,
+  );
+
+  elements.apiSettingButton.addEventListener(
+    "click",
+    configureApiUrl,
+  );
+
   document
     .querySelectorAll(".nav-link")
     .forEach((link) => {
@@ -421,10 +510,17 @@ function loadData(json) {
   ]);
 
   state.typeSources = typeSourceRows
-    .map(normalizeTypeSource)
+    .map((row, index) =>
+      normalizeTypeSource(row, index),
+    )
     .filter(
       (row) =>
         row.type &&
+        row.type !== "유형" &&
+        !(
+          row.book === "교재" &&
+          row.situation === "상황"
+        ) &&
         (row.situation || row.choice),
     );
 
@@ -496,8 +592,16 @@ function getArray(json, keys) {
   return [];
 }
 
-function normalizeTypeSource(row) {
+function normalizeTypeSource(row, index = 0) {
   return {
+    rowNumber: Number(
+      pickValue(row, [
+        "rowNumber",
+        "row",
+        "행",
+      ]),
+    ) || index + 1,
+
     type: cleanText(
       pickValue(row, [
         "type",
@@ -539,6 +643,14 @@ function normalizeTypeSource(row) {
         "출처",
         "page",
         "페이지",
+      ]),
+    ),
+
+    used: normalizeBoolean(
+      pickValue(row, [
+        "used",
+        "사용됨",
+        "checked",
       ]),
     ),
   };
@@ -761,6 +873,18 @@ function initializeFeatures() {
 
     elements.typeSelect.disabled =
       false;
+
+    state.selectedTypeRows = [
+      ...state.typeSources,
+    ];
+
+    elements.sourceSearch.disabled =
+      false;
+
+    elements.showUnusedButton.disabled =
+      false;
+
+    renderAllIdeas();
 
     setIdeaStatus(
       "ready",
@@ -2914,13 +3038,15 @@ function handleTypeChange(event) {
 
   hideIdeaResult();
 
-  elements.sourceSearch.value =
-    "";
-
   state.lastIdeaIndex = -1;
 
   if (!type) {
-    resetIdeaSelection();
+    state.selectedType = "";
+    state.selectedTypeRows = [
+      ...state.typeSources,
+    ];
+    renderAllIdeas();
+    applySourceFilters();
     return;
   }
 
@@ -2933,6 +3059,45 @@ function handleTypeChange(event) {
     );
 
   renderIdeaSelection();
+  applySourceFilters();
+}
+
+function renderAllIdeas() {
+  const situations = countValues(
+    state.typeSources,
+    "situation",
+  );
+  const choices = countValues(
+    state.typeSources,
+    "choice",
+  );
+
+  elements.selectedTypeName.textContent =
+    "전체 유형";
+  elements.selectedTypeSummary.textContent =
+    `전체 ${formatNumber(state.typeSources.length)}개 자료에서 단어를 검색할 수 있습니다.`;
+  elements.totalCount.textContent =
+    formatNumber(state.typeSources.length);
+  elements.situationCount.textContent =
+    formatNumber(situations.length);
+  elements.choiceCount.textContent =
+    formatNumber(choices.length);
+  elements.situationTotal.textContent =
+    `${formatNumber(state.typeSources.length)}건`;
+  elements.choiceTotal.textContent =
+    `${formatNumber(state.typeSources.length)}건`;
+  renderFrequencyList(
+    elements.situationList,
+    situations,
+    "상황 데이터가 없습니다.",
+  );
+  renderFrequencyList(
+    elements.choiceList,
+    choices,
+    "보기 데이터가 없습니다.",
+  );
+  elements.ideaButton.disabled = true;
+  applySourceFilters();
 }
 
 function renderIdeaSelection() {
@@ -3324,39 +3489,188 @@ function hideIdeaResult() {
     "";
 }
 
-function handleSourceSearch(event) {
+function handleSourceSearch() {
+  applySourceFilters();
+}
+
+function applySourceFilters() {
   const query = cleanText(
-    event.target.value,
+    elements.sourceSearch.value,
   ).toLocaleLowerCase("ko");
-
-  if (!query) {
-    renderSourceTable(
-      state.selectedTypeRows,
-    );
-
-    return;
-  }
 
   const filtered =
     state.selectedTypeRows.filter(
-      (row) =>
-        [
-          row.book,
-          row.situation,
-          row.choice,
-          row.source,
-        ]
-          .join(" ")
-          .toLocaleLowerCase(
-            "ko",
-          )
-          .includes(query),
+      (row) => {
+        const matchesQuery =
+          !query ||
+          [
+            row.type,
+            row.book,
+            row.situation,
+            row.choice,
+            row.source,
+          ]
+            .join(" ")
+            .toLocaleLowerCase("ko")
+            .includes(query);
+
+        const matchesUsed =
+          !state.showUnusedOnly ||
+          !getCurrentUsed(row);
+
+        return matchesQuery && matchesUsed;
+      },
     );
 
   renderSourceTable(
     filtered,
     "검색 결과가 없습니다.",
   );
+}
+
+function getCurrentUsed(row) {
+  return state.pendingUsed.has(row.rowNumber)
+    ? state.pendingUsed.get(row.rowNumber)
+    : row.used;
+}
+
+function handleUsedChange(event) {
+  const checkbox = event.target.closest(
+    ".used-checkbox",
+  );
+
+  if (!checkbox) {
+    return;
+  }
+
+  const rowNumber = Number(
+    checkbox.dataset.rowNumber,
+  );
+  const row = state.typeSources.find(
+    (item) => item.rowNumber === rowNumber,
+  );
+
+  if (!row) {
+    return;
+  }
+
+  if (checkbox.checked === row.used) {
+    state.pendingUsed.delete(rowNumber);
+  } else {
+    state.pendingUsed.set(
+      rowNumber,
+      checkbox.checked,
+    );
+  }
+
+  updateSyncSummary();
+
+  if (state.showUnusedOnly && checkbox.checked) {
+    applySourceFilters();
+  }
+}
+
+function toggleUnusedOnly() {
+  state.showUnusedOnly =
+    !state.showUnusedOnly;
+
+  elements.showUnusedButton.classList.toggle(
+    "is-active",
+    state.showUnusedOnly,
+  );
+
+  elements.showUnusedButton.textContent =
+    state.showUnusedOnly
+      ? "전체 보기"
+      : "미사용만 보기";
+
+  applySourceFilters();
+}
+
+async function syncUsedIdeas() {
+  if (!state.apiUrl) {
+    window.alert(
+      "먼저 우측 상단 ‘시트 연동 설정’에서 Apps Script /exec 주소를 입력해 주세요.",
+    );
+    return;
+  }
+
+  const changes = [
+    ...state.pendingUsed.entries(),
+  ].map(([rowNumber, used]) => ({
+    rowNumber,
+    used,
+  }));
+
+  if (changes.length === 0) {
+    window.alert("변경된 체크 항목이 없습니다.");
+    return;
+  }
+
+  elements.syncButton.disabled = true;
+  elements.syncButton.textContent = "동기화 중…";
+
+  try {
+    const response = await fetch(
+      state.apiUrl,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify({
+          action: "syncUsed",
+          changes,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`동기화 요청 실패: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.ok) {
+      throw new Error(result.message || "시트 반영에 실패했습니다.");
+    }
+
+    changes.forEach(({ rowNumber, used }) => {
+      const row = state.typeSources.find(
+        (item) => item.rowNumber === rowNumber,
+      );
+
+      if (row) {
+        row.used = used;
+      }
+    });
+
+    state.pendingUsed.clear();
+    updateSyncSummary(
+      `${formatNumber(changes.length)}개 항목 반영 · JSON 백업 완료`,
+    );
+    applySourceFilters();
+  } catch (error) {
+    console.error(error);
+    window.alert(error.message);
+    updateSyncSummary("동기화 실패 · 체크 상태는 페이지에 남아 있습니다.");
+  } finally {
+    elements.syncButton.textContent = "시트와 동기화";
+    elements.syncButton.disabled = false;
+  }
+}
+
+function updateSyncSummary(message = "") {
+  const pending = state.pendingUsed.size;
+
+  elements.syncButton.disabled =
+    pending === 0;
+
+  elements.syncSummary.textContent =
+    message ||
+    (pending > 0
+      ? `${formatNumber(pending)}개 변경 대기 중 · 동기화 버튼을 누르면 F열에 반영됩니다.`
+      : "체크한 뒤 ‘시트와 동기화’를 누르면 F열에 반영됩니다.");
 }
 
 function renderSourceTable(
@@ -3381,7 +3695,7 @@ function renderSourceTable(
         "td",
       );
 
-    td.colSpan = 4;
+    td.colSpan = 5;
     td.textContent =
       emptyMessage;
 
@@ -3396,7 +3710,9 @@ function renderSourceTable(
   const fragment =
     document.createDocumentFragment();
 
-  rows.forEach((row) => {
+  rows
+    .slice(0, MAX_VISIBLE_SOURCES)
+    .forEach((row) => {
     const tr =
       document.createElement(
         "tr",
@@ -3432,6 +3748,52 @@ function renderSourceTable(
         "td",
       );
 
+    const usedCell =
+      document.createElement(
+        "td",
+      );
+
+    usedCell.className =
+      "source-used";
+
+    const usedLabel =
+      document.createElement(
+        "label",
+      );
+
+    usedLabel.className =
+      "used-check";
+
+    const usedInput =
+      document.createElement(
+        "input",
+      );
+
+    usedInput.type = "checkbox";
+    usedInput.className =
+      "used-checkbox";
+    usedInput.dataset.rowNumber =
+      String(row.rowNumber);
+    usedInput.checked =
+      getCurrentUsed(row);
+
+    const usedText =
+      document.createElement(
+        "span",
+      );
+
+    usedText.textContent =
+      "사용";
+
+    usedLabel.append(
+      usedInput,
+      usedText,
+    );
+
+    usedCell.append(
+      usedLabel,
+    );
+
     if (row.source) {
       const badge =
         document.createElement(
@@ -3459,6 +3821,7 @@ function renderSourceTable(
       situationCell,
       choiceCell,
       sourceCell,
+      usedCell,
     );
 
     fragment.append(tr);
@@ -3466,6 +3829,17 @@ function renderSourceTable(
 
   elements.sourceTableBody
     .append(fragment);
+
+  if (rows.length > MAX_VISIBLE_SOURCES) {
+    const tr = document.createElement("tr");
+    tr.className = "table-empty source-limit-row";
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.textContent =
+      `검색 속도를 위해 ${formatNumber(MAX_VISIBLE_SOURCES)}개까지만 표시합니다. 단어를 더 입력해 좁혀 주세요.`;
+    tr.append(td);
+    elements.sourceTableBody.append(tr);
+  }
 }
 
 function createBookCell(
@@ -4146,6 +4520,26 @@ function cleanText(value) {
   return String(value ?? "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeBoolean(value) {
+  if (value === true) {
+    return true;
+  }
+
+  const text = cleanText(value)
+    .toLocaleLowerCase("ko");
+
+  return [
+    "true",
+    "1",
+    "yes",
+    "y",
+    "사용",
+    "사용됨",
+    "완료",
+    "체크",
+  ].includes(text);
 }
 
 function normalizeTeacher(value) {

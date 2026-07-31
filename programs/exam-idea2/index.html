@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="J&B LAB 모의고사 샘플 메이킹 및 유형별 문항 아이디어 아카이브"
+      content="J&B LAB 유형별 문항 아이디어 아카이브 및 모의고사 샘플 메이킹"
     />
     <meta name="theme-color" content="#07111f" />
 
-    <title>문항 메이킹 LAB | J&amp;B LAB</title>
+    <title>문제 아이디어 LAB | J&amp;B LAB</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,6 +18,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <script src="config.js" defer></script>
     <script src="app.js" defer></script>
   </head>
 
@@ -37,17 +38,17 @@
         </a>
 
         <nav class="main-nav" aria-label="주요 기능">
-          <a class="nav-link is-active" href="#makerSection">
+          <a class="nav-link is-active" href="#ideaSection">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h7" />
             </svg>
-            샘플 메이킹
+            문제 아이디어
           </a>
-          <a class="nav-link" href="#ideaSection">
+          <a class="nav-link" href="#makerSection">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.7 14c-.9.7-1.4 1.5-1.5 2.5h-4.4c-.1-.8-.5-1.5-1.3-2Z" />
             </svg>
-            유형별 아이디어
+            모의고사 메이킹
           </a>
         </nav>
 
@@ -55,6 +56,9 @@
           <span class="status-dot" aria-hidden="true"></span>
           <span>데이터 확인 중</span>
         </div>
+        <button class="api-setting-button" id="apiSettingButton" type="button">
+          시트 연동 설정
+        </button>
         <a
           class="jnb-home-button"
           href="https://science-lab1.parkjunbum0255.workers.dev/"
@@ -72,14 +76,14 @@
 
         <div class="hero-inner">
           <div class="hero-copy">
-            <p class="eyebrow">QUESTION MAKING SYSTEM</p>
+            <p class="eyebrow">QUESTION IDEA ARCHIVE</p>
             <h1 id="pageTitle">
-              출제 자료를 연결해<br />
-              <em>25문항의 뼈대</em>를 설계합니다.
+              유형과 상황을 고르면<br />
+              <em>바로 쓸 보기</em>를 찾습니다.
             </h1>
             <p class="hero-description">
-              정T·백T 출제 비율과 통합과학 1·2 구성을 맞추고, 대단원과 중단원이
-              치우치지 않도록 유형별 세부 소스를 자동 배치합니다.
+              시트에 모인 교재 보기를 유형별로 좁히거나 보기 속 단어로 검색하고,
+              사용한 아이디어는 모아서 한 번에 시트와 동기화합니다.
             </p>
           </div>
 
@@ -87,15 +91,15 @@
             <div class="hero-index-item">
               <span>01</span>
               <div>
-                <strong>모의고사 샘플 메이킹</strong>
-                <small>25문항 × 최대 10회</small>
+                <strong>문제 아이디어 찾기</strong>
+                <small>유형 선택 · 보기 단어 검색</small>
               </div>
             </div>
             <div class="hero-index-item">
               <span>02</span>
               <div>
-                <strong>유형별 아이디어</strong>
-                <small>상황·보기·출처 분석</small>
+                <strong>모의고사 샘플 메이킹</strong>
+                <small>25문항 × 최대 10회</small>
               </div>
             </div>
           </div>
@@ -106,7 +110,7 @@
         <div class="content-inner">
           <div class="section-heading maker-heading">
             <div>
-              <p class="section-kicker">01 · MOCK TEST MAKER</p>
+              <p class="section-kicker">02 · MOCK TEST MAKER</p>
               <h2 id="makerTitle">모의고사 샘플 메이킹</h2>
               <p>단원 분포를 맞춘 뒤 각 유형에 겹치지 않는 세부 유형을 배치합니다.</p>
             </div>
@@ -305,9 +309,9 @@
         <div class="content-inner">
           <div class="section-heading">
             <div>
-              <p class="section-kicker">02 · IDEA ARCHIVE</p>
-              <h2 id="ideaTitle">유형별 출제 아이디어</h2>
-              <p>실제 교재에서 반복되는 상황과 보기를 분석하고 아이디어를 뽑습니다.</p>
+              <p class="section-kicker">01 · IDEA ARCHIVE</p>
+              <h2 id="ideaTitle">문제 아이디어 찾기</h2>
+              <p>유형을 선택하거나 보기 문장 속 단어를 검색합니다.</p>
             </div>
 
             <div class="archive-summary" aria-label="현재 유형 데이터 요약">
@@ -315,8 +319,8 @@
                 <span>전체 자료</span>
                 <strong id="totalCount">-</strong>
               </div>
-              <i aria-hidden="true"></i>
-              <div>
+              <i aria-hidden="true" hidden></i>
+              <div hidden>
                 <span>상황 종류</span>
                 <strong id="situationCount">-</strong>
               </div>
@@ -345,7 +349,7 @@
                 <span class="field-label">문항 유형</span>
                 <span class="select-wrap">
                   <select id="typeSelect" name="type" disabled>
-                    <option value="">유형을 선택해 주세요</option>
+                    <option value="">전체 유형</option>
                   </select>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="m7 9.5 5 5 5-5" />
@@ -358,7 +362,7 @@
                   <path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.7 14c-.9.7-1.4 1.5-1.5 2.5h-4.4c-.1-.8-.5-1.5-1.3-2Z" />
                   <path d="M12 2V.5M4.9 4.9 3.8 3.8M19.1 4.9l1.1-1.1" />
                 </svg>
-                아이디어
+                무작위 아이디어
               </button>
             </div>
 
@@ -396,7 +400,7 @@
           </div>
 
           <div class="pattern-grid">
-            <article class="pattern-panel" aria-labelledby="situationTitle">
+            <article class="pattern-panel" aria-labelledby="situationTitle" hidden>
               <div class="panel-heading">
                 <div class="panel-title-group">
                   <span class="panel-icon situation-icon" aria-hidden="true">
@@ -450,6 +454,7 @@
                 <p class="section-kicker">SOURCE LIST</p>
                 <h3 id="sourceTitle">관련 출처</h3>
               </div>
+              <div class="source-actions">
               <label class="search-field" for="sourceSearch">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" />
@@ -459,12 +464,22 @@
                 <input
                   id="sourceSearch"
                   type="search"
-                  placeholder="교재명 또는 출처 검색"
+                  placeholder="전체 자료에서 단어 검색"
                   autocomplete="off"
                   disabled
                 />
               </label>
+              <button class="button button-secondary" id="showUnusedButton" type="button" disabled>
+                미사용만 보기
+              </button>
+              <button class="button button-mint" id="syncButton" type="button" disabled>
+                시트와 동기화
+              </button>
+              </div>
             </div>
+            <p class="sync-summary" id="syncSummary" aria-live="polite">
+              체크한 뒤 ‘시트와 동기화’를 누르면 F열에 반영됩니다.
+            </p>
 
             <div class="source-table-wrap">
               <table class="source-table">
@@ -474,11 +489,12 @@
                     <th scope="col">상황</th>
                     <th scope="col">보기</th>
                     <th scope="col">출처</th>
+                    <th scope="col">사용됨</th>
                   </tr>
                 </thead>
                 <tbody id="sourceTableBody">
                   <tr class="table-empty">
-                    <td colspan="4">유형을 선택하면 관련 출처를 확인할 수 있습니다.</td>
+                    <td colspan="5">유형을 선택하면 관련 출처를 확인할 수 있습니다.</td>
                   </tr>
                 </tbody>
               </table>
