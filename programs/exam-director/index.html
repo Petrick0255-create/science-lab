@@ -33,6 +33,7 @@
           <input type="hidden" id="questionId">
           <div class="form-grid">
             <label>과목<select id="subject" required><option>통합과학</option><option>생명과학</option></select></label>
+            <label>연도<select id="year" required></select></label>
             <label>시즌<select id="season" required></select></label>
             <label>회<select id="round" required></select></label>
             <label>번호<select id="questionNo" required></select></label>
@@ -69,6 +70,7 @@
       <div class="filter-bar">
         <label class="search-field">⌕<input id="archiveSearch" placeholder="유형·출처·메모 검색"></label>
         <select id="archiveSubject"><option value="">전체 과목</option><option>통합과학</option><option>생명과학</option></select>
+        <select id="archiveYear"><option value="">전체 연도</option></select>
         <select id="archiveSeason"><option value="">전체 시즌</option></select>
         <select id="archiveRound"><option value="">전체 회</option></select>
         <select id="archiveType"><option value="">전체 유형</option></select>
@@ -79,7 +81,7 @@
     </section>
 
     <section class="page" id="analysisPage">
-      <div class="page-head"><div><p class="eyebrow">SEASON ANALYSIS</p><h1>난이도·유형 분석</h1><p>회차별 난이도 흐름과 유형 편중을 한눈에 확인하세요.</p></div><div class="analysis-filters"><select id="analysisSubject"><option>통합과학</option><option>생명과학</option></select><select id="analysisSeason"></select></div></div>
+      <div class="page-head"><div><p class="eyebrow">SEASON ANALYSIS</p><h1>난이도·유형 분석</h1><p>회차별 난이도 흐름과 유형 편중을 한눈에 확인하세요.</p></div><div class="analysis-filters"><select id="analysisSubject"><option>통합과학</option><option>생명과학</option></select><select id="analysisYear"></select><select id="analysisSeason"></select></div></div>
       <div class="metric-grid" id="metricGrid"></div>
       <div class="analysis-grid">
         <section class="analysis-card wide-card"><div class="section-title"><div><h2>회차별 난이도 구성</h2><p>각 막대는 해당 회차에 기록된 문제의 난이도 비율입니다.</p></div><div class="legend" id="difficultyLegend"></div></div><div id="difficultyBars" class="difficulty-bars"></div></section>
