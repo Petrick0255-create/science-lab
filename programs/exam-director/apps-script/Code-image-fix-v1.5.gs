@@ -21,6 +21,7 @@ function doPost(e) {
       case 'listRecords': data = listRecords_(); break;
       case 'saveRecord': data = saveRecord_(payload); break;
       case 'deleteRecord': data = deleteRecord_(payload.id); break;
+      case 'repairImageAccess': data = repairImageAccess_(); break;
       default: throw new Error('지원하지 않는 작업입니다: ' + action);
     }
     return json_({ ok: true, data });
@@ -85,7 +86,8 @@ function rowToRecord_(r) {
   return {
     id:r[0], subject:r[1], season:r[2], round:r[3], number:Number(r[4]), type:r[5],
     difficulty:r[6], score:Number(r[7]), source:r[8], answer:r[9], explanationHtml:r[10],
-    memo:r[11], imageFileName:r[12], imageFileId:r[13], imageUrl:r[14],
+    memo:r[11], imageFileName:r[12], imageFileId:r[13],
+    imageUrl:r[13] ? `https://drive.google.com/thumbnail?id=${r[13]}&sz=w1600` : r[14],
     createdAt:formatDate_(r[15]), updatedAt:formatDate_(r[16])
   };
 }
@@ -159,6 +161,28 @@ function deleteRecord_(id) {
   }
 }
 
+function repairImageAccess_() {
+  const sh = sheet_(CONFIG.DB_SHEET);
+  const last = sh.getLastRow();
+  if (last < 2) return { checked: 0, repaired: 0, failed: 0 };
+
+  const ids = sh.getRange(2, 14, last - 1, 1).getDisplayValues().flat().filter(Boolean);
+  let repaired = 0;
+  let failed = 0;
+
+  ids.forEach(id => {
+    try {
+      const file = DriveApp.getFileById(id);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      repaired++;
+    } catch (_) {
+      failed++;
+    }
+  });
+
+  return { checked: ids.length, repaired, failed };
+}
+
 function saveImage_(record) {
   const m = String(record.imageDataUrl).match(/^data:(image\/[\w.+-]+);base64,(.+)$/);
   if (!m) throw new Error('올바른 이미지 데이터가 아닙니다.');
@@ -172,7 +196,16 @@ function saveImage_(record) {
   const seasonFolder = getOrCreateFolder_(subjectFolder, safe(record.season));
   const roundFolder = getOrCreateFolder_(seasonFolder, safe(record.round));
   const file = roundFolder.createFile(Utilities.newBlob(bytes,mime,name));
-  return { id:file.getId(), name:file.getName(), url:`https://drive.google.com/uc?export=view&id=${file.getId()}` };
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (_) {
+    // 조직 정책상 링크 공유가 차단된 경우 로그인한 Google 계정 권한을 사용합니다.
+  }
+  return {
+    id: file.getId(),
+    name: file.getName(),
+    url: `https://drive.google.com/thumbnail?id=${file.getId()}&sz=w1600`
+  };
 }
 
 function getOrCreateFolder_(parent, name) {

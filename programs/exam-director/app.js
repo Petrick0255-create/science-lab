@@ -109,18 +109,8 @@
   }
 
   function updateQuestionNumbers() {
-    const isBiology = state.subject === "생명과학";
-    const count = isBiology ? 20 : 25;
-
-    setOptions(
-      els.questionNo,
-      Array.from({ length: count }, (_, i) => String(i + 1))
-    );
-
-    setOptions(
-      els.score,
-      isBiology ? ["2", "3"] : ["1.5", "2", "2.5"]
-    );
+    const count = state.subject === "생명과학" ? 20 : 25;
+    setOptions(els.questionNo, Array.from({length:count}, (_,i)=>String(i+1)));
   }
 
   function setSubject(subject) {
@@ -287,6 +277,28 @@
     return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   }
 
+  function getRecordImageUrl(record, size = 1200) {
+    if (record.imageDataUrl) return record.imageDataUrl;
+    if (record.imageFileId) {
+      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(record.imageFileId)}&sz=w${size}`;
+    }
+    return record.imageUrl || "";
+  }
+
+  function handleBrokenImage(img) {
+    if (img.dataset.fallbackTried === "1") {
+      img.closest(".question-thumb, .compare-card")?.classList.add("image-error");
+      img.removeAttribute("src");
+      img.alt = "이미지를 불러오지 못했습니다.";
+      return;
+    }
+    img.dataset.fallbackTried = "1";
+    const fileId = img.dataset.fileId;
+    if (fileId) {
+      img.src = `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}`;
+    }
+  }
+
   function renderArchive() {
     const list = filteredRecords();
     els.archiveSummary.textContent = `${list.length}개 문항`;
@@ -296,7 +308,7 @@
     }
     els.archiveGrid.innerHTML = list.map(r => `
       <article class="question-card">
-        <div class="question-thumb"><img src="${escapeHtml(r.imageUrl || r.imageDataUrl || "")}" alt=""></div>
+        <div class="question-thumb"><img src="${escapeHtml(getRecordImageUrl(r, 900))}" data-file-id="${escapeHtml(r.imageFileId || "")}" onerror="handleBrokenImage(this)" alt="문항 이미지"></div>
         <div class="question-info">
           <div class="question-meta">
             <span class="pill">${escapeHtml(r.subject)}</span><span class="pill">${escapeHtml(r.season)}</span>
@@ -343,7 +355,7 @@
     els.compareGrid.className = "compare-grid";
     els.compareGrid.innerHTML = records.map(r => `
       <article class="compare-card">
-        <img src="${escapeHtml(r.imageUrl || r.imageDataUrl || "")}" alt="">
+        <img src="${escapeHtml(getRecordImageUrl(r, 1400))}" data-file-id="${escapeHtml(r.imageFileId || "")}" onerror="handleBrokenImage(this)" alt="문항 이미지">
         <div class="compare-body">
           <dl>
             <dt>문항</dt><dd>${escapeHtml(r.season)} ${escapeHtml(r.round)} ${escapeHtml(r.number)}번</dd>
@@ -477,6 +489,8 @@
     });
     els.saveSettingsBtn.addEventListener("click", e=>{e.preventDefault();saveSettings();els.settingsDialog.close();});
   }
+
+  window.handleBrokenImage = handleBrokenImage;
 
   function init() {
     bindEvents();
