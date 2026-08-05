@@ -109,8 +109,18 @@
   }
 
   function updateQuestionNumbers() {
-    const count = state.subject === "생명과학" ? 20 : 25;
-    setOptions(els.questionNo, Array.from({length:count}, (_,i)=>String(i+1)));
+    const isBiology = state.subject === "생명과학";
+    const count = isBiology ? 20 : 25;
+
+    setOptions(
+      els.questionNo,
+      Array.from({ length: count }, (_, i) => String(i + 1))
+    );
+
+    setOptions(
+      els.score,
+      isBiology ? ["2", "3"] : ["1.5", "2", "2.5"]
+    );
   }
 
   function setSubject(subject) {
