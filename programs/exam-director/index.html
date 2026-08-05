@@ -1,231 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>모의고사 문제 관리</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MOCK NOTE · 모의고사 문제 관리</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">MOCK EXAM ARCHIVE</p>
-        <h1>모의고사 문제 관리</h1>
+  <header class="topbar">
+    <a class="brand" href="../../index.html" aria-label="메인으로">
+      <span class="brand-mark">M</span><span><strong>MOCK NOTE</strong><small>QUESTION MANAGER</small></span>
+    </a>
+    <div class="top-actions">
+      <span id="saveState" class="save-state">로컬 준비됨</span>
+      <button class="button ghost" id="settingsBtn">연결 설정</button>
+      <button class="button ghost" id="seasonBtn">시즌 설정</button>
+      <button class="button primary" id="syncBtn">동기화</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active" id="recordPage">
+      <div class="page-head">
+        <div><p class="eyebrow">QUESTION RECORD</p><h1>문제 기록</h1><p>문제 이미지를 붙여넣고 분류 정보를 함께 보관하세요.</p></div>
+        <button class="button danger hidden" id="deleteBtn">이 문제 삭제</button>
       </div>
-      <div class="top-actions">
-        <label class="compact-field">
-          <span>과목</span>
-          <select id="globalSubject">
-            <option value="통합과학" selected>통합과학</option>
-            <option value="생명과학">생명과학</option>
-          </select>
-        </label>
-        <button id="settingsBtn" class="btn ghost">설정</button>
-        <span id="connectionBadge" class="badge muted">연결 전</span>
+      <div class="record-layout">
+        <form class="record-form" id="recordForm">
+          <input type="hidden" id="questionId">
+          <div class="form-grid">
+            <label>과목<select id="subject" required><option>통합과학</option><option>생명과학</option></select></label>
+            <label>시즌<select id="season" required></select></label>
+            <label>회<select id="round" required></select></label>
+            <label>번호<select id="questionNo" required></select></label>
+            <label class="wide">유형<select id="type" required></select></label>
+            <label>난이도<select id="difficulty" required><option>하</option><option>중하</option><option selected>중</option><option>중상</option><option>상</option><option>최상</option></select></label>
+            <label>배점<input id="score" type="number" min="0" step="0.5" value="2" required></label>
+            <label class="wide">출처<input id="source" placeholder="예: 2026학년도 3월 학력평가 변형"></label>
+            <label>정답<input id="answer" placeholder="예: ④"></label>
+            <label class="wide">메모<textarea id="memo" rows="3" placeholder="출제 의도, 수정할 점 등을 기록하세요."></textarea></label>
+          </div>
+          <div class="rich-field">
+            <div class="field-title"><span>해설</span><small>한글의 위첨자·아래첨자 붙여넣기 지원</small></div>
+            <div id="explanation" class="rich-editor" contenteditable="true" data-placeholder="해설을 입력하거나 한글 문서에서 붙여넣으세요."></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="button ghost" id="newBtn">새 문제</button>
+            <button type="submit" class="button primary">저장</button>
+          </div>
+        </form>
+
+        <aside class="image-workspace">
+          <div class="image-head"><div><strong>문제 이미지</strong><small id="imageStatus">클립보드·파일·드래그 지원</small></div><button class="text-button" id="clearImageBtn">비우기</button></div>
+          <div class="paste-zone" id="pasteZone" tabindex="0">
+            <img id="questionPreview" alt="문제 이미지 미리보기" class="hidden">
+            <div id="pasteGuide"><span class="paste-icon">⌘V</span><strong>이미지를 붙여넣으세요</strong><p>이 영역을 누른 뒤 Ctrl+V 또는 파일을 끌어 놓으세요.</p><label class="button ghost file-button">파일 선택<input type="file" id="imageInput" accept="image/*"></label></div>
+          </div>
+          <p class="image-note">가독성을 유지하면서 긴 변 기준 1,900px 안팎의 WebP로 압축합니다. 동기화 전에는 브라우저에 임시 보관됩니다.</p>
+        </aside>
       </div>
-    </header>
+    </section>
 
-    <main>
-      <section id="recordTab" class="tab-panel active">
-        <div class="record-layout">
-          <section class="image-workspace card">
-            <div class="section-head">
-              <div>
-                <h2>문항 이미지</h2>
-                <p>캡처한 문제를 Ctrl+V로 붙여넣거나 파일을 끌어놓으세요.</p>
-              </div>
-              <div class="inline-actions">
-                <button id="rotateLeftBtn" class="icon-btn" title="왼쪽 회전">↶</button>
-                <button id="rotateRightBtn" class="icon-btn" title="오른쪽 회전">↷</button>
-                <button id="resetImageBtn" class="icon-btn" title="초기화">초기화</button>
-              </div>
-            </div>
-            <div id="dropZone" class="drop-zone" tabindex="0">
-              <div id="emptyDropMessage" class="drop-placeholder">
-                <div class="drop-icon">＋</div>
-                <strong>이미지를 붙여넣으세요</strong>
-                <span>PNG · JPG · WEBP</span>
-              </div>
-              <img id="questionImage" alt="문항 이미지 미리보기" hidden />
-            </div>
-            <input id="imageFileInput" type="file" accept="image/*" hidden />
-            <div class="image-status">
-              <button id="chooseImageBtn" class="btn secondary">이미지 선택</button>
-              <span id="imageName">선택된 이미지 없음</span>
-              <span id="draftStatus">로컬 임시저장 대기</span>
-            </div>
-          </section>
-
-          <section class="form-card card">
-            <div class="section-head">
-              <div>
-                <h2>문항 정보</h2>
-                <p>저장하면 이미지와 정보가 함께 아카이브됩니다.</p>
-              </div>
-              <button id="newRecordBtn" class="btn ghost">새 문항</button>
-            </div>
-
-            <form id="recordForm">
-              <div class="form-grid three">
-                <label><span>시즌</span><select id="season" required></select></label>
-                <label><span>회차</span><select id="round" required></select></label>
-                <label><span>번호</span><select id="questionNo" required></select></label>
-              </div>
-
-              <label>
-                <span>유형</span>
-                <select id="questionType" required></select>
-              </label>
-
-              <div class="form-grid three">
-                <label><span>난이도</span><select id="difficulty" required>
-                  <option>하</option><option>중하</option><option selected>중</option>
-                  <option>중상</option><option>상</option><option>최상</option>
-                </select></label>
-                <label><span>배점</span><select id="score" required>
-                  <option value="2" selected>2점</option><option value="3">3점</option>
-                </select></label>
-                <label><span>정답</span><select id="answer" required>
-                  <option value="①">①</option>
-                  <option value="②">②</option>
-                  <option value="③">③</option>
-                  <option value="④">④</option>
-                  <option value="⑤">⑤</option>
-                </select></label>
-              </div>
-
-              <label><span>출처</span><input id="source" type="text" placeholder="예: 자체 제작, 2027 완자 변형" /></label>
-
-              <label>
-                <span>해설</span>
-                <div class="rich-toolbar">
-                  <button type="button" data-command="bold"><b>B</b></button>
-                  <button type="button" data-command="superscript">x²</button>
-                  <button type="button" data-command="subscript">x₂</button>
-                  <button type="button" data-command="removeFormat">서식 해제</button>
-                </div>
-                <div id="explanation" class="rich-editor" contenteditable="true"
-                  data-placeholder="한글에서 만든 위첨자·아래첨자를 포함해 붙여넣을 수 있습니다."></div>
-              </label>
-
-              <label><span>메모</span><textarea id="memo" rows="4" placeholder="출제 의도, 수정 사항, 검토 메모"></textarea></label>
-
-              <div class="save-row">
-                <button id="deleteRecordBtn" type="button" class="btn danger" hidden>삭제</button>
-                <button id="saveRecordBtn" type="submit" class="btn primary">저장</button>
-              </div>
-            </form>
-          </section>
-        </div>
-      </section>
-
-      <section id="archiveTab" class="tab-panel">
-        <section class="card archive-card">
-          <div class="section-head archive-head">
-            <div>
-              <h2>문항 아카이브</h2>
-              <p>필터링한 문항을 선택해 최대 3개까지 나란히 비교합니다.</p>
-            </div>
-            <button id="refreshArchiveBtn" class="btn secondary">새로고침</button>
-          </div>
-
-          <div class="filter-grid">
-            <select id="filterSubject"><option value="">전체 과목</option><option>통합과학</option><option>생명과학</option></select>
-            <select id="filterSeason"><option value="">전체 시즌</option></select>
-            <select id="filterRound"><option value="">전체 회차</option></select>
-            <select id="filterType"><option value="">전체 유형</option></select>
-            <select id="filterDifficulty"><option value="">전체 난이도</option><option>하</option><option>중하</option><option>중</option><option>중상</option><option>상</option><option>최상</option></select>
-            <input id="archiveSearch" type="search" placeholder="출처·메모·정답 검색" />
-          </div>
-
-          <div class="archive-content">
-            <div>
-              <div id="archiveSummary" class="archive-summary"></div>
-              <div id="archiveGrid" class="archive-grid"></div>
-            </div>
-            <aside class="compare-panel">
-              <div class="compare-title">
-                <h3>비교함</h3>
-                <button id="clearCompareBtn" class="text-btn">비우기</button>
-              </div>
-              <div id="compareGrid" class="compare-grid empty">
-                <p>문항 카드의 ‘비교’ 버튼을 누르세요.</p>
-              </div>
-            </aside>
-          </div>
-        </section>
-      </section>
-
-      <section id="analysisTab" class="tab-panel">
-        <section class="analysis-layout">
-          <div class="card analysis-controls">
-            <div class="section-head">
-              <div><h2>난이도 배치 분석</h2><p>시즌·회차별 배치와 유형 편중을 확인합니다.</p></div>
-            </div>
-            <div class="filter-grid analysis-filter">
-              <select id="analysisSubject"><option>통합과학</option><option>생명과학</option></select>
-              <select id="analysisSeason"><option value="">전체 시즌</option></select>
-              <select id="analysisRound"><option value="">전체 회차</option></select>
-            </div>
-          </div>
-
-          <div id="statCards" class="stat-grid"></div>
-
-          <div class="card">
-            <div class="section-head"><div><h3>문항 번호별 난이도</h3><p>낮은 난이도에서 높은 난이도 순으로 색이 진해집니다.</p></div></div>
-            <div id="difficultyHeatmap" class="heatmap"></div>
-          </div>
-
-          <div class="analysis-two-column">
-            <div class="card">
-              <div class="section-head"><div><h3>난이도 분포</h3></div></div>
-              <div id="difficultyBars" class="bar-list"></div>
-            </div>
-            <div class="card">
-              <div class="section-head"><div><h3>유형 분포 상위 10개</h3></div></div>
-              <div id="typeBars" class="bar-list"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="section-head"><div><h3>회차별 요약</h3></div></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>시즌</th><th>회차</th><th>문항 수</th><th>평균 난이도</th><th>최고난도 수</th><th>3점 문항</th></tr></thead>
-                <tbody id="analysisTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </section>
-    </main>
-
-    <nav class="bottom-nav">
-      <button class="nav-btn active" data-tab="recordTab"><span>✎</span>기록</button>
-      <button class="nav-btn" data-tab="archiveTab"><span>▦</span>아카이브</button>
-      <button class="nav-btn" data-tab="analysisTab"><span>▥</span>분석</button>
-    </nav>
-  </div>
-
-  <dialog id="settingsDialog">
-    <form method="dialog" class="settings-card">
-      <div class="section-head">
-        <div><h2>설정</h2><p>시즌과 회차는 줄 단위로 입력합니다.</p></div>
-        <button class="icon-btn" value="cancel">×</button>
+    <section class="page" id="archivePage">
+      <div class="page-head"><div><p class="eyebrow">QUESTION ARCHIVE</p><h1>문제 아카이브</h1><p>조건을 좁혀 찾고, 최대 3문제를 한 화면에서 비교하세요.</p></div><div class="head-count"><strong id="archiveCount">0</strong><span>문제</span></div></div>
+      <div class="filter-bar">
+        <label class="search-field">⌕<input id="archiveSearch" placeholder="유형·출처·메모 검색"></label>
+        <select id="archiveSubject"><option value="">전체 과목</option><option>통합과학</option><option>생명과학</option></select>
+        <select id="archiveSeason"><option value="">전체 시즌</option></select>
+        <select id="archiveRound"><option value="">전체 회</option></select>
+        <select id="archiveType"><option value="">전체 유형</option></select>
+        <select id="archiveDifficulty"><option value="">전체 난이도</option><option>하</option><option>중하</option><option>중</option><option>중상</option><option>상</option><option>최상</option></select>
       </div>
-      <label><span>시즌 목록</span><textarea id="settingsSeasons" rows="7"></textarea></label>
-      <label><span>회차 목록</span><textarea id="settingsRounds" rows="7"></textarea></label>
-      <div class="save-row">
-        <button value="cancel" class="btn ghost">취소</button>
-        <button id="saveSettingsBtn" value="default" class="btn primary">저장</button>
+      <div id="archiveGrid" class="archive-grid"></div>
+      <div id="archiveEmpty" class="empty-state hidden"><strong>조건에 맞는 문제가 없습니다.</strong><p>필터를 바꾸거나 기록 탭에서 문제를 추가해 보세요.</p></div>
+    </section>
+
+    <section class="page" id="analysisPage">
+      <div class="page-head"><div><p class="eyebrow">SEASON ANALYSIS</p><h1>난이도·유형 분석</h1><p>회차별 난이도 흐름과 유형 편중을 한눈에 확인하세요.</p></div><div class="analysis-filters"><select id="analysisSubject"><option>통합과학</option><option>생명과학</option></select><select id="analysisSeason"></select></div></div>
+      <div class="metric-grid" id="metricGrid"></div>
+      <div class="analysis-grid">
+        <section class="analysis-card wide-card"><div class="section-title"><div><h2>회차별 난이도 구성</h2><p>각 막대는 해당 회차에 기록된 문제의 난이도 비율입니다.</p></div><div class="legend" id="difficultyLegend"></div></div><div id="difficultyBars" class="difficulty-bars"></div></section>
+        <section class="analysis-card"><div class="section-title"><div><h2>문항 위치 히트맵</h2><p>문항 번호별 난이도 배치입니다.</p></div></div><div id="positionHeatmap" class="heatmap-wrap"></div></section>
+        <section class="analysis-card"><div class="section-title"><div><h2>유형 커버리지</h2><p>시즌에 사용된 유형과 고난도 비중입니다.</p></div></div><div id="typeCoverage" class="type-coverage"></div></section>
+        <section class="analysis-card wide-card"><div class="section-title"><div><h2>검토 포인트</h2><p>누락과 편중을 자동으로 찾아 표시합니다.</p></div></div><div id="analysisAlerts" class="alert-list"></div></section>
       </div>
-    </form>
-  </dialog>
+    </section>
+  </main>
 
-  <div id="toast" class="toast"></div>
+  <nav class="bottom-nav" aria-label="주요 메뉴">
+    <button class="active" data-page="record"><span>✎</span>기록</button>
+    <button data-page="archive"><span>▦</span>아카이브</button>
+    <button data-page="analysis"><span>◫</span>분석</button>
+  </nav>
 
-  <script src="config.js"></script>
+  <div class="compare-dock hidden" id="compareDock"><span><strong id="compareCount">0</strong>/3 선택</span><button id="clearCompareBtn">초기화</button><button class="button primary" id="openCompareBtn">비교하기</button></div>
+
+  <dialog id="compareDialog" class="modal compare-modal"><div class="modal-head"><div><p class="eyebrow">SIDE BY SIDE</p><h2>문제 비교</h2></div><button class="icon-button" data-close="compareDialog">×</button></div><div id="compareContent" class="compare-content"></div></dialog>
+  <dialog id="settingsDialog" class="modal small-modal"><div class="modal-head"><div><p class="eyebrow">CONNECTION</p><h2>연결 설정</h2></div><button class="icon-button" data-close="settingsDialog">×</button></div><div class="modal-body"><label>Apps Script 배포 URL<input id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec"></label><label>동기화 키<input id="syncKey" type="password" autocomplete="off" placeholder="Apps Script에서 만든 키"></label><p class="help-text">한 번 저장하면 이 브라우저에 기억됩니다. 키는 시트 메뉴의 ‘동기화 키 설정’에서 만들 수 있습니다.</p><div class="modal-actions"><button class="button ghost" data-close="settingsDialog">취소</button><button class="button primary" id="saveSettingsBtn">저장하고 연결 확인</button></div></div></dialog>
+  <dialog id="seasonDialog" class="modal"><div class="modal-head"><div><p class="eyebrow">SEASON SETUP</p><h2>시즌·회차 설정</h2></div><button class="icon-button" data-close="seasonDialog">×</button></div><div class="modal-body"><div class="season-toolbar"><select id="seasonSubject"><option>통합과학</option><option>생명과학</option></select><button class="button ghost" id="addSeasonBtn">+ 시즌 추가</button></div><div id="seasonRows" class="season-rows"></div><div class="modal-actions"><button class="button ghost" data-close="seasonDialog">취소</button><button class="button primary" id="saveSeasonsBtn">설정 저장</button></div></div></dialog>
+  <div class="toast" id="toast" role="status"></div>
   <script src="app.js"></script>
 </body>
 </html>

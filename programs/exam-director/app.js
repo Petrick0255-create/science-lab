@@ -1,503 +1,67 @@
-(() => {
-  "use strict";
+const SUBJECTS={"통합과학":25,"생명과학":20};
+const DIFFICULTIES=["하","중하","중","중상","상","최상"];
+const COLORS={"하":"#dbeafe","중하":"#a7d8f0","중":"#76b7df","중상":"#ffd27a","상":"#f39a63","최상":"#d95d5d"};
+const DEFAULT_TYPES={
+  "통합과학":["과학의 기본량","측정 표준과 정보","우주의 시작과 원소의 생성","지구와 생명체를 구성하는 원소의 생성","원소의 규칙성","화학 결합과 물질의 성질","지각과 생명체 구성 물질의 규칙성","물질의 전기적 성질","지구 시스템의 구성과 상호 작용","지권의 변화와 영향","중력의 작용","운동과 충돌","생명 시스템과 세포","생명 시스템에서 일어나는 화학 반응","생명 시스템에서 정보의 흐름","지질 시대의 환경과 생물 변화","진화와 생물 다양성","산화와 환원","산, 염기와 중화 반응","물질 변화에서 에너지의 출입","생태계 구성과 환경","생태계 평형","지구 환경 변화와 인간 생활","태양에너지의 생성과 전환","전기 에너지의 생산","에너지 효율과 신재생 에너지","과학 기술의 활용","과학 기술의 발전과 쟁점"],
+  "생명과학":["생명과학의 이해","물질대사","생태계와 상호작용","신경신호의 전달과 신경계","호르몬과 항상성","방어작용","유전정보와 생식세포","생물의 진화","생물의 다양성","흥분의 전도 속도와 막전위","골격근 수축 과정의 계산","ABO식 혈액형 판정과 계산","핵형 분석 문제","감수 분열 세포의 매칭","세포 매칭의 변형","여러 가지 유전과 확률","복대립 유전","다인자 유전","다인자 유전의 변형","가계도 분석의 기본","연관 가계도의 분석","가계도의 변형","특수 가계도","세포의 매칭과 돌연변이","가계도와 돌연변이"]
+};
+const STORE_KEY="mock-note-state-v1",CONFIG_KEY="mock-note-config-v1";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid=()=>`Q-${Date.now().toString(36).toUpperCase()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase()}`;
+const now=()=>new Date().toISOString();
+const defaultSeasons=()=>Object.keys(SUBJECTS).flatMap(subject=>[1,2,3,4].map(order=>({subject,name:`시즌 ${order}`,roundCount:8,questionCount:SUBJECTS[subject],active:true,order})));
+let state=loadState(), imageDraft=null, selectedCompare=new Set(), currentPage="record", toastTimer;
 
-  const CFG = window.APP_CONFIG || {};
-  const TYPES = {
-    "통합과학": [
-      "과학의 기본량","측정 표준과 정보","우주의 시작과 원소의 생성","지구와 생명체를 구성하는 원소의 생성",
-      "원소의 규칙성","화학 결합과 물질의 성질","지각과 생명체 구성 물질의 규칙성","물질의 전기적 성질",
-      "지구 시스템의 구성과 상호 작용","지권의 변화와 영향","중력의 작용","운동과 충돌","생명 시스템과 세포",
-      "생명 시스템에서 일어나는 화학 반응","생명 시스템에서 정보의 흐름","지질 시대의 환경과 생물 변화",
-      "진화와 생물 다양성","산화와 환원","산, 염기와 중화 반응","물질 변화에서 에너지의 출입",
-      "생태계 구성과 환경","생태계 평형","지구 환경 변화와 인간 생활","태양에너지의 생성과 전환",
-      "전기 에너지의 생산","에너지 효율과 신재생 에너지","과학 기술의 활용","과학 기술의 발전과 쟁점"
-    ],
-    "생명과학Ⅰ": [
-      "생명과학의 이해","물질대사","생태계와 상호작용","신경신호의 전달과 신경계","호르몬과 항상성",
-      "방어작용","유전정보와 생식세포","생물의 진화","생물의 다양성","흥분의 전도 속도와 막전위",
-      "골격근 수축 과정의 계산","ABO식 혈액형 판정과 계산","핵형 분석 문제","감수 분열 세포의 매칭",
-      "세포 매칭의 변형","여러 가지 유전과 확률","복대립 유전","다인자 유전","다인자 유전의 변형",
-      "가계도 분석의 기본","연관 가계도의 분석","가계도의 변형","특수 가계도","세포의 매칭과 돌연변이",
-      "가계도와 돌연변이"
-    ]
-  };
-  const DIFF_VALUE = { "하":1,"중하":2,"중":3,"중상":4,"상":5,"최상":6 };
+function loadState(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY));if(v&&Array.isArray(v.questions))return {...v,seasons:v.seasons?.length?v.seasons:defaultSeasons(),types:v.types||DEFAULT_TYPES};}catch(e){}return{questions:[],seasons:defaultSeasons(),types:DEFAULT_TYPES,updatedAt:null,dirty:false};}
+function persist(dirty=true){state.dirty=dirty||state.dirty;state.updatedAt=now();localStorage.setItem(STORE_KEY,JSON.stringify(state));setSaveState();}
+function config(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY))||{};}catch(e){return{};}}
+function showToast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);}
+function setSaveState(text){const el=$("#saveState");el.textContent=text||(state.dirty?"동기화할 변경 있음":state.updatedAt?`최근 불러옴 ${new Date(state.updatedAt).toLocaleString("ko-KR")}`:"로컬 준비됨");}
+function setBusy(button,busy,label){button.disabled=busy;if(busy){button.dataset.label=button.textContent;button.textContent=label||"처리 중…";}else if(button.dataset.label){button.textContent=button.dataset.label;delete button.dataset.label;}}
+function subjectSeasons(subject){return state.seasons.filter(s=>s.subject===subject&&s.active!==false).sort((a,b)=>(a.order||0)-(b.order||0));}
+function activeSeason(subject,name){return state.seasons.find(s=>s.subject===subject&&s.name===name)||subjectSeasons(subject)[0]||{name:"시즌 1",roundCount:8,questionCount:SUBJECTS[subject]};}
+function options(el,items,value,placeholder){el.innerHTML=(placeholder?`<option value="">${esc(placeholder)}</option>`:"")+items.map(item=>{const v=typeof item==="object"?item.value??item.name:item;const label=typeof item==="object"?item.label??item.name:item;return `<option value="${esc(v)}" ${String(v)===String(value)?"selected":""}>${esc(label)}</option>`;}).join("");}
 
-  const state = {
-    subject: CFG.DEFAULT_SUBJECT || "통합과학",
-    seasons: ["시즌 1","시즌 2","시즌 3","시즌 4"],
-    rounds: ["1회","2회","3회","4회","5회","6회","7회","8회"],
-    records: [],
-    imageDataUrl: "",
-    imageFileName: "",
-    rotation: 0,
-    editingId: null,
-    compareIds: []
-  };
+async function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open("mock-note-images",1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("drafts"))req.result.createObjectStore("drafts")};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function dbSet(key,value){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction("drafts","readwrite");tx.objectStore("drafts").put(value,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+async function dbGet(key){const db=await openDb();return new Promise((resolve,reject)=>{const req=db.transaction("drafts").objectStore("drafts").get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function dbDelete(key){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction("drafts","readwrite");tx.objectStore("drafts").delete(key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+async function collectDrafts(){const db=await openDb();return new Promise((resolve,reject)=>{const req=db.transaction("drafts").objectStore("drafts").getAllKeys();req.onsuccess=async()=>{const out={};for(const k of req.result){const v=await dbGet(k);if(v)out[k]=v;}resolve(out)};req.onerror=()=>reject(req.error);});}
 
-  const $ = (id) => document.getElementById(id);
-  const els = {};
-  const ids = ["globalSubject","connectionBadge","settingsBtn","recordForm","season","round","questionNo","questionType",
-    "difficulty","score","answer","source","explanation","memo","dropZone","questionImage","emptyDropMessage","imageFileInput",
-    "chooseImageBtn","rotateLeftBtn","rotateRightBtn","resetImageBtn","imageName","draftStatus","newRecordBtn","deleteRecordBtn",
-    "filterSubject","filterSeason","filterRound","filterType","filterDifficulty","archiveSearch","archiveGrid","archiveSummary",
-    "compareGrid","clearCompareBtn","refreshArchiveBtn","analysisSubject","analysisSeason","analysisRound","statCards",
-    "difficultyHeatmap","difficultyBars","typeBars","analysisTableBody","settingsDialog","settingsSeasons","settingsRounds",
-    "saveSettingsBtn","saveRecordBtn","toast"];
-  ids.forEach(id => els[id] = $(id));
+function refreshRecordSelectors(keep=true){const subject=$("#subject").value||"통합과학";const old={season:keep?$("#season").value:"",round:keep?$("#round").value:"",no:keep?$("#questionNo").value:"",type:keep?$("#type").value:""};const seasons=subjectSeasons(subject);options($("#season"),seasons,old.season||seasons[0]?.name);const season=activeSeason(subject,$("#season").value);options($("#round"),Array.from({length:+season.roundCount||8},(_,i)=>i+1),old.round||1);options($("#questionNo"),Array.from({length:+season.questionCount||SUBJECTS[subject]},(_,i)=>i+1),old.no||1);options($("#type"),state.types[subject]||DEFAULT_TYPES[subject],old.type);}
+function resetForm(){imageDraft=null;$("#recordForm").reset();$("#questionId").value="";$("#subject").value="통합과학";$("#difficulty").value="중";$("#score").value="2";$("#explanation").innerHTML="";$("#questionPreview").src="";$("#questionPreview").classList.add("hidden");$("#pasteGuide").classList.remove("hidden");$("#deleteBtn").classList.add("hidden");$("#imageStatus").textContent="클립보드·파일·드래그 지원";refreshRecordSelectors(false);}
+async function editQuestion(id){const q=state.questions.find(x=>x.id===id);if(!q)return;switchPage("record");$("#questionId").value=q.id;$("#subject").value=q.subject;refreshRecordSelectors(false);$("#season").value=q.season;refreshRecordSelectors(true);$("#round").value=q.round;$("#questionNo").value=q.number;$("#type").value=q.type;$("#difficulty").value=q.difficulty;$("#score").value=q.score;$("#source").value=q.source||"";$("#answer").value=q.answer||"";$("#memo").value=q.memo||"";$("#explanation").innerHTML=q.explanationHtml||esc(q.explanationText||"").replace(/\n/g,"<br>");const draft=await dbGet(q.id);imageDraft=draft||null;const url=draft?.dataUrl||q.imageUrl||"";if(url){$("#questionPreview").src=url;$("#questionPreview").classList.remove("hidden");$("#pasteGuide").classList.add("hidden");$("#imageStatus").textContent=draft?"동기화할 새 이미지":"Drive 이미지";}else{$("#questionPreview").classList.add("hidden");$("#pasteGuide").classList.remove("hidden");}$("#deleteBtn").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
 
-  function showToast(message) {
-    els.toast.textContent = message;
-    els.toast.classList.add("show");
-    clearTimeout(showToast.timer);
-    showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2400);
-  }
+function sanitizePastedHtml(html,text){if(!html)return esc(text).replace(/\r?\n/g,"<br>");const doc=new DOMParser().parseFromString(html,"text/html");const allowed=new Set(["BR","P","DIV","SUP","SUB","B","STRONG","I","EM","U"]);function clean(node){if(node.nodeType===Node.TEXT_NODE)return document.createTextNode(node.textContent);if(node.nodeType!==Node.ELEMENT_NODE)return document.createDocumentFragment();const tag=node.tagName;const va=(node.style?.verticalAlign||"").toLowerCase();let out;if(tag==="SUP"||va.includes("super"))out=document.createElement("sup");else if(tag==="SUB"||va.includes("sub"))out=document.createElement("sub");else if(allowed.has(tag))out=document.createElement(tag.toLowerCase());else out=document.createDocumentFragment();[...node.childNodes].forEach(n=>out.appendChild(clean(n)));return out;}const box=document.createElement("div");[...doc.body.childNodes].forEach(n=>box.appendChild(clean(n)));return box.innerHTML.replace(/<div><br><\/div>/g,"<br>");}
+function insertHtmlAtCursor(html){document.execCommand("insertHTML",false,html);}
 
-  function apiReady() { return Boolean(CFG.API_URL && /^https:\/\//.test(CFG.API_URL)); }
+async function compressImage(file){const bitmap=await createImageBitmap(file);const max=1900,scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement("canvas");canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext("2d",{alpha:false}).drawImage(bitmap,0,0,canvas.width,canvas.height);let quality=.9,blob;do{blob=await new Promise(r=>canvas.toBlob(r,"image/webp",quality));quality-=.08;}while(blob&&blob.size>950000&&quality>.55);if(!blob)blob=await new Promise(r=>canvas.toBlob(r,"image/jpeg",.86));const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});return{dataUrl,mimeType:blob.type||"image/webp",size:blob.size,width:canvas.width,height:canvas.height};}
+async function acceptImage(file){if(!file?.type.startsWith("image/")){showToast("이미지 파일만 사용할 수 있습니다.");return;}setSaveState("이미지 압축 중…");try{imageDraft=await compressImage(file);$("#questionPreview").src=imageDraft.dataUrl;$("#questionPreview").classList.remove("hidden");$("#pasteGuide").classList.add("hidden");$("#imageStatus").textContent=`${imageDraft.width}×${imageDraft.height} · ${Math.round(imageDraft.size/1024)}KB`;setSaveState();}catch(e){showToast("이미지를 읽지 못했습니다.");setSaveState();}}
 
-  async function api(action, payload = {}) {
-    if (!apiReady()) throw new Error("config.js에 Apps Script 웹 앱 주소를 입력하세요.");
-    const response = await fetch(CFG.API_URL, {
-      method: "POST",
-      headers: {"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify({ action, payload })
-    });
-    const result = await response.json();
-    if (!result.ok) throw new Error(result.message || "서버 요청에 실패했습니다.");
-    return result.data;
-  }
+async function saveQuestion(event){event.preventDefault();const id=$("#questionId").value||uid(),existing=state.questions.find(q=>q.id===id);const q={id,subject:$("#subject").value,season:$("#season").value,round:+$("#round").value,number:+$("#questionNo").value,type:$("#type").value,difficulty:$("#difficulty").value,score:+$("#score").value,source:$("#source").value.trim(),answer:$("#answer").value.trim(),explanationHtml:$("#explanation").innerHTML.trim(),explanationText:$("#explanation").innerText.trim(),memo:$("#memo").value.trim(),imageFileId:existing?.imageFileId||"",imageFileName:existing?.imageFileName||"",imageUrl:existing?.imageUrl||"",createdAt:existing?.createdAt||now(),updatedAt:now()};const duplicate=state.questions.find(x=>x.id!==id&&x.subject===q.subject&&x.season===q.season&&+x.round===q.round&&+x.number===q.number);if(duplicate&&!confirm(`${q.subject} ${q.season} ${q.round}회 ${q.number}번이 이미 있습니다. 계속 저장할까요?`))return;if(imageDraft)await dbSet(id,imageDraft);const idx=state.questions.findIndex(x=>x.id===id);if(idx>=0)state.questions[idx]=q;else state.questions.unshift(q);persist(true);$("#questionId").value=id;$("#deleteBtn").classList.remove("hidden");renderArchive();renderAnalysis();showToast("브라우저에 저장했습니다.");if(config().url&&config().key)await syncToServer("push",true);}
+async function deleteCurrent(){const id=$("#questionId").value;if(!id||!confirm("이 문제와 Drive 이미지를 삭제할까요?"))return;state.questions=state.questions.filter(q=>q.id!==id);await dbDelete(id);persist(true);resetForm();renderArchive();renderAnalysis();showToast("문제를 삭제했습니다.");if(config().url&&config().key)await syncToServer("push",true);}
 
-  function saveDraft() {
-    const draft = collectForm(false);
-    draft.imageDataUrl = state.imageDataUrl;
-    draft.imageFileName = state.imageFileName;
-    localStorage.setItem("mockExamDraft", JSON.stringify(draft));
-    els.draftStatus.textContent = "로컬 임시저장 완료";
-  }
+function switchPage(page){currentPage=page;$$('.page').forEach(x=>x.classList.toggle("active",x.id===`${page}Page`));$$('.bottom-nav button').forEach(x=>x.classList.toggle("active",x.dataset.page===page));if(page==="archive")renderArchive();if(page==="analysis")renderAnalysis();}
+function getFilteredQuestions(){const vals={search:$("#archiveSearch").value.trim().toLowerCase(),subject:$("#archiveSubject").value,season:$("#archiveSeason").value,round:$("#archiveRound").value,type:$("#archiveType").value,difficulty:$("#archiveDifficulty").value};return state.questions.filter(q=>(!vals.subject||q.subject===vals.subject)&&(!vals.season||q.season===vals.season)&&(!vals.round||String(q.round)===vals.round)&&(!vals.type||q.type===vals.type)&&(!vals.difficulty||q.difficulty===vals.difficulty)&&(!vals.search||[q.type,q.source,q.memo,q.answer].join(" ").toLowerCase().includes(vals.search))).sort((a,b)=>a.subject.localeCompare(b.subject,"ko")||a.season.localeCompare(b.season,"ko",{numeric:true})||a.round-b.round||a.number-b.number);}
+function refreshArchiveFilters(){const subject=$("#archiveSubject").value;const qs=subject?state.questions.filter(q=>q.subject===subject):state.questions;const unique=key=>[...new Set(qs.map(q=>q[key]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ko",{numeric:true}));const old={season:$("#archiveSeason").value,round:$("#archiveRound").value,type:$("#archiveType").value};options($("#archiveSeason"),unique("season"),old.season,"전체 시즌");options($("#archiveRound"),unique("round"),old.round,"전체 회");options($("#archiveType"),unique("type"),old.type,"전체 유형");}
+function renderArchive(){refreshArchiveFilters();const qs=getFilteredQuestions();$("#archiveCount").textContent=qs.length;$("#archiveEmpty").classList.toggle("hidden",qs.length>0);$("#archiveGrid").innerHTML=qs.map(q=>`<article class="question-card" data-id="${esc(q.id)}"><div class="card-image">${q.imageUrl?`<img src="${esc(q.imageUrl)}" loading="lazy" alt="${esc(q.type)} 문제">`:`<span class="no-image">이미지 동기화 전</span>`}<button class="select-compare ${selectedCompare.has(q.id)?"selected":""}" data-compare="${esc(q.id)}">${selectedCompare.has(q.id)?"✓ 비교 선택됨":"+ 비교"}</button></div><div class="card-body"><div class="card-top"><strong>${esc(q.subject)} · ${esc(q.season)} · ${q.round}회 ${q.number}번</strong><span class="difficulty-chip" style="background:${COLORS[q.difficulty]||"#eef2f8"}">${esc(q.difficulty)}</span></div><p class="card-type">${esc(q.type)}</p><div class="card-meta"><span class="meta-chip">${esc(q.score)}점</span>${q.source?`<span class="meta-chip">${esc(q.source)}</span>`:""}</div><div class="card-actions"><button data-preview="${esc(q.id)}">크게 보기</button><button data-edit="${esc(q.id)}">기록 수정</button></div></div></article>`).join("");renderCompareDock();}
+function toggleCompare(id){if(selectedCompare.has(id))selectedCompare.delete(id);else if(selectedCompare.size>=3)return showToast("비교는 최대 3문제까지 가능합니다.");else selectedCompare.add(id);renderArchive();}
+function renderCompareDock(){const n=selectedCompare.size;$("#compareDock").classList.toggle("hidden",n===0);$("#compareCount").textContent=n;}
+function openCompare(ids=[...selectedCompare]){const qs=ids.map(id=>state.questions.find(q=>q.id===id)).filter(Boolean);if(!qs.length)return;const box=$("#compareContent");box.className=`compare-content cols-${qs.length}`;box.innerHTML=qs.map(q=>`<article class="compare-column"><img class="compare-image" src="${esc(q.imageUrl||"")}" alt="문제 이미지"><div class="compare-summary"><h3>${esc(q.subject)} · ${esc(q.season)} · ${q.round}회 ${q.number}번</h3><span class="difficulty-chip" style="background:${COLORS[q.difficulty]}">${esc(q.difficulty)}</span></div>${[["유형",esc(q.type)],["배점",`${esc(q.score)}점`],["출처",esc(q.source||"—")],["정답",esc(q.answer||"—")],["해설",sanitizePastedHtml(q.explanationHtml||"",q.explanationText||"—")],["메모",esc(q.memo||"—").replace(/\n/g,"<br>")]].map(([k,v])=>`<div class="compare-row"><span>${k}</span><div>${v}</div></div>`).join("")}</article>`).join("");$("#compareDialog").showModal();}
 
-  function restoreDraft() {
-    try {
-      const draft = JSON.parse(localStorage.getItem("mockExamDraft") || "null");
-      if (!draft) return;
-      fillForm(draft);
-      if (draft.imageDataUrl) setImage(draft.imageDataUrl, draft.imageFileName || "붙여넣은 이미지.png");
-      els.draftStatus.textContent = "임시저장 복원됨";
-    } catch (_) {}
-  }
+function analysisSelection(){const subject=$("#analysisSubject").value;const ss=subjectSeasons(subject);const old=$("#analysisSeason").value;options($("#analysisSeason"),ss,old||ss[0]?.name);return{subject,season:$("#analysisSeason").value,setting:activeSeason(subject,$("#analysisSeason").value)};}
+function renderAnalysis(){const {subject,season,setting}=analysisSelection();const qs=state.questions.filter(q=>q.subject===subject&&q.season===season);const expected=(+setting.roundCount||0)*(+setting.questionCount||0),filled=qs.length,typesUsed=new Set(qs.map(q=>q.type)).size,high=qs.filter(q=>["중상","상","최상"].includes(q.difficulty)).length;$("#metricGrid").innerHTML=[["기록 문항",filled,`예정 ${expected}문항`],["완성도",expected?Math.round(filled/expected*100):0,"%"],["사용 유형",typesUsed,`전체 ${(state.types[subject]||[]).length}개`],["고난도 비중",filled?Math.round(high/filled*100):0,"% · 중상 이상"]].map(([label,value,sub])=>`<div class="metric"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join("");$("#difficultyLegend").innerHTML=DIFFICULTIES.map(d=>`<span><i style="background:${COLORS[d]}"></i>${d}</span>`).join("");const roundCount=+setting.roundCount||8;$("#difficultyBars").innerHTML=Array.from({length:roundCount},(_,i)=>{const r=i+1,list=qs.filter(q=>+q.round===r),total=list.length||1;return `<div class="difficulty-row"><strong>${r}회</strong><div class="stacked-bar">${DIFFICULTIES.map(d=>{const c=list.filter(q=>q.difficulty===d).length;return c?`<span title="${d} ${c}문항" style="width:${c/total*100}%;background:${COLORS[d]}"></span>`:""}).join("")}</div><span>${list.length}/${setting.questionCount}</span></div>`}).join("");renderHeatmap(qs,setting);renderTypeCoverage(qs,subject);renderAlerts(qs,setting,subject,season);}
+function renderHeatmap(qs,setting){const cols=+setting.questionCount||25,rows=+setting.roundCount||8;let html=`<div class="heatmap" style="grid-template-columns:38px repeat(${cols},22px)"><span></span>${Array.from({length:cols},(_,i)=>`<span class="heat-cell heat-label">${i+1}</span>`).join("")}`;for(let r=1;r<=rows;r++){html+=`<span class="heat-cell heat-label">${r}회</span>`;for(let n=1;n<=cols;n++){const q=qs.find(x=>+x.round===r&&+x.number===n);html+=`<span class="heat-cell" title="${q?`${q.type} · ${q.difficulty}`:"미기록"}" style="background:${q?COLORS[q.difficulty]:"#edf0f4"};${q&&["상","최상"].includes(q.difficulty)?"color:#fff":""}">${n}</span>`}}html+="</div>";$("#positionHeatmap").innerHTML=html;}
+function renderTypeCoverage(qs,subject){const counts=(state.types[subject]||[]).map(type=>({type,count:qs.filter(q=>q.type===type).length,high:qs.filter(q=>q.type===type&&["중상","상","최상"].includes(q.difficulty)).length})).sort((a,b)=>b.count-a.count||a.type.localeCompare(b.type,"ko"));const max=Math.max(1,...counts.map(x=>x.count));$("#typeCoverage").innerHTML=counts.map(x=>`<div class="type-row"><span>${esc(x.type)}</span><div class="coverage-track"><span style="width:${x.count/max*100}%"></span></div><strong>${x.count} <small>(${x.high})</small></strong></div>`).join("");}
+function renderAlerts(qs,setting,subject,season){const alerts=[],expected=+setting.questionCount||SUBJECTS[subject];for(let r=1;r<=setting.roundCount;r++){const count=qs.filter(q=>+q.round===r).length;if(count<expected)alerts.push({warn:true,title:`${r}회 ${expected-count}문항 미기록`,body:`${expected}문항 중 ${count}문항만 기록되어 있습니다.`});const ordered=qs.filter(q=>+q.round===r).sort((a,b)=>a.number-b.number);let run=0,maxRun=0;ordered.forEach(q=>{if(["중상","상","최상"].includes(q.difficulty))run++;else run=0;maxRun=Math.max(maxRun,run)});if(maxRun>=4)alerts.push({warn:true,title:`${r}회 고난도 연속 배치`,body:`중상 이상 문제가 최대 ${maxRun}문항 연속으로 배치되어 있습니다.`});}const missing=(state.types[subject]||[]).filter(t=>!qs.some(q=>q.type===t));if(missing.length)alerts.push({warn:false,title:`미사용 유형 ${missing.length}개`,body:missing.slice(0,5).join(", ")+(missing.length>5?" 외":"")});if(!alerts.length)alerts.push({warn:false,title:"균형 검토 완료",body:`${season}에서 뚜렷한 누락이나 고난도 연속 배치가 발견되지 않았습니다.`});$("#analysisAlerts").innerHTML=alerts.slice(0,9).map(a=>`<div class="analysis-alert ${a.warn?"warn":""}"><strong>${esc(a.title)}</strong><p>${esc(a.body)}</p></div>`).join("");}
 
-  function setOptions(select, items, placeholder) {
-    const current = select.value;
-    select.innerHTML = placeholder ? `<option value="">${placeholder}</option>` : "";
-    items.forEach(v => {
-      const opt = document.createElement("option");
-      opt.value = v; opt.textContent = v;
-      select.appendChild(opt);
-    });
-    if ([...select.options].some(o => o.value === current)) select.value = current;
-  }
+function renderSeasonDialog(){const subject=$("#seasonSubject").value;const rows=state.seasons.filter(s=>s.subject===subject).sort((a,b)=>a.order-b.order);$("#seasonRows").innerHTML=rows.map((s,i)=>`<div class="season-row" data-index="${state.seasons.indexOf(s)}"><label>시즌 이름<input data-field="name" value="${esc(s.name)}"></label><label>회차 수<input data-field="roundCount" type="number" min="1" value="${s.roundCount}"></label><label>문항 수<input data-field="questionCount" type="number" min="1" value="${s.questionCount}"></label><label>사용<select data-field="active"><option value="true" ${s.active!==false?"selected":""}>사용</option><option value="false" ${s.active===false?"selected":""}>숨김</option></select></label><button class="season-remove" title="삭제">×</button></div>`).join("");}
+async function saveSeasonDialog(){$$('#seasonRows .season-row').forEach(row=>{const s=state.seasons[+row.dataset.index];s.name=row.querySelector('[data-field="name"]').value.trim()||s.name;s.roundCount=Math.max(1,+row.querySelector('[data-field="roundCount"]').value||1);s.questionCount=Math.max(1,+row.querySelector('[data-field="questionCount"]').value||1);s.active=row.querySelector('[data-field="active"]').value==="true";});persist(true);refreshRecordSelectors(true);renderAnalysis();$("#seasonDialog").close();showToast("시즌 설정을 저장했습니다.");if(config().url&&config().key)await syncToServer("push",true);}
 
-  function refreshSelectors() {
-    setOptions(els.season, state.seasons);
-    setOptions(els.round, state.rounds);
-    setOptions(els.filterSeason, state.seasons, "전체 시즌");
-    setOptions(els.filterRound, state.rounds, "전체 회차");
-    setOptions(els.analysisSeason, state.seasons, "전체 시즌");
-    setOptions(els.analysisRound, state.rounds, "전체 회차");
-    setOptions(els.questionType, TYPES[state.subject] || []);
-    setOptions(els.filterType, [...new Set([...TYPES["통합과학"], ...TYPES["생명과학"]])], "전체 유형");
-    updateQuestionNumbers();
-  }
+async function syncToServer(mode="pull",silent=false){const cfg=config();if(!cfg.url||!cfg.key){$("#settingsDialog").showModal();if(!silent)showToast("먼저 Apps Script 연결을 설정하세요.");return;}const btn=$("#syncBtn");setBusy(btn,true,mode==="pull"?"불러오는 중…":"동기화 중…");setSaveState("시트 연결 중…");try{if(mode==="pull"){if(state.dirty&&!confirm("브라우저에 동기화하지 않은 변경이 있습니다. 시트 데이터로 덮어쓸까요?"))return;const url=new URL(cfg.url);url.searchParams.set("action","load");url.searchParams.set("key",cfg.key);url.searchParams.set("_",Date.now());const res=await fetch(url);const data=await res.json();if(!data.ok)throw new Error(data.message||"불러오기 실패");state={questions:data.questions||[],seasons:data.seasons?.length?data.seasons:defaultSeasons(),types:data.types||DEFAULT_TYPES,updatedAt:data.syncedAt||now(),dirty:false};localStorage.setItem(STORE_KEY,JSON.stringify(state));refreshRecordSelectors(true);renderArchive();renderAnalysis();showToast(`${state.questions.length}문제를 불러왔습니다.`);}else{const drafts=await collectDrafts();const body=new URLSearchParams({action:"sync",key:cfg.key,payload:JSON.stringify({questions:state.questions,seasons:state.seasons,types:state.types,imageDrafts:drafts})});const res=await fetch(cfg.url,{method:"POST",body});const data=await res.json();if(!data.ok)throw new Error(data.message||"동기화 실패");state.questions=data.questions||state.questions;state.updatedAt=data.syncedAt||now();state.dirty=false;localStorage.setItem(STORE_KEY,JSON.stringify(state));for(const id of Object.keys(drafts))await dbDelete(id);imageDraft=null;renderArchive();renderAnalysis();showToast("시트와 Drive에 동기화했습니다.");}}catch(e){console.error(e);showToast(`연결 실패: ${e.message}`);setSaveState("연결 확인 필요");}finally{setBusy(btn,false);setSaveState();}}
+async function verifySettings(){const btn=$("#saveSettingsBtn"),url=$("#scriptUrl").value.trim(),key=$("#syncKey").value.trim();if(!/^https:\/\/script\.google\.com\//.test(url)||!key)return showToast("배포 URL과 동기화 키를 확인하세요.");localStorage.setItem(CONFIG_KEY,JSON.stringify({url,key}));setBusy(btn,true,"확인 중…");try{const test=new URL(url);test.searchParams.set("action","ping");test.searchParams.set("key",key);const data=await (await fetch(test)).json();if(!data.ok)throw new Error(data.message||"인증 실패");$("#settingsDialog").close();showToast("연결되었습니다.");await syncToServer("pull",true);}catch(e){showToast(`연결 실패: ${e.message}`);}finally{setBusy(btn,false);}}
 
-  function updateQuestionNumbers() {
-    const count = state.subject === "생명과학" ? 20 : 25;
-    setOptions(els.questionNo, Array.from({length:count}, (_,i)=>String(i+1)));
-  }
-
-  function setSubject(subject) {
-    state.subject = subject;
-    els.globalSubject.value = subject;
-    els.analysisSubject.value = subject;
-    setOptions(els.questionType, TYPES[subject] || []);
-    updateQuestionNumbers();
-    saveDraft();
-  }
-
-  function collectForm(requireImage = true) {
-    if (requireImage && !state.imageDataUrl && !state.editingId) throw new Error("문항 이미지를 붙여넣으세요.");
-    return {
-      id: state.editingId || "",
-      subject: state.subject,
-      season: els.season.value,
-      round: els.round.value,
-      number: Number(els.questionNo.value),
-      type: els.questionType.value,
-      difficulty: els.difficulty.value,
-      score: Number(els.score.value),
-      source: els.source.value.trim(),
-      answer: els.answer.value.trim(),
-      explanationHtml: els.explanation.innerHTML,
-      memo: els.memo.value.trim(),
-      imageDataUrl: state.imageDataUrl,
-      imageFileName: state.imageFileName
-    };
-  }
-
-  function fillForm(r) {
-    if (r.subject) setSubject(r.subject);
-    els.season.value = r.season || state.seasons[0];
-    els.round.value = r.round || state.rounds[0];
-    els.questionNo.value = String(r.number || 1);
-    els.questionType.value = r.type || (TYPES[state.subject] || [])[0];
-    els.difficulty.value = r.difficulty || "중";
-    els.score.value = String(r.score || 2);
-    els.source.value = r.source || "";
-    els.answer.value = r.answer || "";
-    els.explanation.innerHTML = r.explanationHtml || "";
-    els.memo.value = r.memo || "";
-  }
-
-  function setImage(dataUrl, fileName = "붙여넣은 이미지.png") {
-    state.imageDataUrl = dataUrl;
-    state.imageFileName = fileName;
-    state.rotation = 0;
-    els.questionImage.src = dataUrl;
-    els.questionImage.hidden = false;
-    els.emptyDropMessage.hidden = true;
-    els.imageName.textContent = fileName;
-    updateRotation();
-    saveDraft();
-  }
-
-  function updateRotation() {
-    els.questionImage.style.transform = `rotate(${state.rotation}deg)`;
-  }
-
-  function resetRecord() {
-    state.editingId = null;
-    state.imageDataUrl = "";
-    state.imageFileName = "";
-    state.rotation = 0;
-    els.recordForm.reset();
-    els.explanation.innerHTML = "";
-    els.questionImage.hidden = true;
-    els.questionImage.src = "";
-    els.emptyDropMessage.hidden = false;
-    els.imageName.textContent = "선택된 이미지 없음";
-    els.deleteRecordBtn.hidden = true;
-    setSubject(state.subject);
-    els.season.value = state.seasons[0] || "";
-    els.round.value = state.rounds[0] || "";
-    localStorage.removeItem("mockExamDraft");
-  }
-
-  async function handleFiles(files) {
-    const file = files && files[0];
-    if (!file || !file.type.startsWith("image/")) return showToast("이미지 파일만 사용할 수 있습니다.");
-    const reader = new FileReader();
-    reader.onload = () => setImage(reader.result, file.name);
-    reader.readAsDataURL(file);
-  }
-
-  async function loadAll() {
-    if (!apiReady()) {
-      els.connectionBadge.textContent = "설정 필요";
-      els.connectionBadge.className = "badge error";
-      state.records = JSON.parse(localStorage.getItem("mockExamRecords") || "[]");
-      renderAll();
-      return;
-    }
-    try {
-      const [settings, records] = await Promise.all([api("getSettings"), api("listRecords")]);
-      state.seasons = settings.seasons?.length ? settings.seasons : state.seasons;
-      state.rounds = settings.rounds?.length ? settings.rounds : state.rounds;
-      state.records = records || [];
-      els.connectionBadge.textContent = "연결됨";
-      els.connectionBadge.className = "badge ok";
-      refreshSelectors();
-      renderAll();
-    } catch (err) {
-      els.connectionBadge.textContent = "연결 오류";
-      els.connectionBadge.className = "badge error";
-      showToast(err.message);
-    }
-  }
-
-  async function saveRecord(event) {
-    event.preventDefault();
-    try {
-      const record = collectForm(true);
-      if (!record.season || !record.round || !record.type || !record.answer) throw new Error("필수 항목을 입력하세요.");
-      els.saveRecordBtn.disabled = true;
-      els.saveRecordBtn.textContent = "저장 중…";
-      if (apiReady()) {
-        const saved = await api("saveRecord", record);
-        const idx = state.records.findIndex(r => r.id === saved.id);
-        if (idx >= 0) state.records[idx] = saved; else state.records.unshift(saved);
-      } else {
-        const now = new Date().toISOString();
-        const saved = {...record, id: record.id || crypto.randomUUID(), imageUrl: record.imageDataUrl, createdAt: now, updatedAt: now};
-        const idx = state.records.findIndex(r => r.id === saved.id);
-        if (idx >= 0) state.records[idx] = saved; else state.records.unshift(saved);
-        localStorage.setItem("mockExamRecords", JSON.stringify(state.records));
-      }
-      showToast("문항을 저장했습니다.");
-      resetRecord();
-      renderAll();
-    } catch (err) {
-      showToast(err.message);
-    } finally {
-      els.saveRecordBtn.disabled = false;
-      els.saveRecordBtn.textContent = "저장";
-    }
-  }
-
-  async function deleteRecord() {
-    if (!state.editingId || !confirm("이 문항을 삭제하시겠습니까?")) return;
-    try {
-      if (apiReady()) await api("deleteRecord", {id:state.editingId});
-      state.records = state.records.filter(r => r.id !== state.editingId);
-      localStorage.setItem("mockExamRecords", JSON.stringify(state.records));
-      resetRecord(); renderAll(); showToast("삭제했습니다.");
-    } catch (err) { showToast(err.message); }
-  }
-
-  function filteredRecords() {
-    const q = els.archiveSearch.value.trim().toLowerCase();
-    return state.records.filter(r =>
-      (!els.filterSubject.value || r.subject === els.filterSubject.value) &&
-      (!els.filterSeason.value || r.season === els.filterSeason.value) &&
-      (!els.filterRound.value || r.round === els.filterRound.value) &&
-      (!els.filterType.value || r.type === els.filterType.value) &&
-      (!els.filterDifficulty.value || r.difficulty === els.filterDifficulty.value) &&
-      (!q || [r.source,r.memo,r.answer,r.type].join(" ").toLowerCase().includes(q))
-    );
-  }
-
-  function escapeHtml(str="") {
-    return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-  }
-
-  function getRecordImageUrl(record, size = 1200) {
-    if (record.imageDataUrl) return record.imageDataUrl;
-    if (record.imageFileId) {
-      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(record.imageFileId)}&sz=w${size}`;
-    }
-    return record.imageUrl || "";
-  }
-
-  function handleBrokenImage(img) {
-    if (img.dataset.fallbackTried === "1") {
-      img.closest(".question-thumb, .compare-card")?.classList.add("image-error");
-      img.removeAttribute("src");
-      img.alt = "이미지를 불러오지 못했습니다.";
-      return;
-    }
-    img.dataset.fallbackTried = "1";
-    const fileId = img.dataset.fileId;
-    if (fileId) {
-      img.src = `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}`;
-    }
-  }
-
-  function renderArchive() {
-    const list = filteredRecords();
-    els.archiveSummary.textContent = `${list.length}개 문항`;
-    if (!list.length) {
-      els.archiveGrid.innerHTML = `<div class="empty-state">조건에 맞는 문항이 없습니다.</div>`;
-      renderCompare(); return;
-    }
-    els.archiveGrid.innerHTML = list.map(r => `
-      <article class="question-card">
-        <div class="question-thumb"><img src="${escapeHtml(getRecordImageUrl(r, 900))}" data-file-id="${escapeHtml(r.imageFileId || "")}" onerror="handleBrokenImage(this)" alt="문항 이미지"></div>
-        <div class="question-info">
-          <div class="question-meta">
-            <span class="pill">${escapeHtml(r.subject)}</span><span class="pill">${escapeHtml(r.season)}</span>
-            <span class="pill">${escapeHtml(r.round)}</span><span class="pill">${escapeHtml(r.difficulty)}</span>
-          </div>
-          <div class="question-title">${escapeHtml(r.number)}번 · ${escapeHtml(r.type)}</div>
-          <div class="question-sub">${escapeHtml(r.source || "출처 없음")} · 정답 ${escapeHtml(r.answer)}</div>
-          <div class="card-actions">
-            <button data-edit="${r.id}">열기</button>
-            <button data-compare="${r.id}">비교</button>
-          </div>
-        </div>
-      </article>`).join("");
-  }
-
-  function editRecord(id) {
-    const r = state.records.find(x => x.id === id);
-    if (!r) return;
-    state.editingId = id;
-    fillForm(r);
-    if (r.imageUrl || r.imageDataUrl) setImage(r.imageUrl || r.imageDataUrl, r.imageFileName || "저장된 이미지");
-    state.imageDataUrl = ""; // 기존 이미지 유지, 새 이미지 업로드 때만 채움
-    els.deleteRecordBtn.hidden = false;
-    document.querySelector('[data-tab="recordTab"]').click();
-    window.scrollTo({top:0,behavior:"smooth"});
-  }
-
-  function toggleCompare(id) {
-    if (state.compareIds.includes(id)) state.compareIds = state.compareIds.filter(x=>x!==id);
-    else {
-      if (state.compareIds.length >= 3) return showToast("비교는 최대 3개까지 가능합니다.");
-      state.compareIds.push(id);
-    }
-    renderCompare();
-  }
-
-  function renderCompare() {
-    const records = state.compareIds.map(id=>state.records.find(r=>r.id===id)).filter(Boolean);
-    if (!records.length) {
-      els.compareGrid.className = "compare-grid empty";
-      els.compareGrid.innerHTML = "<p>문항 카드의 ‘비교’ 버튼을 누르세요.</p>";
-      return;
-    }
-    els.compareGrid.className = "compare-grid";
-    els.compareGrid.innerHTML = records.map(r => `
-      <article class="compare-card">
-        <img src="${escapeHtml(getRecordImageUrl(r, 1400))}" data-file-id="${escapeHtml(r.imageFileId || "")}" onerror="handleBrokenImage(this)" alt="문항 이미지">
-        <div class="compare-body">
-          <dl>
-            <dt>문항</dt><dd>${escapeHtml(r.season)} ${escapeHtml(r.round)} ${escapeHtml(r.number)}번</dd>
-            <dt>유형</dt><dd>${escapeHtml(r.type)}</dd>
-            <dt>난이도</dt><dd>${escapeHtml(r.difficulty)}</dd>
-            <dt>배점</dt><dd>${escapeHtml(r.score)}점</dd>
-            <dt>정답</dt><dd>${escapeHtml(r.answer)}</dd>
-            <dt>출처</dt><dd>${escapeHtml(r.source || "-")}</dd>
-          </dl>
-          <div class="card-actions"><button data-remove-compare="${r.id}">비교 제외</button></div>
-        </div>
-      </article>`).join("");
-  }
-
-  function analysisFiltered() {
-    return state.records.filter(r =>
-      r.subject === els.analysisSubject.value &&
-      (!els.analysisSeason.value || r.season === els.analysisSeason.value) &&
-      (!els.analysisRound.value || r.round === els.analysisRound.value)
-    );
-  }
-
-  function renderAnalysis() {
-    const list = analysisFiltered();
-    const avg = list.length ? (list.reduce((s,r)=>s+(DIFF_VALUE[r.difficulty]||0),0)/list.length).toFixed(1) : "0.0";
-    const stats = [
-      ["문항 수", list.length],
-      ["평균 난이도", avg],
-      ["최상 문항", list.filter(r=>r.difficulty==="최상").length],
-      ["3점 문항", list.filter(r=>Number(r.score)===3).length],
-      ["사용 유형", new Set(list.map(r=>r.type)).size]
-    ];
-    els.statCards.innerHTML = stats.map(([k,v])=>`<div class="stat-card"><span>${k}</span><strong>${v}</strong></div>`).join("");
-
-    const groups = {};
-    list.forEach(r => {
-      const key = `${r.season} · ${r.round}`;
-      (groups[key] ||= []).push(r);
-    });
-    els.difficultyHeatmap.innerHTML = Object.keys(groups).length ? Object.entries(groups).map(([key,items]) => {
-      const max = items[0]?.subject === "생명과학" ? 20 : 25;
-      const byNo = Object.fromEntries(items.map(r=>[Number(r.number),r]));
-      return `<div class="heat-row"><div class="heat-label">${escapeHtml(key)}</div>${
-        Array.from({length:max},(_,i)=> {
-          const r = byNo[i+1];
-          return `<div class="heat-cell ${r ? `d-${r.difficulty}`:"heat-empty"}" title="${r ? `${r.type} / ${r.difficulty}`:"미등록"}">${i+1}</div>`;
-        }).join("")
-      }</div>`;
-    }).join("") : `<div class="empty-state">분석할 문항이 없습니다.</div>`;
-
-    renderBars(els.difficultyBars, countBy(list,"difficulty"), ["하","중하","중","중상","상","최상"]);
-    renderBars(els.typeBars, countBy(list,"type"), null, 10);
-
-    els.analysisTableBody.innerHTML = Object.entries(groups).map(([key,items]) => {
-      const [season, round] = key.split(" · ");
-      const average = (items.reduce((s,r)=>s+(DIFF_VALUE[r.difficulty]||0),0)/items.length).toFixed(1);
-      return `<tr><td>${escapeHtml(season)}</td><td>${escapeHtml(round)}</td><td>${items.length}</td><td>${average}</td><td>${items.filter(r=>r.difficulty==="최상").length}</td><td>${items.filter(r=>Number(r.score)===3).length}</td></tr>`;
-    }).join("") || `<tr><td colspan="6">데이터가 없습니다.</td></tr>`;
-  }
-
-  function countBy(list,key) {
-    return list.reduce((o,r)=>{ const k=r[key]||"미분류"; o[k]=(o[k]||0)+1; return o; },{});
-  }
-
-  function renderBars(target, counts, preferredOrder, limit) {
-    let entries = Object.entries(counts);
-    if (preferredOrder) entries = preferredOrder.map(k=>[k,counts[k]||0]);
-    else entries.sort((a,b)=>b[1]-a[1]);
-    if (limit) entries = entries.slice(0,limit);
-    const max = Math.max(1,...entries.map(e=>e[1]));
-    target.innerHTML = entries.length ? entries.map(([label,value])=>`
-      <div class="bar-row"><span>${escapeHtml(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${value/max*100}%"></div></div><strong>${value}</strong></div>`).join("")
-      : `<div class="empty-state">데이터가 없습니다.</div>`;
-  }
-
-  function renderAll() { renderArchive(); renderCompare(); renderAnalysis(); }
-
-  async function saveSettings() {
-    const seasons = els.settingsSeasons.value.split(/\n/).map(v=>v.trim()).filter(Boolean);
-    const rounds = els.settingsRounds.value.split(/\n/).map(v=>v.trim()).filter(Boolean);
-    if (!seasons.length || !rounds.length) return showToast("시즌과 회차를 한 개 이상 입력하세요.");
-    try {
-      if (apiReady()) await api("saveSettings",{seasons,rounds});
-      state.seasons = seasons; state.rounds = rounds;
-      refreshSelectors(); renderAll(); showToast("설정을 저장했습니다.");
-    } catch(err) { showToast(err.message); }
-  }
-
-  function bindEvents() {
-    document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => {
-      document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b===btn));
-      document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id===btn.dataset.tab));
-      if (btn.dataset.tab === "archiveTab") renderArchive();
-      if (btn.dataset.tab === "analysisTab") renderAnalysis();
-    }));
-    els.globalSubject.addEventListener("change", e=>setSubject(e.target.value));
-    els.recordForm.addEventListener("submit", saveRecord);
-    els.newRecordBtn.addEventListener("click", resetRecord);
-    els.deleteRecordBtn.addEventListener("click", deleteRecord);
-    els.chooseImageBtn.addEventListener("click", ()=>els.imageFileInput.click());
-    els.imageFileInput.addEventListener("change", e=>handleFiles(e.target.files));
-    els.rotateLeftBtn.addEventListener("click", ()=>{state.rotation-=90;updateRotation();});
-    els.rotateRightBtn.addEventListener("click", ()=>{state.rotation+=90;updateRotation();});
-    els.resetImageBtn.addEventListener("click", ()=>{state.rotation=0;updateRotation();});
-    els.dropZone.addEventListener("click", ()=>els.imageFileInput.click());
-    ["dragenter","dragover"].forEach(ev=>els.dropZone.addEventListener(ev,e=>{e.preventDefault();els.dropZone.classList.add("dragging");}));
-    ["dragleave","drop"].forEach(ev=>els.dropZone.addEventListener(ev,e=>{e.preventDefault();els.dropZone.classList.remove("dragging");}));
-    els.dropZone.addEventListener("drop", e=>handleFiles(e.dataTransfer.files));
-    document.addEventListener("paste", e=>{
-      const items=[...(e.clipboardData?.items||[])];
-      const imageItem=items.find(i=>i.type.startsWith("image/"));
-      if (imageItem) { e.preventDefault(); handleFiles([imageItem.getAsFile()]); }
-    });
-    document.querySelectorAll(".rich-toolbar button").forEach(btn=>btn.addEventListener("click",()=>{
-      document.execCommand(btn.dataset.command,false,null); els.explanation.focus();
-    }));
-    document.querySelectorAll("#recordForm input,#recordForm select,#recordForm textarea").forEach(el=>el.addEventListener("input",saveDraft));
-    els.explanation.addEventListener("input",saveDraft);
-    ["filterSubject","filterSeason","filterRound","filterType","filterDifficulty","archiveSearch"].forEach(id=>els[id].addEventListener("input",renderArchive));
-    els.archiveGrid.addEventListener("click", e=>{
-      const edit=e.target.dataset.edit, compare=e.target.dataset.compare;
-      if(edit) editRecord(edit); if(compare) toggleCompare(compare);
-    });
-    els.compareGrid.addEventListener("click", e=>{ if(e.target.dataset.removeCompare) toggleCompare(e.target.dataset.removeCompare); });
-    els.clearCompareBtn.addEventListener("click", ()=>{state.compareIds=[];renderCompare();});
-    els.refreshArchiveBtn.addEventListener("click", loadAll);
-    ["analysisSubject","analysisSeason","analysisRound"].forEach(id=>els[id].addEventListener("change",renderAnalysis));
-    els.settingsBtn.addEventListener("click", ()=>{
-      els.settingsSeasons.value=state.seasons.join("\n"); els.settingsRounds.value=state.rounds.join("\n");
-      els.settingsDialog.showModal();
-    });
-    els.saveSettingsBtn.addEventListener("click", e=>{e.preventDefault();saveSettings();els.settingsDialog.close();});
-  }
-
-  window.handleBrokenImage = handleBrokenImage;
-
-  function init() {
-    bindEvents();
-    refreshSelectors();
-    setSubject(state.subject);
-    restoreDraft();
-    loadAll();
-  }
-  document.addEventListener("DOMContentLoaded", init);
-})();
+function bind(){$$('.bottom-nav button').forEach(b=>b.addEventListener("click",()=>switchPage(b.dataset.page)));$("#recordForm").addEventListener("submit",saveQuestion);$("#subject").addEventListener("change",()=>refreshRecordSelectors(false));$("#season").addEventListener("change",()=>refreshRecordSelectors(true));$("#newBtn").addEventListener("click",resetForm);$("#deleteBtn").addEventListener("click",deleteCurrent);$("#imageInput").addEventListener("change",e=>acceptImage(e.target.files[0]));$("#clearImageBtn").addEventListener("click",()=>{imageDraft=null;$("#questionPreview").src="";$("#questionPreview").classList.add("hidden");$("#pasteGuide").classList.remove("hidden")});const zone=$("#pasteZone");zone.addEventListener("paste",e=>{const f=[...e.clipboardData.items].find(x=>x.type.startsWith("image/"))?.getAsFile();if(f){e.preventDefault();acceptImage(f)}});["dragenter","dragover"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.add("dragover")}));["dragleave","drop"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.remove("dragover")}));zone.addEventListener("drop",e=>acceptImage(e.dataTransfer.files[0]));$("#explanation").addEventListener("paste",e=>{e.preventDefault();insertHtmlAtCursor(sanitizePastedHtml(e.clipboardData.getData("text/html"),e.clipboardData.getData("text/plain")))});[$("#archiveSearch"),$("#archiveSubject"),$("#archiveSeason"),$("#archiveRound"),$("#archiveType"),$("#archiveDifficulty")].forEach(el=>el.addEventListener(el.tagName==="INPUT"?"input":"change",renderArchive));$("#archiveGrid").addEventListener("click",e=>{const c=e.target.closest("[data-compare]"),p=e.target.closest("[data-preview]"),ed=e.target.closest("[data-edit]");if(c)toggleCompare(c.dataset.compare);if(p)openCompare([p.dataset.preview]);if(ed)editQuestion(ed.dataset.edit)});$("#clearCompareBtn").addEventListener("click",()=>{selectedCompare.clear();renderArchive()});$("#openCompareBtn").addEventListener("click",()=>openCompare());$("#analysisSubject").addEventListener("change",()=>{$("#analysisSeason").value="";renderAnalysis()});$("#analysisSeason").addEventListener("change",renderAnalysis);$("#settingsBtn").addEventListener("click",()=>{const c=config();$("#scriptUrl").value=c.url||"";$("#syncKey").value=c.key||"";$("#settingsDialog").showModal()});$("#saveSettingsBtn").addEventListener("click",verifySettings);$("#syncBtn").addEventListener("click",()=>syncToServer(state.dirty?"push":"pull"));$("#seasonBtn").addEventListener("click",()=>{renderSeasonDialog();$("#seasonDialog").showModal()});$("#seasonSubject").addEventListener("change",renderSeasonDialog);$("#addSeasonBtn").addEventListener("click",()=>{const subject=$("#seasonSubject").value,rows=state.seasons.filter(s=>s.subject===subject),n=rows.length+1;state.seasons.push({subject,name:`시즌 ${n}`,roundCount:8,questionCount:SUBJECTS[subject],active:true,order:n});renderSeasonDialog()});$("#seasonRows").addEventListener("click",e=>{if(!e.target.matches(".season-remove"))return;const row=e.target.closest(".season-row"),s=state.seasons[+row.dataset.index];if(confirm(`${s.name} 설정을 삭제할까요?`)){state.seasons.splice(+row.dataset.index,1);renderSeasonDialog()}});$("#saveSeasonsBtn").addEventListener("click",saveSeasonDialog);$$('[data-close]').forEach(b=>b.addEventListener("click",()=>$("#"+b.dataset.close).close()));}
+function init(){bind();refreshRecordSelectors(false);refreshArchiveFilters();renderArchive();renderAnalysis();setSaveState();const c=config();if(c.url&&c.key&&!state.dirty)syncToServer("pull",true);}
+init();
