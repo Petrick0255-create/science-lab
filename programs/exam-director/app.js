@@ -43,7 +43,7 @@
     "filterSubject","filterSeason","filterRound","filterType","filterDifficulty","archiveSearch","archiveGrid","archiveSummary",
     "compareGrid","clearCompareBtn","refreshArchiveBtn","analysisSubject","analysisSeason","analysisRound","statCards",
     "difficultyHeatmap","difficultyBars","typeBars","analysisTableBody","settingsDialog","settingsSeasons","settingsRounds",
-    "saveSettingsBtn","toast"];
+    "saveSettingsBtn","saveRecordBtn","toast"];
   ids.forEach(id => els[id] = $(id));
 
   function showToast(message) {
