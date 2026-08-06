@@ -1,7 +1,7 @@
 var SPREADSHEET_ID = '1LvDHhARksHVu4j2FWTR_YuGDlVJcnTZFS2UeBlbSt08';
 var IMAGE_FOLDER_ID = '1IQohwxwwiT6-BSvVDe6WEZWu070FdYlU';
 var SHEETS = { master: '문제 마스터', seasons: '시즌 설정', types: '유형 목록', backup: '백업', settings: '설정' };
-var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일'];
+var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('모의고사 관리')
@@ -37,7 +37,7 @@ function doGet(e) {
   try {
     var action = String((e && e.parameter && e.parameter.action) || 'load');
     checkKey_(e && e.parameter && e.parameter.key);
-    if (action === 'ping') return json_({ ok: true, message: 'connected', version: 1 });
+    if (action === 'ping') return json_({ ok: true, message: 'connected', version: 2 });
     if (action === 'load') return json_(loadPayload_());
     return json_({ ok: false, message: '지원하지 않는 요청입니다.' });
   } catch (err) {
@@ -59,7 +59,7 @@ function doPost(e) {
     var updated = applyImages_(payload.questions || [], payload.imageDrafts || {}, oldQuestions);
     writeQuestions_(updated);
     writeSeasons_(payload.seasons || []);
-    writeTypes_(payload.types || {});
+    if (payload.detailTypes) writeTypes_(payload.detailTypes);
     trashRemovedImages_(oldQuestions, updated);
     var syncedAt = new Date().toISOString();
     writeSetting_('LAST_SYNC_AT', syncedAt, '최근 웹페이지 동기화 시각');
@@ -83,6 +83,7 @@ function loadPayload_() {
     questions: readQuestions_(),
     seasons: readSeasons_(),
     types: readTypes_(),
+    detailTypes: readTypes_(),
     syncedAt: new Date().toISOString()
   };
 }
@@ -139,14 +140,14 @@ function readQuestions_() {
   if (!sh || sh.getLastRow() < 2) return [];
   var values = sh.getRange(2, 1, sh.getLastRow() - 1, MASTER_HEADERS.length).getDisplayValues();
   return values.filter(function(r) { return r[0] && r[0].indexOf('(웹페이지') !== 0; }).map(function(r) {
-    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],difficulty:r[7],score:Number(r[8]),source:r[9],answer:r[10],explanationHtml:r[11],explanationText:r[12],memo:r[13],imageFileId:r[14],imageFileName:r[15],imageUrl:r[16],createdAt:toIso_(r[17]),updatedAt:toIso_(r[18]) };
+    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],detailType:r[7],difficulty:r[8],score:Number(r[9]),source:r[10],answer:r[11],explanationHtml:r[12],explanationText:r[13],memo:r[14],imageFileId:r[15],imageFileName:r[16],imageUrl:r[17],createdAt:toIso_(r[18]),updatedAt:toIso_(r[19]) };
   });
 }
 
 function writeQuestions_(questions) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sh = ensureMasterSheet_(ss);
-  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.season,q.round,q.number,q.type,q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt]; });
+  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.season,q.round,q.number,q.type,q.detailType||'',q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt]; });
   clearBody_(sh, MASTER_HEADERS.length);
   if (rows.length) sh.getRange(2,1,rows.length,MASTER_HEADERS.length).setValues(rows);
   styleDataSheet_(sh, MASTER_HEADERS.length);
@@ -182,7 +183,7 @@ function writeTypes_(types) {
 function backupNow() { backupNow_('수동 백업'); SpreadsheetApp.getUi().alert('현재 데이터를 백업했습니다.'); }
 function backupNow_(label) {
   var ss=SpreadsheetApp.openById(SPREADSHEET_ID),sh=ensureSheet_(ss,SHEETS.backup,['백업 ID','백업 일시','구간','전체 구간','JSON 조각']);
-  var json=JSON.stringify({label:label,questions:readQuestions_(),seasons:readSeasons_(),types:readTypes_()});
+  var json=JSON.stringify({label:label,questions:readQuestions_(),seasons:readSeasons_(),detailTypes:readTypes_()});
   var size=45000,chunks=[];for(var i=0;i<json.length;i+=size)chunks.push(json.slice(i,i+size));
   var id='BK-'+Utilities.formatDate(new Date(),Session.getScriptTimeZone(),'yyyyMMdd-HHmmss');
   var rows=chunks.map(function(chunk,index){return[id,new Date(),index+1,chunks.length,chunk];});
@@ -202,6 +203,9 @@ function ensureMasterSheet_(ss) {
   if(first==='문제 ID'&&third!=='연도') {
     sh.insertColumnBefore(3);
     if(sh.getLastRow()>1)sh.getRange(2,3,sh.getLastRow()-1,1).setValues(Array(sh.getLastRow()-1).fill([String(new Date().getFullYear())]));
+  }
+  if(first==='문제 ID'&&String(sh.getRange(1,7).getValue()||'')==='유형'&&String(sh.getRange(1,8).getValue()||'')!=='세부 유형') {
+    sh.insertColumnAfter(7);
   }
   sh.getRange(1,1,1,MASTER_HEADERS.length).setValues([MASTER_HEADERS]);
   styleDataSheet_(sh,MASTER_HEADERS.length);
