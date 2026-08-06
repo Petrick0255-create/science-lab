@@ -57,7 +57,11 @@ function openCompare(ids=[...selectedCompare]){const qs=ids.map(id=>state.questi
 
 function analysisSelection(){const subject=$("#analysisSubject").value;const years=[...new Set([String(CURRENT_YEAR),...state.questions.filter(q=>q.subject===subject).map(questionYear)])].sort((a,b)=>Number(b)-Number(a));const oldYear=$("#analysisYear").value;options($("#analysisYear"),years,oldYear||String(CURRENT_YEAR));const year=$("#analysisYear").value;const ss=subjectSeasons(subject);const old=$("#analysisSeason").value;options($("#analysisSeason"),ss,old||ss[0]?.name);return{subject,year,season:$("#analysisSeason").value,setting:activeSeason(subject,$("#analysisSeason").value)};}
 function renderAnalysis(){const {subject,year,season,setting}=analysisSelection();const qs=state.questions.filter(q=>q.subject===subject&&questionYear(q)===year&&q.season===season);const expected=(+setting.roundCount||0)*(+setting.questionCount||0),filled=qs.length,typesUsed=new Set(qs.map(q=>q.type)).size,high=qs.filter(q=>["중상","상","최상"].includes(q.difficulty)).length;$("#metricGrid").innerHTML=[["기록 문항",filled,`예정 ${expected}문항`],["완성도",expected?Math.round(filled/expected*100):0,"%"],["사용 유형",typesUsed,`전체 ${(state.types[subject]||[]).length}개`],["고난도 비중",filled?Math.round(high/filled*100):0,"% · 중상 이상"]].map(([label,value,sub])=>`<div class="metric"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join("");$("#difficultyLegend").innerHTML=DIFFICULTIES.map(d=>`<span><i style="background:${COLORS[d]}"></i>${d}</span>`).join("");const roundCount=+setting.roundCount||8;$("#difficultyBars").innerHTML=Array.from({length:roundCount},(_,i)=>{const r=i+1,list=qs.filter(q=>+q.round===r),total=list.length||1;return `<div class="difficulty-row"><strong>${r}회</strong><div class="stacked-bar">${DIFFICULTIES.map(d=>{const c=list.filter(q=>q.difficulty===d).length;return c?`<span title="${d} ${c}문항" style="width:${c/total*100}%;background:${COLORS[d]}"></span>`:""}).join("")}</div><span>${list.length}/${setting.questionCount}</span></div>`}).join("");renderHeatmap(qs,setting);renderTypeCoverage(qs,subject);renderAlerts(qs,setting,subject,`${year}년 ${season}`);}
-function renderHeatmap(qs,setting){const cols=+setting.questionCount||25,rows=+setting.roundCount||8;let html=`<div class="heatmap" style="grid-template-columns:38px repeat(${cols},22px)"><span></span>${Array.from({length:cols},(_,i)=>`<span class="heat-cell heat-label">${i+1}</span>`).join("")}`;for(let r=1;r<=rows;r++){html+=`<span class="heat-cell heat-label">${r}회</span>`;for(let n=1;n<=cols;n++){const q=qs.find(x=>+x.round===r&&+x.number===n);html+=`<span class="heat-cell" title="${q?`${q.type} · ${q.difficulty}`:"미기록"}" style="background:${q?COLORS[q.difficulty]:"#edf0f4"};${q&&["상","최상"].includes(q.difficulty)?"color:#fff":""}">${n}</span>`}}html+="</div>";$("#positionHeatmap").innerHTML=html;}
+function renderHeatmap(qs,setting){hideHeatmapPreview();const cols=+setting.questionCount||25,rows=+setting.roundCount||8;let html=`<div class="heatmap" style="grid-template-columns:38px repeat(${cols},22px)"><span></span>${Array.from({length:cols},(_,i)=>`<span class="heat-cell heat-label">${i+1}</span>`).join("")}`;for(let r=1;r<=rows;r++){html+=`<span class="heat-cell heat-label">${r}회</span>`;for(let n=1;n<=cols;n++){const q=qs.find(x=>+x.round===r&&+x.number===n);html+=q?`<button type="button" class="heat-cell heat-question" data-heat-question="${esc(q.id)}" aria-label="${r}회 ${n}번 ${esc(q.type)} 문제 보기" style="background:${COLORS[q.difficulty]};${["상","최상"].includes(q.difficulty)?"color:#fff":""}">${n}</button>`:`<span class="heat-cell heat-empty" title="미기록">${n}</span>`}}html+="</div>";$("#positionHeatmap").innerHTML=html;}
+function heatmapPreviewElement(){let el=$("#heatmapPreview");if(el)return el;el=document.createElement("div");el.id="heatmapPreview";el.className="heatmap-preview hidden";el.setAttribute("role","tooltip");document.body.appendChild(el);return el;}
+function showHeatmapPreview(id,clientX,clientY){const q=state.questions.find(x=>x.id===id);if(!q)return;const el=heatmapPreviewElement();el.innerHTML=`<div class="heat-preview-image">${q.imageUrl?`<img src="${esc(q.imageUrl)}" alt="${esc(q.type)} 문제 미리보기">`:`<span>이미지 없음</span>`}</div><div class="heat-preview-copy"><strong>${esc(questionYear(q))}년 · ${esc(q.subject)}</strong><b>${esc(q.season)} · ${q.round}회 ${q.number}번</b><div><span>${esc(q.type)}</span><span style="background:${COLORS[q.difficulty]||"#eef2f8"}">${esc(q.difficulty)}</span><span>${esc(q.score)}점</span></div><small>클릭하면 문항 정보를 자세히 볼 수 있습니다.</small></div>`;el.classList.remove("hidden");moveHeatmapPreview(clientX,clientY);}
+function moveHeatmapPreview(clientX,clientY){const el=$("#heatmapPreview");if(!el||el.classList.contains("hidden"))return;const gap=14,rect=el.getBoundingClientRect();let left=clientX+gap,top=clientY+gap;if(left+rect.width>window.innerWidth-10)left=clientX-rect.width-gap;if(top+rect.height>window.innerHeight-10)top=clientY-rect.height-gap;el.style.left=`${Math.max(10,left)}px`;el.style.top=`${Math.max(10,top)}px`;}
+function hideHeatmapPreview(){const el=$("#heatmapPreview");if(el)el.classList.add("hidden");}
 function renderTypeCoverage(qs,subject){const counts=(state.types[subject]||[]).map(type=>({type,count:qs.filter(q=>q.type===type).length,high:qs.filter(q=>q.type===type&&["중상","상","최상"].includes(q.difficulty)).length})).sort((a,b)=>b.count-a.count||a.type.localeCompare(b.type,"ko"));const max=Math.max(1,...counts.map(x=>x.count));$("#typeCoverage").innerHTML=counts.map(x=>`<div class="type-row"><span>${esc(x.type)}</span><div class="coverage-track"><span style="width:${x.count/max*100}%"></span></div><strong>${x.count} <small>(${x.high})</small></strong></div>`).join("");}
 function renderAlerts(qs,setting,subject,season){const alerts=[],expected=+setting.questionCount||SUBJECTS[subject];for(let r=1;r<=setting.roundCount;r++){const count=qs.filter(q=>+q.round===r).length;if(count<expected)alerts.push({warn:true,title:`${r}회 ${expected-count}문항 미기록`,body:`${expected}문항 중 ${count}문항만 기록되어 있습니다.`});const ordered=qs.filter(q=>+q.round===r).sort((a,b)=>a.number-b.number);let run=0,maxRun=0;ordered.forEach(q=>{if(["중상","상","최상"].includes(q.difficulty))run++;else run=0;maxRun=Math.max(maxRun,run)});if(maxRun>=4)alerts.push({warn:true,title:`${r}회 고난도 연속 배치`,body:`중상 이상 문제가 최대 ${maxRun}문항 연속으로 배치되어 있습니다.`});}const missing=(state.types[subject]||[]).filter(t=>!qs.some(q=>q.type===t));if(missing.length)alerts.push({warn:false,title:`미사용 유형 ${missing.length}개`,body:missing.slice(0,5).join(", ")+(missing.length>5?" 외":"")});if(!alerts.length)alerts.push({warn:false,title:"균형 검토 완료",body:`${season}에서 뚜렷한 누락이나 고난도 연속 배치가 발견되지 않았습니다.`});$("#analysisAlerts").innerHTML=alerts.slice(0,9).map(a=>`<div class="analysis-alert ${a.warn?"warn":""}"><strong>${esc(a.title)}</strong><p>${esc(a.body)}</p></div>`).join("");}
 
@@ -65,78 +69,10 @@ function renderSeasonDialog(){const subject=$("#seasonSubject").value;const rows
 async function saveSeasonDialog(){$$('#seasonRows .season-row').forEach(row=>{const s=state.seasons[+row.dataset.index];s.name=row.querySelector('[data-field="name"]').value.trim()||s.name;s.roundCount=Math.max(1,+row.querySelector('[data-field="roundCount"]').value||1);s.questionCount=Math.max(1,+row.querySelector('[data-field="questionCount"]').value||1);s.active=row.querySelector('[data-field="active"]').value==="true";});persist(true);refreshRecordSelectors(true);renderAnalysis();$("#seasonDialog").close();showToast("시즌 설정을 저장했습니다.");if(config().url&&config().key)await syncToServer("push",true);}
 
 async function syncToServer(mode="pull",silent=false){const cfg=config();if(!cfg.url||!cfg.key){$("#settingsDialog").showModal();if(!silent)showToast("먼저 Apps Script 연결을 설정하세요.");return;}const btn=$("#syncBtn");setBusy(btn,true,mode==="pull"?"불러오는 중…":"동기화 중…");setSaveState("시트 연결 중…");try{if(mode==="pull"){if(state.dirty&&!confirm("브라우저에 동기화하지 않은 변경이 있습니다. 시트 데이터로 덮어쓸까요?"))return;const url=new URL(cfg.url);url.searchParams.set("action","load");url.searchParams.set("key",cfg.key);url.searchParams.set("_",Date.now());const res=await fetch(url);const data=await res.json();if(!data.ok)throw new Error(data.message||"불러오기 실패");state={questions:(data.questions||[]).map(normalizeQuestion),seasons:data.seasons?.length?data.seasons:defaultSeasons(),types:data.types||DEFAULT_TYPES,updatedAt:data.syncedAt||now(),dirty:false};localStorage.setItem(STORE_KEY,JSON.stringify(state));refreshRecordSelectors(true);renderArchive();renderAnalysis();showToast(`${state.questions.length}문제를 불러왔습니다.`);}else{const drafts=await collectDrafts();const body=new URLSearchParams({action:"sync",key:cfg.key,payload:JSON.stringify({questions:state.questions,seasons:state.seasons,types:state.types,imageDrafts:drafts})});const res=await fetch(cfg.url,{method:"POST",body});const data=await res.json();if(!data.ok)throw new Error(data.message||"동기화 실패");state.questions=(data.questions||state.questions).map(normalizeQuestion);state.updatedAt=data.syncedAt||now();state.dirty=false;localStorage.setItem(STORE_KEY,JSON.stringify(state));for(const id of Object.keys(drafts))await dbDelete(id);imageDraft=null;renderArchive();renderAnalysis();showToast("시트와 Drive에 동기화했습니다.");}}catch(e){console.error(e);showToast(`연결 실패: ${e.message}`);setSaveState("연결 확인 필요");}finally{setBusy(btn,false);setSaveState();}}
-async function verifySettings() {
-  const btn = $("#saveSettingsBtn");
+async function verifySettings(){const btn=$("#saveSettingsBtn"),url=$("#scriptUrl").value.trim(),key=$("#syncKey").value.trim();if(!/^https:\/\/script\.google\.com\//.test(url)||!key)return showToast("배포 URL과 동기화 키를 확인하세요.");localStorage.setItem(CONFIG_KEY,JSON.stringify({url,key}));setBusy(btn,true,"확인 중…");try{const test=new URL(url);test.searchParams.set("action","ping");test.searchParams.set("key",key);const data=await (await fetch(test)).json();if(!data.ok)throw new Error(data.message||"인증 실패");$("#settingsDialog").close();showToast("연결되었습니다.");await syncToServer("pull",true);}catch(e){showToast(`연결 실패: ${e.message}`);}finally{setBusy(btn,false);}}
 
-  let url = $("#scriptUrl").value
-    .trim()
-    .replace(/\u200B/g, "")
-    .replace(/[?#].*$/, "")
-    .replace(/\/+$/, "");
-
-  const key = $("#syncKey").value.trim();
-
-  if (
-    !url.startsWith("https://script.google.com/macros/s/") ||
-    !url.endsWith("/exec")
-  ) {
-    showToast("/exec로 끝나는 Apps Script 웹 앱 주소를 입력하세요.");
-    return;
-  }
-
-  if (!key) {
-    showToast("동기화 키를 입력하세요.");
-    return;
-  }
-
-  setBusy(btn, true, "확인 중…");
-
-  try {
-    const testUrl = new URL(url);
-    testUrl.searchParams.set("action", "ping");
-    testUrl.searchParams.set("key", key);
-    testUrl.searchParams.set("_", Date.now());
-
-    const response = await fetch(testUrl.toString());
-    const text = await response.text();
-
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Apps Script 응답:", text);
-      throw new Error(
-        "Apps Script가 JSON 대신 로그인 또는 오류 페이지를 반환했습니다."
-      );
-    }
-
-    if (!data.ok) {
-      throw new Error(data.message || "인증에 실패했습니다.");
-    }
-
-    localStorage.setItem(
-      CONFIG_KEY,
-      JSON.stringify({
-        url,
-        key
-      })
-    );
-
-    $("#scriptUrl").value = url;
-    $("#settingsDialog").close();
-
-    showToast("연결되었습니다.");
-
-    await syncToServer("pull", true);
-  } catch (error) {
-    console.error(error);
-    showToast(`연결 실패: ${error.message}`);
-  } finally {
-    setBusy(btn, false);
-  }
-}
+function bindHeatmap(){const box=$("#positionHeatmap");box.addEventListener("pointerover",e=>{const cell=e.target.closest("[data-heat-question]");if(cell)showHeatmapPreview(cell.dataset.heatQuestion,e.clientX,e.clientY)});box.addEventListener("pointermove",e=>{if(e.target.closest("[data-heat-question]"))moveHeatmapPreview(e.clientX,e.clientY)});box.addEventListener("pointerout",e=>{const cell=e.target.closest("[data-heat-question]");if(cell&&!cell.contains(e.relatedTarget))hideHeatmapPreview()});box.addEventListener("click",e=>{const cell=e.target.closest("[data-heat-question]");if(!cell)return;hideHeatmapPreview();openCompare([cell.dataset.heatQuestion])});window.addEventListener("scroll",hideHeatmapPreview,true);window.addEventListener("resize",hideHeatmapPreview);}
 
 function bind(){$$('.bottom-nav button').forEach(b=>b.addEventListener("click",()=>switchPage(b.dataset.page)));$("#recordForm").addEventListener("submit",saveQuestion);$("#subject").addEventListener("change",()=>refreshRecordSelectors(false));$("#season").addEventListener("change",()=>refreshRecordSelectors(true));$("#newBtn").addEventListener("click",resetForm);$("#deleteBtn").addEventListener("click",deleteCurrent);$("#imageInput").addEventListener("change",e=>acceptImage(e.target.files[0]));$("#clearImageBtn").addEventListener("click",()=>{imageDraft=null;$("#questionPreview").src="";$("#questionPreview").classList.add("hidden");$("#pasteGuide").classList.remove("hidden")});const zone=$("#pasteZone");zone.addEventListener("paste",e=>{const f=[...e.clipboardData.items].find(x=>x.type.startsWith("image/"))?.getAsFile();if(f){e.preventDefault();acceptImage(f)}});["dragenter","dragover"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.add("dragover")}));["dragleave","drop"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.remove("dragover")}));zone.addEventListener("drop",e=>acceptImage(e.dataTransfer.files[0]));$("#explanation").addEventListener("paste",e=>{e.preventDefault();insertHtmlAtCursor(sanitizePastedHtml(e.clipboardData.getData("text/html"),e.clipboardData.getData("text/plain")))});[$("#archiveSearch"),$("#archiveSubject"),$("#archiveYear"),$("#archiveSeason"),$("#archiveRound"),$("#archiveType"),$("#archiveDifficulty")].forEach(el=>el.addEventListener(el.tagName==="INPUT"?"input":"change",renderArchive));$("#archiveGrid").addEventListener("click",e=>{const c=e.target.closest("[data-compare]"),p=e.target.closest("[data-preview]"),ed=e.target.closest("[data-edit]");if(c)toggleCompare(c.dataset.compare);if(p)openCompare([p.dataset.preview]);if(ed)editQuestion(ed.dataset.edit)});$("#clearCompareBtn").addEventListener("click",()=>{selectedCompare.clear();renderArchive()});$("#openCompareBtn").addEventListener("click",()=>openCompare());$("#analysisSubject").addEventListener("change",()=>{$("#analysisYear").value="";$("#analysisSeason").value="";renderAnalysis()});$("#analysisYear").addEventListener("change",renderAnalysis);$("#analysisSeason").addEventListener("change",renderAnalysis);$("#settingsBtn").addEventListener("click",()=>{const c=config();$("#scriptUrl").value=c.url||"";$("#syncKey").value=c.key||"";$("#settingsDialog").showModal()});$("#saveSettingsBtn").addEventListener("click",verifySettings);$("#syncBtn").addEventListener("click",()=>syncToServer(state.dirty?"push":"pull"));$("#seasonBtn").addEventListener("click",()=>{renderSeasonDialog();$("#seasonDialog").showModal()});$("#seasonSubject").addEventListener("change",renderSeasonDialog);$("#addSeasonBtn").addEventListener("click",()=>{const subject=$("#seasonSubject").value,rows=state.seasons.filter(s=>s.subject===subject),n=rows.length+1;state.seasons.push({subject,name:`시즌 ${n}`,roundCount:8,questionCount:SUBJECTS[subject],active:true,order:n});renderSeasonDialog()});$("#seasonRows").addEventListener("click",e=>{if(!e.target.matches(".season-remove"))return;const row=e.target.closest(".season-row"),s=state.seasons[+row.dataset.index];if(confirm(`${s.name} 설정을 삭제할까요?`)){state.seasons.splice(+row.dataset.index,1);renderSeasonDialog()}});$("#saveSeasonsBtn").addEventListener("click",saveSeasonDialog);$$('[data-close]').forEach(b=>b.addEventListener("click",()=>$("#"+b.dataset.close).close()));}
-function init(){bind();refreshYearSelect(CURRENT_YEAR);refreshRecordSelectors(false);refreshArchiveFilters();renderArchive();renderAnalysis();setSaveState();const c=config();if(c.url&&c.key&&!state.dirty)syncToServer("pull",true);}
+function init(){bind();bindHeatmap();refreshYearSelect(CURRENT_YEAR);refreshRecordSelectors(false);refreshArchiveFilters();renderArchive();renderAnalysis();setSaveState();const c=config();if(c.url&&c.key&&!state.dirty)syncToServer("pull",true);}
 init();
