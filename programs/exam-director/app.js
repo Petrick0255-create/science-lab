@@ -65,7 +65,77 @@ function renderSeasonDialog(){const subject=$("#seasonSubject").value;const rows
 async function saveSeasonDialog(){$$('#seasonRows .season-row').forEach(row=>{const s=state.seasons[+row.dataset.index];s.name=row.querySelector('[data-field="name"]').value.trim()||s.name;s.roundCount=Math.max(1,+row.querySelector('[data-field="roundCount"]').value||1);s.questionCount=Math.max(1,+row.querySelector('[data-field="questionCount"]').value||1);s.active=row.querySelector('[data-field="active"]').value==="true";});persist(true);refreshRecordSelectors(true);renderAnalysis();$("#seasonDialog").close();showToast("시즌 설정을 저장했습니다.");if(config().url&&config().key)await syncToServer("push",true);}
 
 async function syncToServer(mode="pull",silent=false){const cfg=config();if(!cfg.url||!cfg.key){$("#settingsDialog").showModal();if(!silent)showToast("먼저 Apps Script 연결을 설정하세요.");return;}const btn=$("#syncBtn");setBusy(btn,true,mode==="pull"?"불러오는 중…":"동기화 중…");setSaveState("시트 연결 중…");try{if(mode==="pull"){if(state.dirty&&!confirm("브라우저에 동기화하지 않은 변경이 있습니다. 시트 데이터로 덮어쓸까요?"))return;const url=new URL(cfg.url);url.searchParams.set("action","load");url.searchParams.set("key",cfg.key);url.searchParams.set("_",Date.now());const res=await fetch(url);const data=await res.json();if(!data.ok)throw new Error(data.message||"불러오기 실패");state={questions:(data.questions||[]).map(normalizeQuestion),seasons:data.seasons?.length?data.seasons:defaultSeasons(),types:data.types||DEFAULT_TYPES,updatedAt:data.syncedAt||now(),dirty:false};localStorage.setItem(STORE_KEY,JSON.stringify(state));refreshRecordSelectors(true);renderArchive();renderAnalysis();showToast(`${state.questions.length}문제를 불러왔습니다.`);}else{const drafts=await collectDrafts();const body=new URLSearchParams({action:"sync",key:cfg.key,payload:JSON.stringify({questions:state.questions,seasons:state.seasons,types:state.types,imageDrafts:drafts})});const res=await fetch(cfg.url,{method:"POST",body});const data=await res.json();if(!data.ok)throw new Error(data.message||"동기화 실패");state.questions=(data.questions||state.questions).map(normalizeQuestion);state.updatedAt=data.syncedAt||now();state.dirty=false;localStorage.setItem(STORE_KEY,JSON.stringify(state));for(const id of Object.keys(drafts))await dbDelete(id);imageDraft=null;renderArchive();renderAnalysis();showToast("시트와 Drive에 동기화했습니다.");}}catch(e){console.error(e);showToast(`연결 실패: ${e.message}`);setSaveState("연결 확인 필요");}finally{setBusy(btn,false);setSaveState();}}
-async function verifySettings(){const btn=$("#saveSettingsBtn"),url=$("#scriptUrl").value.trim(),key=$("#syncKey").value.trim();if(!/^https:\/\/script\.google\.com\//.test(url)||!key)return showToast("배포 URL과 동기화 키를 확인하세요.");localStorage.setItem(CONFIG_KEY,JSON.stringify({url,key}));setBusy(btn,true,"확인 중…");try{const test=new URL(url);test.searchParams.set("action","ping");test.searchParams.set("key",key);const data=await (await fetch(test)).json();if(!data.ok)throw new Error(data.message||"인증 실패");$("#settingsDialog").close();showToast("연결되었습니다.");await syncToServer("pull",true);}catch(e){showToast(`연결 실패: ${e.message}`);}finally{setBusy(btn,false);}}
+async function verifySettings() {
+  const btn = $("#saveSettingsBtn");
+
+  let url = $("#scriptUrl").value
+    .trim()
+    .replace(/\u200B/g, "")
+    .replace(/[?#].*$/, "")
+    .replace(/\/+$/, "");
+
+  const key = $("#syncKey").value.trim();
+
+  if (
+    !url.startsWith("https://script.google.com/macros/s/") ||
+    !url.endsWith("/exec")
+  ) {
+    showToast("/exec로 끝나는 Apps Script 웹 앱 주소를 입력하세요.");
+    return;
+  }
+
+  if (!key) {
+    showToast("동기화 키를 입력하세요.");
+    return;
+  }
+
+  setBusy(btn, true, "확인 중…");
+
+  try {
+    const testUrl = new URL(url);
+    testUrl.searchParams.set("action", "ping");
+    testUrl.searchParams.set("key", key);
+    testUrl.searchParams.set("_", Date.now());
+
+    const response = await fetch(testUrl.toString());
+    const text = await response.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Apps Script 응답:", text);
+      throw new Error(
+        "Apps Script가 JSON 대신 로그인 또는 오류 페이지를 반환했습니다."
+      );
+    }
+
+    if (!data.ok) {
+      throw new Error(data.message || "인증에 실패했습니다.");
+    }
+
+    localStorage.setItem(
+      CONFIG_KEY,
+      JSON.stringify({
+        url,
+        key
+      })
+    );
+
+    $("#scriptUrl").value = url;
+    $("#settingsDialog").close();
+
+    showToast("연결되었습니다.");
+
+    await syncToServer("pull", true);
+  } catch (error) {
+    console.error(error);
+    showToast(`연결 실패: ${error.message}`);
+  } finally {
+    setBusy(btn, false);
+  }
+}
 
 function bind(){$$('.bottom-nav button').forEach(b=>b.addEventListener("click",()=>switchPage(b.dataset.page)));$("#recordForm").addEventListener("submit",saveQuestion);$("#subject").addEventListener("change",()=>refreshRecordSelectors(false));$("#season").addEventListener("change",()=>refreshRecordSelectors(true));$("#newBtn").addEventListener("click",resetForm);$("#deleteBtn").addEventListener("click",deleteCurrent);$("#imageInput").addEventListener("change",e=>acceptImage(e.target.files[0]));$("#clearImageBtn").addEventListener("click",()=>{imageDraft=null;$("#questionPreview").src="";$("#questionPreview").classList.add("hidden");$("#pasteGuide").classList.remove("hidden")});const zone=$("#pasteZone");zone.addEventListener("paste",e=>{const f=[...e.clipboardData.items].find(x=>x.type.startsWith("image/"))?.getAsFile();if(f){e.preventDefault();acceptImage(f)}});["dragenter","dragover"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.add("dragover")}));["dragleave","drop"].forEach(n=>zone.addEventListener(n,e=>{e.preventDefault();zone.classList.remove("dragover")}));zone.addEventListener("drop",e=>acceptImage(e.dataTransfer.files[0]));$("#explanation").addEventListener("paste",e=>{e.preventDefault();insertHtmlAtCursor(sanitizePastedHtml(e.clipboardData.getData("text/html"),e.clipboardData.getData("text/plain")))});[$("#archiveSearch"),$("#archiveSubject"),$("#archiveYear"),$("#archiveSeason"),$("#archiveRound"),$("#archiveType"),$("#archiveDifficulty")].forEach(el=>el.addEventListener(el.tagName==="INPUT"?"input":"change",renderArchive));$("#archiveGrid").addEventListener("click",e=>{const c=e.target.closest("[data-compare]"),p=e.target.closest("[data-preview]"),ed=e.target.closest("[data-edit]");if(c)toggleCompare(c.dataset.compare);if(p)openCompare([p.dataset.preview]);if(ed)editQuestion(ed.dataset.edit)});$("#clearCompareBtn").addEventListener("click",()=>{selectedCompare.clear();renderArchive()});$("#openCompareBtn").addEventListener("click",()=>openCompare());$("#analysisSubject").addEventListener("change",()=>{$("#analysisYear").value="";$("#analysisSeason").value="";renderAnalysis()});$("#analysisYear").addEventListener("change",renderAnalysis);$("#analysisSeason").addEventListener("change",renderAnalysis);$("#settingsBtn").addEventListener("click",()=>{const c=config();$("#scriptUrl").value=c.url||"";$("#syncKey").value=c.key||"";$("#settingsDialog").showModal()});$("#saveSettingsBtn").addEventListener("click",verifySettings);$("#syncBtn").addEventListener("click",()=>syncToServer(state.dirty?"push":"pull"));$("#seasonBtn").addEventListener("click",()=>{renderSeasonDialog();$("#seasonDialog").showModal()});$("#seasonSubject").addEventListener("change",renderSeasonDialog);$("#addSeasonBtn").addEventListener("click",()=>{const subject=$("#seasonSubject").value,rows=state.seasons.filter(s=>s.subject===subject),n=rows.length+1;state.seasons.push({subject,name:`시즌 ${n}`,roundCount:8,questionCount:SUBJECTS[subject],active:true,order:n});renderSeasonDialog()});$("#seasonRows").addEventListener("click",e=>{if(!e.target.matches(".season-remove"))return;const row=e.target.closest(".season-row"),s=state.seasons[+row.dataset.index];if(confirm(`${s.name} 설정을 삭제할까요?`)){state.seasons.splice(+row.dataset.index,1);renderSeasonDialog()}});$("#saveSeasonsBtn").addEventListener("click",saveSeasonDialog);$$('[data-close]').forEach(b=>b.addEventListener("click",()=>$("#"+b.dataset.close).close()));}
 function init(){bind();refreshYearSelect(CURRENT_YEAR);refreshRecordSelectors(false);refreshArchiveFilters();renderArchive();renderAnalysis();setSaveState();const c=config();if(c.url&&c.key&&!state.dirty)syncToServer("pull",true);}
