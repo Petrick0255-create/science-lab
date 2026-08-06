@@ -1,7 +1,7 @@
 var SPREADSHEET_ID = '1LvDHhARksHVu4j2FWTR_YuGDlVJcnTZFS2UeBlbSt08';
 var IMAGE_FOLDER_ID = '1IQohwxwwiT6-BSvVDe6WEZWu070FdYlU';
 var SHEETS = { master: '문제 마스터', seasons: '시즌 설정', types: '유형 목록', backup: '백업', settings: '설정' };
-var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일'];
+var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일','문제지 링크','해설지 링크'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('모의고사 관리')
@@ -104,7 +104,7 @@ function applyImages_(questions, drafts, oldQuestions) {
     q.imageFileName = q.imageFileName || old.imageFileName || '';
     q.imageUrl = q.imageUrl || old.imageUrl || '';
     if (draft && draft.dataUrl) {
-      if (q.imageFileId) {
+      if (q.imageFileId && !isEvaluationQuestion_(old)) {
         try { DriveApp.getFileById(q.imageFileId).setTrashed(true); } catch (ignore) {}
       }
       var parts = String(draft.dataUrl).split(',');
@@ -128,10 +128,14 @@ function trashRemovedImages_(oldQuestions, newQuestions) {
   var keep = {};
   newQuestions.forEach(function(q) { if (q.imageFileId) keep[q.imageFileId] = true; });
   oldQuestions.forEach(function(q) {
-    if (q.imageFileId && !keep[q.imageFileId]) {
+    if (q.imageFileId && !keep[q.imageFileId] && !isEvaluationQuestion_(q)) {
       try { DriveApp.getFileById(q.imageFileId).setTrashed(true); } catch (ignore) {}
     }
   });
+}
+
+function isEvaluationQuestion_(q) {
+  return /-평가원$/.test(String((q && q.subject) || '')) || /^EVAL-/.test(String((q && q.id) || ''));
 }
 
 function readQuestions_() {
@@ -140,14 +144,14 @@ function readQuestions_() {
   if (!sh || sh.getLastRow() < 2) return [];
   var values = sh.getRange(2, 1, sh.getLastRow() - 1, MASTER_HEADERS.length).getDisplayValues();
   return values.filter(function(r) { return r[0] && r[0].indexOf('(웹페이지') !== 0; }).map(function(r) {
-    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],detailType:r[7],difficulty:r[8],score:Number(r[9]),source:r[10],answer:r[11],explanationHtml:r[12],explanationText:r[13],memo:r[14],imageFileId:r[15],imageFileName:r[16],imageUrl:r[17],createdAt:toIso_(r[18]),updatedAt:toIso_(r[19]) };
+    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],detailType:r[7],difficulty:r[8],score:Number(r[9]),source:r[10],answer:r[11],explanationHtml:r[12],explanationText:r[13],memo:r[14],imageFileId:r[15],imageFileName:r[16],imageUrl:r[17],createdAt:toIso_(r[18]),updatedAt:toIso_(r[19]),problemPdfUrl:r[20],solutionPdfUrl:r[21] };
   });
 }
 
 function writeQuestions_(questions) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sh = ensureMasterSheet_(ss);
-  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.season,q.round,q.number,q.type,q.detailType||'',q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt]; });
+  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.season,q.round,q.number,q.type,q.detailType||'',q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt,q.problemPdfUrl||'',q.solutionPdfUrl||'']; });
   clearBody_(sh, MASTER_HEADERS.length);
   if (rows.length) sh.getRange(2,1,rows.length,MASTER_HEADERS.length).setValues(rows);
   styleDataSheet_(sh, MASTER_HEADERS.length);
@@ -167,7 +171,7 @@ function writeSeasons_(seasons) {
 }
 
 function readTypes_() {
-  var result = {'통합과학':[],'생명과학':[]};
+  var result = {'통합과학':[],'생명과학':[],'통합과학-평가원':[],'생명과학-평가원':[]};
   var sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.types);
   if (!sh || sh.getLastRow() < 2) return result;
   sh.getRange(2,1,sh.getLastRow()-1,3).getValues().filter(function(r){return r[0]&&r[1];}).sort(function(a,b){return Number(a[2])-Number(b[2]);}).forEach(function(r){if(!result[r[0]])result[r[0]]=[];result[r[0]].push(String(r[1]));});
