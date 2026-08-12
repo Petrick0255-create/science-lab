@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>J&B AI Workbench</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">J<small>&</small>B</span><b>AI WORKBENCH</b></div>
+      <div class="top-actions"><span id="status" class="status"><i></i>맥미니 연결 전</span><button id="settingsBtn" class="icon-button" aria-label="연결 설정">⚙</button></div>
+    </header>
+    <section class="workspace">
+      <aside class="sidebar">
+        <button id="newChat" class="new-chat">＋　새 작업</button>
+        <nav><p>작업 도구</p>
+          <button data-prompt="통합과학 문제 아이디어를 만들어 주세요."><b>✦</b>문제 아이디어</button>
+          <button data-prompt="다음 과학 내용에 개념 오류가 있는지 검사해 주세요.\n\n"><b>✓</b>개념 오류 검사</button>
+          <button data-prompt="다음 문항의 해설을 학생이 이해하기 쉽게 작성해 주세요.\n\n"><b>≡</b>해설 작성</button>
+          <button data-prompt="다음 보기의 표현을 짧고 정확하게 다듬어 주세요.\n\n"><b>↗</b>보기 다듬기</button>
+        </nav>
+        <div class="sidebar-note"><strong>내 과학 자료 연결</strong><p>문항과 교재 자료 검색 기능은 맥미니 연결 후 추가합니다.</p></div>
+      </aside>
+      <section class="chat-area">
+        <div class="chat-head"><div><b>J&B 과학 교재 AI</b><small id="modeText">화면 체험 모드</small></div><button id="copyChat">대화 복사</button></div>
+        <div id="messages" class="messages">
+          <div id="welcome" class="welcome"><span class="spark">✦</span><h1>무엇을 만들까요?</h1><p>과학 문항 제작부터 개념 검토까지, 필요한 작업을 바로 입력해 주세요.</p>
+            <div class="preset-grid">
+              <button data-prompt="통합과학 문제 아이디어를 만들어 주세요."><b>✦</b><span>문제 아이디어</span><small>→</small></button>
+              <button data-prompt="다음 과학 내용에 개념 오류가 있는지 검사해 주세요.\n\n"><b>✓</b><span>개념 오류 검사</span><small>→</small></button>
+              <button data-prompt="다음 문항의 해설을 학생이 이해하기 쉽게 작성해 주세요.\n\n"><b>≡</b><span>해설 작성</span><small>→</small></button>
+              <button data-prompt="다음 보기의 표현을 짧고 정확하게 다듬어 주세요.\n\n"><b>↗</b><span>보기 다듬기</span><small>→</small></button>
+            </div>
+          </div>
+          <article class="message assistant"><div class="avatar">JB</div><div><strong>J&B AI</strong><p>안녕하세요, 준범님. 과학 문항 제작과 교재 검토를 도와드릴 준비가 되었습니다. 아래 작업을 고르거나 바로 질문을 입력해 주세요.</p></div></article>
+        </div>
+        <form id="composer" class="composer"><textarea id="question" rows="1" placeholder="AI에게 작업을 요청하세요"></textarea><button id="sendBtn" type="submit" disabled>↑</button><small>Enter로 보내기 · Shift + Enter로 줄바꿈</small></form>
+      </section>
+    </section>
+  </main>
+  <div id="modal" class="modal-backdrop hidden"><section class="modal"><button id="closeModal" class="modal-close">×</button><span class="modal-icon">⌁</span><h2>맥미니 AI 연결</h2><p>집에서 AI 서버를 만든 뒤 받게 될 주소를 여기에 넣습니다. 지금은 비워 두셔도 됩니다.</p><label for="endpoint">연결 주소</label><input id="endpoint" placeholder="예: https://ai.jblab.kr/chat"><div class="modal-actions"><button id="disconnect">연결 해제</button><button id="saveEndpoint">저장</button></div></section></div>
+  <script src="app.js"></script>
+</body>
+</html>
