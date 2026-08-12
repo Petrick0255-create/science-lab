@@ -1,4 +1,4 @@
-const CACHE_NAME = "jnb-lab-home-v4";
+const CACHE_NAME = "jnb-lab-home-v5";
 const HOME_ASSETS = [
   "./",
   "./index.html",

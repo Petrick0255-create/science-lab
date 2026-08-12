@@ -5,14 +5,14 @@
   --line: rgba(151, 171, 214, .15);
   --paper: #0d1429;
   --background: #070b18;
-  --blue: #278cff;
-  --blue-deep: #55b7ff;
-  --coral: #f33f98;
-  --coral-deep: #ff73bb;
-  --mint: #13c995;
-  --mint-deep: #51efc0;
-  --yellow: #f39a25;
-  --yellow-deep: #ffc45e;
+  --blue: #167dff;
+  --blue-deep: #65c4ff;
+  --coral: #9a5cff;
+  --coral-deep: #bd94ff;
+  --mint: #00c9b7;
+  --mint-deep: #55eadb;
+  --yellow: #38bdf8;
+  --yellow-deep: #7ddcff;
   --violet: #7667f1;
 }
 
@@ -295,24 +295,24 @@ button:focus-visible {
 }
 
 .sector.physics .sector-path {
-  fill: var(--blue);
+  fill: url(#physics-gradient);
 }
-.sector.physics { --sector-glow: rgba(39, 140, 255, .62); }
+.sector.physics { --sector-glow: rgba(22, 125, 255, .56); }
 
 .sector.chemistry .sector-path {
-  fill: var(--coral);
+  fill: url(#chemistry-gradient);
 }
-.sector.chemistry { --sector-glow: rgba(243, 63, 152, .57); }
+.sector.chemistry { --sector-glow: rgba(154, 92, 255, .52); }
 
 .sector.biology .sector-path {
-  fill: var(--mint);
+  fill: url(#biology-gradient);
 }
-.sector.biology { --sector-glow: rgba(19, 201, 149, .56); }
+.sector.biology { --sector-glow: rgba(0, 201, 183, .48); }
 
 .sector.earth .sector-path {
-  fill: var(--yellow);
+  fill: url(#earth-gradient);
 }
-.sector.earth { --sector-glow: rgba(243, 154, 37, .55); }
+.sector.earth { --sector-glow: rgba(56, 189, 248, .48); }
 
 .sector-label {
   fill: #fff;
@@ -335,7 +335,7 @@ button:focus-visible {
 }
 
 .core-circle {
-  fill: #6259cb;
+  fill: url(#core-gradient);
   stroke: transparent;
   stroke-width: 0;
   filter: drop-shadow(0 0 20px rgba(118, 103, 241, .42));
