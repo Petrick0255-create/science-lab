@@ -2,11 +2,17 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="통합과학을 중심으로 과학 시뮬레이터와 문항 제작 도구를 연결하는 J&B LAB입니다.">
+  <meta name="theme-color" content="#101a3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="J&B LAB">
   <title>J&B LAB | 통합과학 온라인 실험실</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 </head>
 
 <body id="top">
@@ -20,127 +26,89 @@
   </header>
 
   <main class="container">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <span class="eyebrow">SCIENCE TOOLKIT</span>
-        <h1 id="hero-title">과학을 연결하고,<br><strong>직접 확인합니다.</strong></h1>
-        <p>통합과학을 중심으로 물리학·화학·생명과학·지구과학의 개념을 실험하고, 문항 제작에 필요한 도구를 한곳에서 사용하세요.</p>
-      </div>
-
-      <div class="program-item">
-        <button class="program-card" type="button" aria-expanded="false" aria-controls="program-menu">
-          <span class="program-icon" aria-hidden="true">⌘</span>
-          <span class="program-copy">
-            <span class="program-kicker">SEPARATE TOOLBOX</span>
-            <strong>프로그램</strong>
-            <small>그래프·도형·문항 검색 도구</small>
-          </span>
-          <span class="program-arrow" aria-hidden="true">↗</span>
-        </button>
-
-        <nav class="program-dropdown" id="program-menu" aria-label="프로그램 메뉴">
-          <a href="programs/graph-maker/index.html">그래프 제작기</a>
-          <a href="https://exam-cutter.onrender.com" target="_blank" rel="noopener noreferrer">문제 추출기</a>
-          <a href="programs/circle-graph/index.html">원형 그래프 제작기</a>
-          <a href="programs/venn-diagram/index.html">벤다이어그램 제작기</a>
-          <a href="programs/exam-search/index.html">문항 출처 검색기</a>
-          <a href="programs/problem-idea/index.html">유형별 문항 검색기</a>
-        </nav>
-      </div>
-    </section>
-
-    <section class="science-section" aria-labelledby="science-title">
+    <section class="hub-section" aria-labelledby="hub-title">
       <div class="section-heading">
         <div>
-          <span class="eyebrow">CONNECTED SCIENCE</span>
-          <h2 id="science-title">통합과학 허브</h2>
+          <span class="eyebrow">J&amp;B LAB</span>
+          <h1 id="hub-title">통합과학 허브</h1>
         </div>
-        <p>과목 카드를 선택하면 해당 실험과 제작 도구가 아래에 표시됩니다.</p>
+        <div class="program-item">
+          <button class="program-card" type="button" aria-expanded="false" aria-controls="program-menu">
+            <span class="program-symbol" aria-hidden="true">⌘</span>
+            <strong>프로그램</strong>
+            <span class="program-arrow" aria-hidden="true">↗</span>
+          </button>
+          <nav class="program-dropdown" id="program-menu" aria-label="프로그램 메뉴">
+            <a href="programs/graph-maker/index.html">그래프 제작기</a>
+            <a href="https://exam-cutter.onrender.com" target="_blank" rel="noopener noreferrer">문제 추출기</a>
+            <a href="programs/circle-graph/index.html">원형 그래프 제작기</a>
+            <a href="programs/venn-diagram/index.html">벤다이어그램 제작기</a>
+            <a href="programs/exam-search/index.html">문항 출처 검색기</a>
+            <a href="programs/problem-idea/index.html">유형별 문항 검색기</a>
+          </nav>
+        </div>
       </div>
 
-      <div class="science-orbit" aria-label="과학 분야 선택">
-        <span class="orbit-line orbit-line-vertical" aria-hidden="true"></span>
-        <span class="orbit-line orbit-line-horizontal" aria-hidden="true"></span>
+      <div class="hub-layout">
+        <div class="donut-wrap">
+          <div class="ambient-dot dot-one" aria-hidden="true"></div>
+          <div class="ambient-dot dot-two" aria-hidden="true"></div>
+          <svg class="donut-svg" viewBox="0 0 560 560" role="img" aria-labelledby="donut-title donut-description">
+            <title id="donut-title">통합과학 중심 원형 메뉴</title>
+            <desc id="donut-description">가운데 통합과학을 물리학, 생명과학, 지구과학, 화학의 네 원호가 간격을 두고 둘러싼 메뉴입니다.</desc>
+            <circle class="outer-guide" cx="280" cy="280" r="232"></circle>
+            <g id="sector-layer"></g>
+            <g class="core-button active" data-category="integrated" role="button" tabindex="0" aria-label="통합과학 메뉴 선택" aria-pressed="true">
+              <circle class="core-halo" cx="280" cy="280" r="99"></circle>
+              <circle class="core-circle" cx="280" cy="280" r="87"></circle>
+              <text class="core-star" x="280" y="241" text-anchor="middle">✦</text>
+              <text class="core-title" x="280" y="284" text-anchor="middle">통합과학</text>
+              <text class="core-sub" x="280" y="310" text-anchor="middle">CORE HUB</text>
+            </g>
+          </svg>
+        </div>
 
-        <button class="science-card physics" type="button" data-category="physics" aria-expanded="false" aria-controls="science-menu">
-          <span class="science-number">01</span>
-          <span class="science-icon" aria-hidden="true">⚛️</span>
-          <strong>물리학</strong>
-          <small>운동 · 에너지 · 파동</small>
-        </button>
-
-        <button class="science-card chemistry" type="button" data-category="chemistry" aria-expanded="false" aria-controls="science-menu">
-          <span class="science-number">02</span>
-          <span class="science-icon" aria-hidden="true">🧪</span>
-          <strong>화학</strong>
-          <small>물질 · 반응 · 규칙성</small>
-        </button>
-
-        <button class="science-card integrated active" type="button" data-category="integrated" aria-expanded="true" aria-controls="science-menu">
-          <span class="hub-ring" aria-hidden="true"></span>
-          <span class="science-number">CORE</span>
-          <span class="science-icon" aria-hidden="true">✦</span>
-          <strong>통합과학</strong>
-          <small>네 과학의 연결에서 출발합니다</small>
-          <span class="core-label">중심 허브</span>
-        </button>
-
-        <button class="science-card biology" type="button" data-category="biology" aria-expanded="false" aria-controls="science-menu">
-          <span class="science-number">03</span>
-          <span class="science-icon" aria-hidden="true">🧬</span>
-          <strong>생명과학</strong>
-          <small>세포 · 유전 · 생명 시스템</small>
-        </button>
-
-        <button class="science-card earth" type="button" data-category="earth" aria-expanded="false" aria-controls="science-menu">
-          <span class="science-number">04</span>
-          <span class="science-icon" aria-hidden="true">🌎</span>
-          <strong>지구과학</strong>
-          <small>지구 시스템 · 판 구조론</small>
-        </button>
+        <div class="hub-guide">
+          <span class="guide-label">SELECTED</span>
+          <h3 id="selected-title">통합과학</h3>
+          <p id="selected-description">통합과학 문항을 검토하고, 피드백과 모의고사 제작 과정을 관리합니다.</p>
+          <div class="guide-tip"><span aria-hidden="true">↗</span> 원의 각 영역을 선택해 보세요.</div>
+        </div>
       </div>
 
       <div class="science-menu" id="science-menu" aria-live="polite">
-        <div class="menu-heading">
-          <span class="menu-label">SELECTED</span>
-          <div>
-            <h3 id="selected-title">통합과학</h3>
-            <p id="selected-description">통합과학 문항을 검토하고, 피드백과 모의고사 제작 과정을 관리합니다.</p>
-          </div>
-        </div>
-
         <nav class="menu-links active" data-panel="integrated" aria-label="통합과학 메뉴">
-          <a href="https://inspection-f27b4.web.app/" target="_blank" rel="noopener noreferrer"><span>AI 문항 검토</span><b>01</b></a>
-          <a href="programs/feedback-share/index.html"><span>통과 피드백 공유</span><b>02</b></a>
-          <a href="programs/exam-idea2/index.html"><span>모의고사 메이킹</span><b>03</b></a>
-          <a href="programs/exam-director/index.html"><span>모의고사 관리</span><b>04</b></a>
+          <a href="https://inspection-f27b4.web.app/" target="_blank" rel="noopener noreferrer"><b>01</b><span>AI 문항 검토</span><em>↗</em></a>
+          <a href="programs/feedback-share/index.html"><b>02</b><span>통과 피드백 공유</span><em>↗</em></a>
+          <a href="programs/exam-idea2/index.html"><b>03</b><span>모의고사 메이킹</span><em>↗</em></a>
+          <a href="programs/exam-director/index.html"><b>04</b><span>모의고사 관리</span><em>↗</em></a>
         </nav>
 
         <nav class="menu-links" data-panel="physics" aria-label="물리학 메뉴" hidden>
-          <a href="physics/collision/index.html"><span>충돌 실험 시뮬레이터</span><b>01</b></a>
-          <a href="physics/projectile/index.html"><span>자유낙하와 수평 투사</span><b>02</b></a>
-          <a href="physics/Energy Conversion/index.html"><span>에너지 전환</span><b>03</b></a>
+          <a href="physics/collision/index.html"><b>01</b><span>충돌 실험 시뮬레이터</span><em>↗</em></a>
+          <a href="physics/projectile/index.html"><b>02</b><span>자유낙하와 수평 투사</span><em>↗</em></a>
+          <a href="physics/Energy Conversion/index.html"><b>03</b><span>에너지 전환</span><em>↗</em></a>
         </nav>
 
         <nav class="menu-links" data-panel="chemistry" aria-label="화학 메뉴" hidden>
-          <a href="chemistry/neutralization/index.html"><span>중화 반응 시뮬레이터</span><b>01</b></a>
-          <a href="chemistry/neutralization-graph/index.html"><span>중화 반응 그래프</span><b>02</b></a>
-          <a href="chemistry/element-problem-maker/index.html"><span>원소의 규칙성</span><b>03</b></a>
-          <span class="coming-soon"><span>기체 법칙</span><em>제작 예정</em></span>
-          <span class="coming-soon"><span>반응 속도</span><em>제작 예정</em></span>
+          <a href="chemistry/neutralization/index.html"><b>01</b><span>중화 반응 시뮬레이터</span><em>↗</em></a>
+          <a href="chemistry/neutralization-graph/index.html"><b>02</b><span>중화 반응 그래프</span><em>↗</em></a>
+          <a href="chemistry/element-problem-maker/index.html"><b>03</b><span>원소의 규칙성</span><em>↗</em></a>
+          <span class="coming-soon"><b>04</b><span>기체 법칙</span><i>제작 예정</i></span>
+          <span class="coming-soon"><b>05</b><span>반응 속도</span><i>제작 예정</i></span>
         </nav>
 
         <nav class="menu-links" data-panel="biology" aria-label="생명과학 메뉴" hidden>
-          <a href="biology/dna-transcription/index.html"><span>DNA 전사 시뮬레이터</span><b>01</b></a>
-          <a href="biology/protein-structure/index.html"><span>단백질 구조와 유전자 정보 탐구</span><b>02</b></a>
-          <a href="biology/genetic-trait-designer/index.html"><span>가계도 제작 도우미</span><b>03</b></a>
-          <a href="https://inspection-bio.web.app/" target="_blank" rel="noopener noreferrer"><span>AI 생명과학 문항 검수</span><b>04</b></a>
-          <span class="coming-soon"><span>광합성</span><em>제작 예정</em></span>
+          <a href="biology/dna-transcription/index.html"><b>01</b><span>DNA 전사 시뮬레이터</span><em>↗</em></a>
+          <a href="biology/protein-structure/index.html"><b>02</b><span>단백질 구조와 유전자 정보 탐구</span><em>↗</em></a>
+          <a href="biology/genetic-trait-designer/index.html"><b>03</b><span>가계도 제작 도우미</span><em>↗</em></a>
+          <a href="https://inspection-bio.web.app/" target="_blank" rel="noopener noreferrer"><b>04</b><span>AI 생명과학 문항 검수</span><em>↗</em></a>
+          <span class="coming-soon"><b>05</b><span>광합성</span><i>제작 예정</i></span>
         </nav>
 
         <nav class="menu-links" data-panel="earth" aria-label="지구과학 메뉴" hidden>
-          <a href="earth/plate_boundary/index.html"><span>판 경계와 연령 분포 시뮬레이터</span><b>01</b></a>
-          <a href="earth/plate-boundary-simulator/index.html"><span>판의 경계 시뮬레이션</span><b>02</b></a>
+          <a href="earth/plate_boundary/index.html"><b>01</b><span>판 경계와 연령 분포 시뮬레이터</span><em>↗</em></a>
+          <a href="earth/plate-boundary-simulator/index.html"><b>02</b><span>판의 경계 시뮬레이션</span><em>↗</em></a>
         </nav>
       </div>
     </section>
@@ -148,16 +116,16 @@
 
   <aside class="quick-banner" aria-label="업무 바로가기">
     <span class="quick-label">QUICK</span>
-    <a href="https://docs.google.com/spreadsheets/d/1l8_1coLDaQa21Tc71NL1qhL0zugAllnOXa_nPPqqg-o/edit?gid=1998448896#gid=1998448896" target="_blank" rel="noopener noreferrer" class="quick-btn">2027 교재 제작</a>
-    <a href="https://docs.google.com/spreadsheets/d/1ABvtaEBOrFPqQTp3eDtobovHD3ls-k1BmP9giC9qtZU/edit?gid=1429834433#gid=1429834433" target="_blank" rel="noopener noreferrer" class="quick-btn">모니터링 스케쥴</a>
-    <a href="https://docs.google.com/spreadsheets/d/1ABvtaEBOrFPqQTp3eDtobovHD3ls-k1BmP9giC9qtZU/edit?gid=2015276783#gid=2015276783" target="_blank" rel="noopener noreferrer" class="quick-btn">강의 제작 기록지</a>
-    <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="quick-btn">Chat GPT</a>
-    <a href="https://tzone.megastudy.net/" target="_blank" rel="noopener noreferrer" class="quick-btn">메가스터디 티존</a>
-    <a href="https://www.megastudy.net/" target="_blank" rel="noopener noreferrer" class="quick-btn">메가스터디</a>
-    <a href="https://docs.google.com/spreadsheets/d/158mBlgqF6IqoMOvU8yTJojIbz9tf7WYsV2MeoiTX8Z8/edit?gid=350694753#gid=350694753" target="_blank" rel="noopener noreferrer" class="quick-btn">통합과학 분석</a>
-    <a href="https://data.kma.go.kr/cmmn/main.do" target="_blank" rel="noopener noreferrer" class="quick-btn">기상 자료 개방 포털</a>
-    <a href="https://www.data.go.kr/index.do" target="_blank" rel="noopener noreferrer" class="quick-btn">공공 데이터 포털</a>
-    <a href="#top" class="quick-btn quick-top">↑ TOP</a>
+    <a href="https://docs.google.com/spreadsheets/d/1l8_1coLDaQa21Tc71NL1qhL0zugAllnOXa_nPPqqg-o/edit?gid=1998448896#gid=1998448896" target="_blank" rel="noopener noreferrer">2027 교재 제작</a>
+    <a href="https://docs.google.com/spreadsheets/d/1ABvtaEBOrFPqQTp3eDtobovHD3ls-k1BmP9giC9qtZU/edit?gid=1429834433#gid=1429834433" target="_blank" rel="noopener noreferrer">모니터링 스케쥴</a>
+    <a href="https://docs.google.com/spreadsheets/d/1ABvtaEBOrFPqQTp3eDtobovHD3ls-k1BmP9giC9qtZU/edit?gid=2015276783#gid=2015276783" target="_blank" rel="noopener noreferrer">강의 제작 기록지</a>
+    <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Chat GPT</a>
+    <a href="https://tzone.megastudy.net/" target="_blank" rel="noopener noreferrer">메가스터디 티존</a>
+    <a href="https://www.megastudy.net/" target="_blank" rel="noopener noreferrer">메가스터디</a>
+    <a href="https://docs.google.com/spreadsheets/d/158mBlgqF6IqoMOvU8yTJojIbz9tf7WYsV2MeoiTX8Z8/edit?gid=350694753#gid=350694753" target="_blank" rel="noopener noreferrer">통합과학 분석</a>
+    <a href="https://data.kma.go.kr/cmmn/main.do" target="_blank" rel="noopener noreferrer">기상 자료 개방 포털</a>
+    <a href="https://www.data.go.kr/index.do" target="_blank" rel="noopener noreferrer">공공 데이터 포털</a>
+    <a href="#top" class="quick-top">↑ TOP</a>
   </aside>
 
   <footer>
