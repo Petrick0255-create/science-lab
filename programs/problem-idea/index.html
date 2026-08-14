@@ -1,204 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>J&B 문제 아이디어</title>
-
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="물리학·화학·생명과학·지구과학·통합과학 모의고사 문항 검색">
+  <title>J&amp;B 통합 모의고사 문항 검색</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
-
 <body>
+  <header class="jb-header">
+    <a href="../../index.html" class="jb-logo"><span class="jb-brand">J&amp;B</span><span class="jb-badge">LAB</span></a>
+    <div class="jb-title">통합 모의고사 문항 검색기</div>
+    <a href="../../index.html" class="jb-home">J&amp;B 홈으로</a>
+  </header>
 
-<header class="jb-header">
+  <main class="container">
+    <section class="hero">
+      <h1>문제 속 단어로 문항 찾기</h1>
+      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>문제 이미지를 누르면 크게 볼 수 있고, 문제 PDF와 해설 PDF를 바로 열 수 있습니다.</p>
+    </section>
 
-  <a href="../../index.html" class="jb-logo">
-    <div class="jb-brand">J&B</div>
-    <div class="jb-badge">LAB</div>
-  </a>
+    <section class="control-panel">
+      <form id="searchForm" class="search-row" role="search">
+        <label class="sr-only" for="searchInput">검색어</label>
+        <input id="searchInput" type="search" placeholder="예: 초전도체 전기 저항, 3S250301" autocomplete="off">
+        <button id="searchBtn" type="submit" disabled>검색</button>
+      </form>
 
-  <div class="jb-title">
-    유형별 문항 검색기
-  </div>
-
-  <a href="../../index.html" class="jb-home">
-    J&B 홈으로
-  </a>
-
-</header>
-
-<main class="container">
-
-  <section class="hero">
-    <h1>유형별 문항 검색기</h1>
-
-    <p>
-      과목과 유형을 선택해 관련 문항을 확인하고, 잘못 분류된 유형을 수정할 수 있습니다.<br>
-      그림은 미리보기 이미지입니다. 깨진 경우 pdf에서 캡쳐하세요. 처음 접속 시 10초 정도 로딩 시간이 있습니다. 
-    </p>
-  </section>
-
-  <section class="control-panel">
-
-    <div class="filters">
-
-      <label>
-        과목
-
-        <select id="subjectSelect">
-          <option value="">전체 과목</option>
-        </select>
-      </label>
-
-      <label>
-        유형
-
-        <select id="typeSelect">
-          <option value="">전체 유형</option>
-        </select>
-      </label>
-
-      <label>
-        정렬
-
-        <select id="sortSelect">
-          <option value="newest">최신순</option>
-          <option value="oldest">오래된순</option>
-          <option value="number">번호순</option>
-          <option value="random">랜덤</option>
-        </select>
-      </label>
-
-      <label>
-        보기
-
-        <select id="columnSelect">
-          <option value="2">2열</option>
-          <option value="3" selected>3열</option>
-        </select>
-      </label>
-
-    </div>
-
-    <div class="summary-row">
-
-      <div class="result-summary">
-        <div id="resultCount">총 0문항</div>
-        <div id="editedCount">수정 0문항</div>
+      <div class="filters">
+        <label>과목<select id="subjectFilter"><option value="">전체 과목</option></select></label>
+        <label>유형<select id="typeFilter"><option value="">전체 유형</option></select></label>
+        <label>학년<select id="gradeFilter"><option value="">전체 학년</option><option>고1</option><option>고2</option><option>고3</option></select></label>
+        <label>정렬<select id="sortSelect"><option value="relevance">관련도순</option><option value="newest">최신순</option><option value="oldest">오래된순</option><option value="number">번호순</option></select></label>
+        <label>보기<select id="columnSelect"><option value="2">2열</option><option value="3" selected>3열</option></select></label>
       </div>
 
-      <div class="data-buttons">
-
-        <button
-          type="button"
-          id="copyAllBtn"
-        >
-          전체 출처 복사
-        </button>
-
-        <button
-          type="button"
-          id="resetChangesBtn"
-        >
-          수정 초기화
-        </button>
-
-        <button
-          type="button"
-          id="syncJsonBtn"
-        >
-          JSON 동기화
-        </button>
-
+      <div class="summary-row">
+        <div class="result-summary"><div id="resultCount">총 0문항</div><div id="dataStatus"><span class="spinner"></span> 데이터 불러오는 중</div></div>
+        <div class="data-buttons">
+          <button id="copyAllBtn" type="button" disabled>표시 출처 복사</button>
+          <button id="resetBtn" type="button">검색 초기화</button>
+          <a class="db-button" href="https://docs.google.com/spreadsheets/d/1u9dPjf4FAEifmS_jQ_xjaN5R8CNecKx49pdIPFuzp0c/edit" target="_blank" rel="noopener noreferrer">DB 원본 열기</a>
+        </div>
       </div>
+    </section>
 
+    <section id="sourcePanel" class="source-panel hidden">
+      <div class="section-head"><h2>출처 목록</h2><span>출처를 누르면 해당 카드로 이동합니다.</span></div>
+      <div id="sourceList" class="source-list"></div>
+    </section>
+
+    <section class="problem-panel">
+      <div class="section-head"><h2>관련 문제</h2><span>이미지를 누르면 크게 볼 수 있습니다.</span></div>
+      <div id="problemGrid" class="problem-grid cols-3"><div class="empty">키워드 또는 필터를 선택해 문항을 검색하세요.</div></div>
+      <button id="loadMoreBtn" class="load-more hidden" type="button">문항 더 보기</button>
+    </section>
+  </main>
+
+  <div id="imageModal" class="image-modal" aria-hidden="true">
+    <div class="image-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="image-modal-head"><strong id="modalTitle">문제 이미지</strong><button id="modalCloseBtn" class="modal-close" type="button" aria-label="닫기">×</button></div>
+      <div class="image-modal-body"><img id="modalImage" alt="문제 이미지"><div id="modalImageError" class="modal-error hidden">이미지를 불러올 수 없습니다. 원본 이미지 링크를 이용해 주세요.</div></div>
+      <div class="modal-links"><a id="modalOriginalBtn" target="_blank" rel="noopener noreferrer">원본 이미지 ↗</a><a id="modalProblemBtn" target="_blank" rel="noopener noreferrer">문제 PDF ↗</a><a id="modalSolutionBtn" target="_blank" rel="noopener noreferrer">해설 PDF ↗</a></div>
     </div>
-
-  </section>
-
-  <section class="source-panel">
-
-    <div class="section-head">
-      <h2>출처 검색용</h2>
-
-      <span>
-        출처를 누르면 검색 페이지가 열립니다.
-      </span>
-    </div>
-
-    <div id="sourceList" class="source-list">
-      데이터를 불러오는 중입니다.
-    </div>
-
-  </section>
-
-  <section class="problem-panel">
-
-    <div class="section-head">
-      <h2>관련 문제</h2>
-
-      <span>
-        문제 이미지를 누르면 크게 볼 수 있고,
-        카드에서 유형을 수정할 수 있습니다.
-      </span>
-    </div>
-
-    <div
-      id="problemGrid"
-      class="problem-grid cols-3"
-    ></div>
-
-  </section>
-
-</main>
-
-<div
-  id="imageModal"
-  class="image-modal"
-  aria-hidden="true"
-  onclick="closeImagePreview()"
->
-
-  <div
-    class="image-modal-dialog"
-    role="dialog"
-    aria-modal="true"
-    onclick="event.stopPropagation()"
-  >
-
-    <div class="image-modal-head">
-
-      <strong id="modalTitle">
-        문제 이미지
-      </strong>
-
-      <button
-        type="button"
-        class="modal-close"
-        onclick="closeImagePreview()"
-        aria-label="닫기"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="image-modal-body">
-
-      <img
-        id="modalImage"
-        src=""
-        alt="문제 이미지"
-      />
-
-    </div>
-
   </div>
 
-</div>
-
-<script src="./app.js"></script>
-
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
