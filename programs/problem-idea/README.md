@@ -32,12 +32,19 @@ node build-index.js /path/to/ndjson-folder
 
 ## 로컬 파일 연결
 
-문항 이미지 미리보기와 이미지 버튼은 항상 아래 로컬 PNG를 사용합니다. `PDF 로컬 우선`을 켜면 문제·해설 PDF도 로컬 경로를 사용합니다. 이 앱 폴더의 `data` 아래에 기존 자료 폴더를 그대로 두면 됩니다.
+문항 이미지 미리보기와 이미지 버튼은 항상 형제 폴더인 `exam-search/data`의 로컬 PNG를 사용합니다. `PDF 로컬 우선`을 켜면 문제·해설 PDF도 같은 자료 폴더를 사용합니다.
 
 ```text
-data/고3 기출/생명과학/문제 이미지 파일/3S260701.png
-data/고3 기출/생명과학/3S2607.pdf
-data/고3 기출/생명과학/3S2607 해설.pdf
+science-lab/programs/
+├─ problem-idea/   ← 이 ZIP의 파일을 저장하는 위치
+└─ exam-search/
+   └─ data/        ← 문제·해설 PDF와 문제 이미지가 있는 위치
+```
+
+```text
+../exam-search/data/고3 기출/생명과학/문제 이미지 파일/3S260701.png
+../exam-search/data/고3 기출/생명과학/3S2607.pdf
+../exam-search/data/고3 기출/생명과학/3S2607 해설.pdf
 ```
 
 ## 주요 기능

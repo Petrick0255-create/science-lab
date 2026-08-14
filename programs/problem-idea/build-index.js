@@ -11,7 +11,7 @@ function normalize(value){return String(value||"").replace(/[Ⅰⅰ]/g,"1").norm
 function clean(value){return typeof value==="string"?value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,""):value}
 function sourceYear(row){const year=Number(row.year)||0,month=Number(row.month)||0;return row.grade==="고3"&&![6,9,11].includes(month)?year-1:year}
 function localUrls(row){
-  const pdfKey=String(row.id||"").slice(0,6),base=`data/${row.grade} 기출/${row.subject}`;
+  const pdfKey=String(row.id||"").slice(0,6),base=`../exam-search/data/${row.grade} 기출/${row.subject}`;
   return{image:`${base}/문제 이미지 파일/${row.imageName||`${row.id}.png`}`,problem:`${base}/${pdfKey}.pdf`,solution:`${base}/${pdfKey} 해설.pdf`};
 }
 const sourceFiles=fs.readdirSync(inputDir).filter(name=>/^chunk_\d+\.ndjson$/.test(name)).sort();
