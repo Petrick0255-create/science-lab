@@ -17,13 +17,13 @@
   <main class="container">
     <section class="hero">
       <h1>문제 속 단어로 문항 찾기</h1>
-      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>문제 이미지를 누르면 크게 볼 수 있고, 문제 PDF와 해설 PDF를 바로 열 수 있습니다.</p>
+      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>고3 7·10월은 시험지 표기 연도와 보정 학년도를 모두 검색하며, Drive 또는 로컬 파일로 바로 연결합니다.</p>
     </section>
 
     <section class="control-panel">
       <form id="searchForm" class="search-row" role="search">
         <label class="sr-only" for="searchInput">검색어</label>
-        <input id="searchInput" type="search" placeholder="예: 초전도체 전기 저항, 3S250301" autocomplete="off">
+        <input id="searchInput" type="search" placeholder="예: 체세포 분열, 25 07 생명과학, 3S260701" autocomplete="off">
         <button id="searchBtn" type="submit" disabled>검색</button>
       </form>
 
@@ -38,6 +38,7 @@
       <div class="summary-row">
         <div class="result-summary"><div id="resultCount">총 0문항</div><div id="dataStatus"><span class="spinner"></span> 데이터 불러오는 중</div></div>
         <div class="data-buttons">
+          <label class="file-mode"><input id="localFileMode" type="checkbox"><span>로컬 파일 우선</span></label>
           <button id="copyAllBtn" type="button" disabled>표시 출처 복사</button>
           <button id="resetBtn" type="button">검색 초기화</button>
           <a class="db-button" href="https://docs.google.com/spreadsheets/d/1u9dPjf4FAEifmS_jQ_xjaN5R8CNecKx49pdIPFuzp0c/edit" target="_blank" rel="noopener noreferrer">DB 원본 열기</a>
@@ -65,6 +66,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=5"></script>
+  <script src="./app.js?v=6"></script>
 </body>
 </html>

@@ -1,19 +1,21 @@
 "use strict";
 
-const CONFIG={indexUrl:"data/search-index.json",typeCatalogUrl:"reference/type-catalog.json",pageSize:30};
-const state={data:[],catalog:{},results:[],visible:CONFIG.pageSize,ready:false};
+const CONFIG={indexUrl:"data/search-index.json",typeCatalogUrl:"reference/type-catalog.json",pageSize:30,localModeKey:"examSearchPreferLocal"};
+const state={data:[],catalog:{},results:[],visible:CONFIG.pageSize,ready:false,preferLocal:false};
 const el={};
 
 document.addEventListener("DOMContentLoaded",init);
 
 async function init(){
-  ["searchForm","searchInput","searchBtn","subjectFilter","typeFilter","gradeFilter","sortSelect","columnSelect","resultCount","dataStatus","copyAllBtn","resetBtn","sourcePanel","sourceList","problemGrid","loadMoreBtn","imageModal","modalTitle","modalImage","modalImageError","modalOriginalBtn","modalProblemBtn","modalSolutionBtn","modalCloseBtn"].forEach(id=>el[id]=document.getElementById(id));
+  ["searchForm","searchInput","searchBtn","subjectFilter","typeFilter","gradeFilter","sortSelect","columnSelect","localFileMode","resultCount","dataStatus","copyAllBtn","resetBtn","sourcePanel","sourceList","problemGrid","loadMoreBtn","imageModal","modalTitle","modalImage","modalImageError","modalOriginalBtn","modalProblemBtn","modalSolutionBtn","modalCloseBtn"].forEach(id=>el[id]=document.getElementById(id));
   el.searchForm.addEventListener("submit",event=>{event.preventDefault();search(true)});
   el.subjectFilter.addEventListener("change",()=>{buildTypeOptions();search(true)});
   el.typeFilter.addEventListener("change",()=>search(true));
   el.gradeFilter.addEventListener("change",()=>search(true));
   el.sortSelect.addEventListener("change",()=>search(true));
   el.columnSelect.addEventListener("change",changeColumns);
+  state.preferLocal=localStorage.getItem(CONFIG.localModeKey)==="1";el.localFileMode.checked=state.preferLocal;
+  el.localFileMode.addEventListener("change",()=>{state.preferLocal=el.localFileMode.checked;localStorage.setItem(CONFIG.localModeKey,state.preferLocal?"1":"0");render()});
   el.resetBtn.addEventListener("click",resetSearch);
   el.copyAllBtn.addEventListener("click",copyVisibleSources);
   el.loadMoreBtn.addEventListener("click",()=>{state.visible+=CONFIG.pageSize;render()});
@@ -45,7 +47,8 @@ function buildSubjectOptions(){
 }
 function buildTypeOptions(){
   const current=el.typeFilter.value,subject=el.subjectFilter.value;
-  const types=subject&&state.catalog[subject]?.length?state.catalog[subject]:unique(state.data.filter(item=>!subject||item.s===subject).map(item=>item.t||"미분류"));
+  const dataTypes=state.data.filter(item=>!subject||item.s===subject).map(item=>item.t||"미분류");
+  const types=unique([...(subject?state.catalog[subject]||[]:[]),...dataTypes]);
   el.typeFilter.replaceChildren(option("","전체 유형"),...types.map(value=>option(value,value)));
   if(types.includes(current))el.typeFilter.value=current;
 }
@@ -62,15 +65,20 @@ function search(updateUrl){
   const query=normalize(el.searchInput.value),tokens=query.split(" ").filter(Boolean);
   const subject=el.subjectFilter.value,type=el.typeFilter.value,grade=el.gradeFilter.value;
   const exact=normalize(el.searchInput.value).replace(/\s/g,"").toUpperCase();
+  const directCode=/^[123][A-Z]\d{6}$/.test(exact);
+  const dateMatch=!directCode&&query.match(/(?:^|\s)(\d{2})\s*(0[1-9]|1[0-2]|[1-9])(?:\s|$)/);
+  const printedYear=dateMatch?Number(dateMatch[1]):null,printedMonth=dateMatch?Number(dateMatch[2]):null;
   state.results=[];
   for(const item of state.data){
     if(subject&&item.s!==subject||type&&(item.t||"미분류")!==type||grade&&item.g!==grade)continue;
+    if(dateMatch&&(item.sy!==printedYear||item.m!==printedMonth))continue;
     if(!tokens.every(token=>item.x.includes(token)))continue;
     let score=0;
     if(item.i===exact)score+=10000;
     if(query&&normalize(item.i).includes(query))score+=1000;
     if(query&&normalize(item.t).includes(query))score+=250;
     if(query&&normalize(item.e).includes(query))score+=100;
+    if(dateMatch)score+=500;
     for(const token of tokens){if(normalize(item.t).includes(token))score+=40;if(normalize(item.q).includes(token))score+=10}
     state.results.push({...item,_score:score});
   }
@@ -105,14 +113,14 @@ function makeSourceChip(item){
 function makeCard(item){
   const card=document.createElement("article");card.className="problem-card";card.id=`card-${item.i}`;
   const preview=document.createElement("button");preview.type="button";preview.className="problem-preview";preview.setAttribute("aria-label",`${sourceText(item)} 이미지 크게 보기`);
-  const image=document.createElement("img");image.alt=`${sourceText(item)} 문제 이미지`;image.loading="lazy";image.src=previewUrl(item.im);
+  const image=document.createElement("img");image.alt=`${sourceText(item)} 문제 이미지`;image.loading="lazy";
   const error=document.createElement("span");error.className="image-error-text";error.textContent="이미지를 불러올 수 없습니다. 원본 링크를 이용해 주세요.";
-  image.addEventListener("error",()=>preview.classList.add("image-error"));preview.addEventListener("click",()=>openImage(item));preview.append(image,error);
+  loadImageWithFallback(image,preview,item);preview.addEventListener("click",()=>openImage(item));preview.append(image,error);
 
   const main=document.createElement("div");main.className="card-main";
   const titleRow=document.createElement("div");titleRow.className="problem-title-row";
   const title=document.createElement("div");title.className="problem-title";title.textContent=sourceText(item);
-  const status=document.createElement("span");status.className=`status-badge ${item.st==="정상"?"ok":"check"}`;status.textContent=item.st;
+  const status=document.createElement("span");status.className=`status-badge ${item.st==="정상"||String(item.st).includes("완료")?"ok":"check"}`;status.textContent=item.st;
   titleRow.append(title,status);
   const meta=document.createElement("div");meta.className="problem-meta";meta.textContent=`${item.i} · ${item.g} · ${item.s} · ${item.n}번`;
   const type=document.createElement("div");type.className="type-chip";type.textContent=item.t||"미분류";
@@ -120,7 +128,7 @@ function makeCard(item){
   main.append(titleRow,meta,type,prompt);
 
   const links=document.createElement("div");links.className="card-links";
-  links.append(link("원본 이미지",item.im,"image"),link("문제 PDF",item.p,"problem"),link("해설 PDF",item.sol,"solution"),copyButton(item));
+  links.append(link("원본 이미지",resourceUrl(item,"image"),"image"),link("문제 PDF",resourceUrl(item,"problem"),"problem"),link("해설 PDF",resourceUrl(item,"solution"),"solution"),copyButton(item));
   card.append(preview,main,links);return card;
 }
 
@@ -130,12 +138,23 @@ function makeEmpty(text){const div=document.createElement("div");div.className="
 function sourceText(item){return `${item.e} ${item.n}번`}
 function previewUrl(url){const id=driveFileId(url);return id?`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`:url||""}
 function driveFileId(url){const match=String(url||"").match(/\/file\/d\/([^/]+)/);return match?match[1]:""}
+function resourceCandidates(item,kind){
+  const pairs={image:[item.im,item.lim],problem:[item.p,item.lp],solution:[item.sol,item.lsol]};
+  const pair=pairs[kind]||[];return (state.preferLocal?[pair[1],pair[0]]:pair).filter(Boolean);
+}
+function resourceUrl(item,kind){return resourceCandidates(item,kind)[0]||""}
+function loadImageWithFallback(image,container,item){
+  const candidates=resourceCandidates(item,"image").map(previewUrl);let index=0;container.classList.remove("image-error");
+  image.onerror=()=>{index+=1;if(index<candidates.length)image.src=candidates[index];else container.classList.add("image-error")};
+  if(candidates.length)image.src=candidates[0];else container.classList.add("image-error");
+}
 
 function openImage(item){
-  if(!driveFileId(item.im)){if(item.im)window.open(item.im,"_blank","noopener");return}
-  el.modalTitle.textContent=sourceText(item);el.modalImageError.classList.add("hidden");el.modalImage.classList.remove("hidden");el.modalImage.src=previewUrl(item.im);
-  el.modalImage.onerror=()=>{el.modalImage.classList.add("hidden");el.modalImageError.classList.remove("hidden")};
-  setModalLink(el.modalOriginalBtn,item.im);setModalLink(el.modalProblemBtn,item.p);setModalLink(el.modalSolutionBtn,item.sol);
+  el.modalTitle.textContent=sourceText(item);el.modalImageError.classList.add("hidden");el.modalImage.classList.remove("hidden");
+  const candidates=resourceCandidates(item,"image").map(previewUrl);let index=0;
+  el.modalImage.onerror=()=>{index+=1;if(index<candidates.length)el.modalImage.src=candidates[index];else{el.modalImage.classList.add("hidden");el.modalImageError.classList.remove("hidden")}};
+  if(candidates.length)el.modalImage.src=candidates[0];else{el.modalImage.classList.add("hidden");el.modalImageError.classList.remove("hidden")}
+  setModalLink(el.modalOriginalBtn,resourceUrl(item,"image"));setModalLink(el.modalProblemBtn,resourceUrl(item,"problem"));setModalLink(el.modalSolutionBtn,resourceUrl(item,"solution"));
   el.imageModal.classList.add("show");el.imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");
 }
 function setModalLink(node,url){node.classList.toggle("hidden",!url);if(url)node.href=url;else node.removeAttribute("href")}
