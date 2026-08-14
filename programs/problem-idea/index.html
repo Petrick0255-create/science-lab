@@ -17,7 +17,7 @@
   <main class="container">
     <section class="hero">
       <h1>문제 속 단어로 문항 찾기</h1>
-      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>고3 7·10월은 시험지 표기 연도와 보정 학년도를 모두 검색하며, Drive 또는 로컬 파일로 바로 연결합니다.</p>
+      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>문항 이미지는 로컬 PNG로 미리 보고, 문제·해설 PDF는 Drive 또는 로컬 파일로 바로 연결합니다.</p>
     </section>
 
     <section class="control-panel">
@@ -38,7 +38,7 @@
       <div class="summary-row">
         <div class="result-summary"><div id="resultCount">총 0문항</div><div id="dataStatus"><span class="spinner"></span> 데이터 불러오는 중</div></div>
         <div class="data-buttons">
-          <label class="file-mode"><input id="localFileMode" type="checkbox"><span>로컬 파일 우선</span></label>
+          <label class="file-mode"><input id="localFileMode" type="checkbox"><span>PDF 로컬 우선</span></label>
           <button id="copyAllBtn" type="button" disabled>표시 출처 복사</button>
           <button id="resetBtn" type="button">검색 초기화</button>
           <a class="db-button" href="https://docs.google.com/spreadsheets/d/1u9dPjf4FAEifmS_jQ_xjaN5R8CNecKx49pdIPFuzp0c/edit" target="_blank" rel="noopener noreferrer">DB 원본 열기</a>
@@ -61,11 +61,11 @@
   <div id="imageModal" class="image-modal" aria-hidden="true">
     <div class="image-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="image-modal-head"><strong id="modalTitle">문제 이미지</strong><button id="modalCloseBtn" class="modal-close" type="button" aria-label="닫기">×</button></div>
-      <div class="image-modal-body"><img id="modalImage" alt="문제 이미지"><div id="modalImageError" class="modal-error hidden">이미지를 불러올 수 없습니다. 원본 이미지 링크를 이용해 주세요.</div></div>
-      <div class="modal-links"><a id="modalOriginalBtn" target="_blank" rel="noopener noreferrer">원본 이미지 ↗</a><a id="modalProblemBtn" target="_blank" rel="noopener noreferrer">문제 PDF ↗</a><a id="modalSolutionBtn" target="_blank" rel="noopener noreferrer">해설 PDF ↗</a></div>
+      <div class="image-modal-body"><img id="modalImage" alt="문제 이미지"><div id="modalImageError" class="modal-error hidden">로컬 문제 이미지를 찾지 못했습니다. 파일명과 폴더 위치를 확인해 주세요.</div></div>
+      <div class="modal-links"><a id="modalOriginalBtn" target="_blank" rel="noopener noreferrer">로컬 이미지 ↗</a><a id="modalProblemBtn" target="_blank" rel="noopener noreferrer">문제 PDF ↗</a><a id="modalSolutionBtn" target="_blank" rel="noopener noreferrer">해설 PDF ↗</a></div>
     </div>
   </div>
 
-  <script src="./app.js?v=6"></script>
+  <script src="./app.js?v=7"></script>
 </body>
 </html>

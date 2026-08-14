@@ -114,7 +114,7 @@ function makeCard(item){
   const card=document.createElement("article");card.className="problem-card";card.id=`card-${item.i}`;
   const preview=document.createElement("button");preview.type="button";preview.className="problem-preview";preview.setAttribute("aria-label",`${sourceText(item)} 이미지 크게 보기`);
   const image=document.createElement("img");image.alt=`${sourceText(item)} 문제 이미지`;image.loading="lazy";
-  const error=document.createElement("span");error.className="image-error-text";error.textContent="이미지를 불러올 수 없습니다. 원본 링크를 이용해 주세요.";
+  const error=document.createElement("span");error.className="image-error-text";error.textContent="로컬 문제 이미지를 찾지 못했습니다. 파일명과 폴더 위치를 확인해 주세요.";
   loadImageWithFallback(image,preview,item);preview.addEventListener("click",()=>openImage(item));preview.append(image,error);
 
   const main=document.createElement("div");main.className="card-main";
@@ -128,7 +128,7 @@ function makeCard(item){
   main.append(titleRow,meta,type,prompt);
 
   const links=document.createElement("div");links.className="card-links";
-  links.append(link("원본 이미지",resourceUrl(item,"image"),"image"),link("문제 PDF",resourceUrl(item,"problem"),"problem"),link("해설 PDF",resourceUrl(item,"solution"),"solution"),copyButton(item));
+  links.append(link("로컬 이미지",resourceUrl(item,"image"),"image"),link("문제 PDF",resourceUrl(item,"problem"),"problem"),link("해설 PDF",resourceUrl(item,"solution"),"solution"),copyButton(item));
   card.append(preview,main,links);return card;
 }
 
@@ -139,6 +139,7 @@ function sourceText(item){return `${item.e} ${item.n}번`}
 function previewUrl(url){const id=driveFileId(url);return id?`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`:url||""}
 function driveFileId(url){const match=String(url||"").match(/\/file\/d\/([^/]+)/);return match?match[1]:""}
 function resourceCandidates(item,kind){
+  if(kind==="image")return[item.lim].filter(Boolean);
   const pairs={image:[item.im,item.lim],problem:[item.p,item.lp],solution:[item.sol,item.lsol]};
   const pair=pairs[kind]||[];return (state.preferLocal?[pair[1],pair[0]]:pair).filter(Boolean);
 }
