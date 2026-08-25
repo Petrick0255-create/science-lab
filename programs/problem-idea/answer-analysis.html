@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="모의고사 문항 기록, 유형 비교, 정답 분포 분석">
+  <title>J&amp;B 모의고사 기록·비교·분석</title>
+  <link rel="stylesheet" href="./analysis.css">
+</head>
+<body>
+  <header class="jb-header">
+    <a href="../../index.html" class="jb-logo"><span class="jb-brand">J&amp;B</span><span class="jb-badge">LAB</span></a>
+    <div class="jb-title">모의고사 기록·비교·분석</div>
+    <nav class="jb-nav" aria-label="도구 이동">
+      <a class="jb-nav-link" href="./index.html">문항 검색</a>
+      <a class="jb-nav-link active" href="./answer-analysis.html">모의고사 분석</a>
+      <a href="../../index.html" class="jb-home">J&amp;B 홈으로</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="tool-head">
+      <div><span>MOCK EXAM ARCHIVE</span><h1>모의고사 문항 기록</h1><p>문항을 기록하면 비교표와 분석 결과가 자동으로 만들어집니다.</p></div>
+      <div id="totalStatus" class="total-status">0개 모의고사 · 0문항</div>
+    </section>
+
+    <nav class="tabs" aria-label="분석 화면">
+      <button class="tab active" type="button" data-tab="record">기록</button>
+      <button class="tab" type="button" data-tab="compare">비교</button>
+      <button class="tab" type="button" data-tab="analysis">분석</button>
+      <button class="tab" type="button" data-tab="quick">빠른 분석</button>
+    </nav>
+
+    <section id="recordTab" class="tab-page active">
+      <div class="panel">
+        <div class="panel-title"><div><h2>문항 입력</h2><p>이미지는 선택 사항이며, 파일 선택 또는 붙여넣기로 넣을 수 있습니다.</p></div><span class="local-badge">브라우저에만 저장</span></div>
+        <form id="recordForm" class="record-form">
+          <input id="editingId" type="hidden">
+          <div class="exam-picker field-span-2">
+            <label>모의고사 제목</label>
+            <div class="exam-mode">
+              <select id="existingExam"><option value="">새 제목 입력</option></select>
+              <input id="newExamTitle" required placeholder="예: 26 고2 6월">
+            </div>
+            <small id="examHint">처음 입력하는 모의고사 제목을 적어 주세요.</small>
+          </div>
+          <label class="field-span-2">유형<input id="questionType" required list="typeSuggestions" placeholder="예: 운동량과 충격량"></label>
+          <label>번호<input id="questionNumber" required type="number" min="1" max="99" inputmode="numeric" placeholder="13"></label>
+          <label>배점<select id="questionPoints" required><option value="1.5">1.5점</option><option value="2" selected>2점</option><option value="2.5">2.5점</option><option value="3">3점</option></select></label>
+          <label>난이도<select id="questionDifficulty" required><option value="하">하</option><option value="중" selected>중</option><option value="상">상</option><option value="최상">최상</option></select></label>
+          <label>정답<select id="questionAnswer" required><option value="">선택</option><option value="1">①</option><option value="2">②</option><option value="3">③</option><option value="4">④</option><option value="5">⑤</option></select></label>
+          <label class="field-span-2">스크린샷 이미지 (선택)<input id="questionImage" type="file" accept="image/*"><span id="imageStatus">파일 선택 또는 이 입력 칸에서 Ctrl+V</span></label>
+          <label class="field-span-4">해설<textarea id="questionExplanation" required rows="4" placeholder="정답의 근거와 오답 선지 해설을 입력하세요."></textarea></label>
+          <div class="form-actions field-span-4"><button id="cancelEdit" class="secondary hidden" type="button">수정 취소</button><button id="saveRecord" type="submit">저장</button></div>
+        </form>
+        <datalist id="typeSuggestions"></datalist>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><div><h2>저장된 문항</h2><p>모의고사를 선택해 기록을 확인하고 수정할 수 있습니다.</p></div><select id="recordExamFilter"><option value="">전체 모의고사</option></select></div>
+        <div id="recordList" class="record-list"></div>
+      </div>
+    </section>
+
+    <section id="compareTab" class="tab-page">
+      <div class="panel">
+        <div class="panel-title"><div><h2>비교할 모의고사 선택</h2><p>최대 8개까지 나란히 비교할 수 있습니다.</p></div><span id="compareCount" class="count-badge">0 / 8</span></div>
+        <div id="examChecks" class="exam-checks"></div>
+      </div>
+      <div class="panel compare-panel">
+        <div class="panel-title"><div><h2>유형별 비교</h2><p>셀을 누르면 이미지와 해설을 확인할 수 있습니다.</p></div></div>
+        <div id="compareEmpty" class="empty">비교할 모의고사를 선택해 주세요.</div>
+        <div id="compareScroll" class="table-scroll hidden"><table id="compareTable" class="compare-table"></table></div>
+      </div>
+    </section>
+
+    <section id="analysisTab" class="tab-page">
+      <div class="panel analysis-controls">
+        <label>분석할 모의고사<select id="analysisExam"><option value="">모의고사 선택</option></select></label>
+      </div>
+      <div id="analysisEmpty" class="panel empty">분석할 모의고사를 선택해 주세요.</div>
+      <div id="analysisContent" class="hidden">
+        <div id="summaryCards" class="summary-cards"></div>
+        <div class="analysis-grid">
+          <div class="panel"><h2>정답 분포</h2><div id="answerCounts" class="answer-counts"></div></div>
+          <div class="panel"><h2>배점 분포</h2><div id="pointCounts" class="metric-bars"></div></div>
+          <div class="panel"><h2>난이도 분포</h2><div id="difficultyCounts" class="metric-bars"></div></div>
+          <div class="panel wide-panel"><h2>번호별 답 배치</h2><div id="answerSequence" class="answer-sequence"></div><div id="answerWarning" class="answer-warning"></div></div>
+          <div class="panel wide-panel"><h2>유형별 문항</h2><div id="typeAnalysis" class="type-analysis"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quickTab" class="tab-page">
+      <div class="panel">
+        <div class="panel-title"><div><h2>페이지별 빠른 입력</h2><p>1p는 5문항, 2p~6p는 각 4문항입니다. 정답·ㄱㄴㄷ 조합·유형을 한 칸씩 입력하세요.</p></div><button id="quickReset" class="secondary" type="button">초기화</button></div>
+        <div id="quickPageGrid" class="quick-page-grid"></div>
+        <div class="quick-result-grid">
+          <div><h3>보기별 개수</h3><div id="quickChoiceCounts" class="answer-counts"></div></div>
+          <div><h3>ㄱ·ㄴ·ㄷ 조합 개수</h3><div id="quickStatementCounts" class="statement-counts"></div></div>
+          <div><h3>번호별 답 배치</h3><div id="quickSequence" class="answer-sequence"></div><div id="quickWarning" class="answer-warning"></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><div><h2>페이지별 유형 배치</h2><p>어떤 유형이 어느 페이지와 번호에 놓였는지 한눈에 확인합니다.</p></div></div>
+        <div id="quickTypeBoard" class="quick-type-board"></div>
+        <div id="quickTypeCounts" class="quick-type-counts"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="detailModal" class="modal" aria-hidden="true">
+    <article class="modal-card">
+      <header><div><strong id="modalTitle"></strong><span id="modalMeta"></span></div><button id="modalClose" type="button" aria-label="닫기">×</button></header>
+      <div id="modalImageWrap" class="modal-image-wrap"><img id="modalImage" alt="문항 스크린샷"></div>
+      <section><h3>해설</h3><p id="modalExplanation"></p></section>
+    </article>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./answer-analysis.js?v=2"></script>
+</body>
+</html>

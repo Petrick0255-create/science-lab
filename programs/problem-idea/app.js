@@ -135,15 +135,7 @@ function makeCard(item){
 function link(text,url,className){const a=document.createElement("a");a.textContent=text;a.className=className;a.target="_blank";a.rel="noopener noreferrer";if(url)a.href=url;else{a.classList.add("disabled");a.removeAttribute("href")}return a}
 function copyButton(item){const button=document.createElement("button");button.type="button";button.className="copy-button";button.title="출처 복사";button.textContent="📋";button.addEventListener("click",async()=>{await copyText(sourceText(item));button.textContent="✓";setTimeout(()=>button.textContent="📋",900)});return button}
 function makeEmpty(text){const div=document.createElement("div");div.className="empty";div.textContent=text;return div}
-function displayExamName(item){
-  const educationOfficeMonths=[4,5,7,10];
-  if(item.g==="고3"&&educationOfficeMonths.includes(Number(item.m))){
-    const year=Number.isFinite(Number(item.sy))?Number(item.sy):Number(item.y)-1;
-    return `${String(year).padStart(2,"0")} ${String(item.m).padStart(2,"0")} ${item.g} ${item.s}`;
-  }
-  return item.e||`${String(item.y).padStart(2,"0")} ${String(item.m).padStart(2,"0")} ${item.g} ${item.s}`;
-}
-function sourceText(item){return `${displayExamName(item)} ${item.n}번`}
+function sourceText(item){return `${item.e} ${item.n}번`}
 function previewUrl(url){const id=driveFileId(url);return id?`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`:url||""}
 function driveFileId(url){const match=String(url||"").match(/\/file\/d\/([^/]+)/);return match?match[1]:""}
 function resourceCandidates(item,kind){
