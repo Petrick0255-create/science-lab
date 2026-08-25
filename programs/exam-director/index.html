@@ -52,7 +52,8 @@
 
     <section class="page" id="quickPage">
       <div class="page-head"><div><p class="eyebrow">QUICK LAYOUT</p><h1>빠른 분석</h1><p>1p~6p에 페이지당 최대 6문항을 놓고 빈칸을 제외해 집계합니다.</p></div><button id="quickReset" class="button ghost">초기화</button></div>
-      <section class="analysis-card"><div class="section-title"><div><h2>페이지별 입력</h2><p>각 칸에 정답 번호, ㄱ·ㄴ·ㄷ 조합, 유형을 입력하세요.</p></div></div><div id="quickPageGrid" class="quick-page-grid"></div></section>
+      <section class="hwp-import-card" id="hwpImportZone"><div><span class="hwp-badge">HWP 자동 입력</span><h2>모의고사 한글 파일을 올리세요</h2><p>‘01번 답 ③-측정 표준과 정보(1.5)’ 형식의 문항 정보를 읽어 정답·ㄱㄴㄷ 조합·유형을 자동으로 채웁니다.</p><small id="quickHwpStatus">25문항은 1p 5문항, 이후 페이지당 4문항으로 자동 배치합니다.</small></div><label class="button primary hwp-file-button">HWP 선택<input type="file" id="quickHwpInput" accept=".hwp,application/x-hwp"></label></section>
+      <section class="analysis-card"><div class="section-title"><div><h2>페이지별 입력</h2><p>자동 입력 뒤에도 각 칸을 직접 수정할 수 있습니다.</p></div></div><div id="quickPageGrid" class="quick-page-grid"></div></section>
       <div class="quick-result-grid"><section class="analysis-card"><h2>답 번호 개수</h2><div id="quickAnswerCounts" class="answer-counts"></div></section><section class="analysis-card"><h2>ㄱ·ㄴ·ㄷ 조합 개수</h2><div id="quickStatementCounts" class="statement-counts"></div></section><section class="analysis-card"><h2>페이지별 답 배치</h2><div id="quickSequence" class="answer-sequence"></div><div id="quickAlert" class="analysis-alert"></div></section></div>
       <section class="analysis-card"><div class="section-title"><div><h2>페이지별 유형 배치</h2><p>유형의 위치와 사용 횟수를 한눈에 봅니다.</p></div></div><div id="quickTypeBoard" class="quick-type-board"></div><div id="quickTypeCounts" class="quick-type-counts"></div></section>
     </section>
@@ -63,6 +64,7 @@
   <dialog id="detailDialog" class="modal"><div class="modal-head"><div><p class="eyebrow">QUESTION DETAIL</p><h2 id="detailTitle">문항 상세</h2><span id="detailMeta"></span></div><button class="icon-button" data-close="detailDialog">×</button></div><div class="detail-body"><div id="detailImageWrap" class="detail-image"><img id="detailImage" alt="문항 이미지"></div><section><h3>해설</h3><div id="detailExplanation"></div></section><div class="modal-actions"><button class="button ghost" id="detailEditBtn">수정</button></div></div></dialog>
   <dialog id="settingsDialog" class="modal small-modal"><div class="modal-head"><div><p class="eyebrow">CONNECTION</p><h2>연결 설정</h2></div><button class="icon-button" data-close="settingsDialog">×</button></div><div class="modal-body"><label>Apps Script 배포 URL<input id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec"></label><label>동기화 키<input id="syncKey" type="password" autocomplete="off"></label><p class="help-text">기존 Exam Director의 시트·Drive 연결을 그대로 사용합니다.</p><div class="modal-actions"><button class="button ghost" data-close="settingsDialog">취소</button><button class="button primary" id="saveSettingsBtn">저장하고 연결 확인</button></div></div></dialog>
   <div class="toast" id="toast" role="status"></div>
+  <script src="hwp-import.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
