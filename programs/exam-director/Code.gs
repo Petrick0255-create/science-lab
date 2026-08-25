@@ -1,7 +1,7 @@
 var SPREADSHEET_ID = '1LvDHhARksHVu4j2FWTR_YuGDlVJcnTZFS2UeBlbSt08';
 var IMAGE_FOLDER_ID = '1IQohwxwwiT6-BSvVDe6WEZWu070FdYlU';
 var SHEETS = { master: '문제 마스터', seasons: '시즌 설정', types: '유형 목록', backup: '백업', settings: '설정' };
-var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일','문제지 링크','해설지 링크'];
+var MASTER_HEADERS = ['문제 ID','과목','연도','모의고사 제목','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일','문제지 링크','해설지 링크'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('모의고사 관리')
@@ -58,7 +58,7 @@ function doPost(e) {
     var oldQuestions = readQuestions_();
     var updated = applyImages_(payload.questions || [], payload.imageDrafts || {}, oldQuestions);
     writeQuestions_(updated);
-    writeSeasons_(payload.seasons || []);
+    if (Array.isArray(payload.seasons)) writeSeasons_(payload.seasons);
     if (payload.detailTypes) writeTypes_(payload.detailTypes);
     trashRemovedImages_(oldQuestions, updated);
     var syncedAt = new Date().toISOString();
@@ -89,7 +89,7 @@ function loadPayload_() {
 }
 
 function validatePayload_(p) {
-  if (!p || !Array.isArray(p.questions) || !Array.isArray(p.seasons)) throw new Error('동기화 데이터 형식이 올바르지 않습니다.');
+  if (!p || !Array.isArray(p.questions)) throw new Error('동기화 데이터 형식이 올바르지 않습니다.');
   if (p.questions.length > 5000) throw new Error('한 번에 저장할 수 있는 문제 수를 초과했습니다.');
 }
 
@@ -100,9 +100,18 @@ function applyImages_(questions, drafts, oldQuestions) {
   return questions.map(function(q) {
     var old = oldMap[q.id] || {};
     var draft = drafts[q.id];
-    q.imageFileId = q.imageFileId || old.imageFileId || '';
-    q.imageFileName = q.imageFileName || old.imageFileName || '';
-    q.imageUrl = q.imageUrl || old.imageUrl || '';
+    if (q.removeImage) {
+      if (old.imageFileId && !isEvaluationQuestion_(old)) {
+        try { DriveApp.getFileById(old.imageFileId).setTrashed(true); } catch (ignore0) {}
+      }
+      q.imageFileId = '';
+      q.imageFileName = '';
+      q.imageUrl = '';
+    } else {
+      q.imageFileId = q.imageFileId || old.imageFileId || '';
+      q.imageFileName = q.imageFileName || old.imageFileName || '';
+      q.imageUrl = q.imageUrl || old.imageUrl || '';
+    }
     if (draft && draft.dataUrl) {
       if (q.imageFileId && !isEvaluationQuestion_(old)) {
         try { DriveApp.getFileById(q.imageFileId).setTrashed(true); } catch (ignore) {}
@@ -144,14 +153,14 @@ function readQuestions_() {
   if (!sh || sh.getLastRow() < 2) return [];
   var values = sh.getRange(2, 1, sh.getLastRow() - 1, MASTER_HEADERS.length).getDisplayValues();
   return values.filter(function(r) { return r[0] && r[0].indexOf('(웹페이지') !== 0; }).map(function(r) {
-    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],detailType:r[7],difficulty:r[8],score:Number(r[9]),source:r[10],answer:r[11],explanationHtml:r[12],explanationText:r[13],memo:r[14],imageFileId:r[15],imageFileName:r[16],imageUrl:r[17],createdAt:toIso_(r[18]),updatedAt:toIso_(r[19]),problemPdfUrl:r[20],solutionPdfUrl:r[21] };
+    return { id:r[0],subject:r[1],year:String(r[2] || new Date().getFullYear()),examTitle:r[3],season:r[3],round:Number(r[4]),number:Number(r[5]),type:r[6],detailType:r[7],difficulty:r[8],score:Number(r[9]),source:r[10],answer:r[11],explanationHtml:r[12],explanationText:r[13],memo:r[14],imageFileId:r[15],imageFileName:r[16],imageUrl:r[17],createdAt:toIso_(r[18]),updatedAt:toIso_(r[19]),problemPdfUrl:r[20],solutionPdfUrl:r[21] };
   });
 }
 
 function writeQuestions_(questions) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sh = ensureMasterSheet_(ss);
-  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.season,q.round,q.number,q.type,q.detailType||'',q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt,q.problemPdfUrl||'',q.solutionPdfUrl||'']; });
+  var rows = questions.map(function(q) { return [q.id,q.subject,String(q.year || new Date().getFullYear()),q.examTitle||q.season,q.round||1,q.number,q.type,q.detailType||'',q.difficulty,q.score,safeCell_(q.source),safeCell_(q.answer),safeCell_(q.explanationHtml),safeCell_(q.explanationText),safeCell_(q.memo),q.imageFileId,q.imageFileName,q.imageUrl,q.createdAt,q.updatedAt,q.problemPdfUrl||'',q.solutionPdfUrl||'']; });
   clearBody_(sh, MASTER_HEADERS.length);
   if (rows.length) sh.getRange(2,1,rows.length,MASTER_HEADERS.length).setValues(rows);
   styleDataSheet_(sh, MASTER_HEADERS.length);
