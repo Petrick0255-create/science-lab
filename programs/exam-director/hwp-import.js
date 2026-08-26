@@ -44,16 +44,13 @@
     return paragraphs.join("\n");
   }
 
-  function typeKey(value){return String(value||"").replace(/[★☆\d\s,，·.\-–—]/g,"").trim();}
-  function normalizeType(value,types){const key=typeKey(value);return types.find(type=>typeKey(type)===key)||"";}
-  function statementFor(block,answer){const choices={};for(const match of block.matchAll(/([①-⑤])\s*([ㄱㄴㄷ](?:\s*[,，]?\s*[ㄱㄴㄷ]){0,2})/g)){const letters=[...new Set(match[2].match(/[ㄱㄴㄷ]/g)||[])];choices[match[1]]=letters.sort((a,b)=>"ㄱㄴㄷ".indexOf(a)-"ㄱㄴㄷ".indexOf(b)).join(" ");}return choices[answer]||"";}
-
-  function parseQuestions(text,types){
-    const header=/^(\d{1,2})번\s*답\s*([①-⑤])\s*[-–—]\s*(.+?)\s*\(\s*([123](?:\.0|\.5)?)\s*(?:점)?\s*\)\s*$/gm,matches=[...text.matchAll(header)],questions=[];
-    for(let index=0;index<matches.length;index++){const match=matches[index],block=text.slice(match.index+match[0].length,matches[index+1]?.index??text.length),type=normalizeType(match[3],types);questions.push({number:Number(match[1]),answer:CIRCLED.indexOf(match[2])+1,answerSymbol:match[2],type:type||match[3].trim(),typeMatched:Boolean(type),score:Number(match[4]),statement:statementFor(block,match[2])});}
+  function parseQuestions(text){
+    const start=text.search(/(?:^|\n)\s*01번/);if(start<0)throw new Error("01번 문항 머리말을 찾지 못했습니다.");
+    const header=/^\s*(\d{2})번[^①-⑤\r\n]*([①-⑤])\s*[-–—]\s*([^()\r\n]+?)\s*\(\s*(\d+(?:\.\d+)?)\s*(?:점)?\s*\)/gm,questions=[];
+    for(const match of text.slice(start).matchAll(header))questions.push({number:Number(match[1]),answer:CIRCLED.indexOf(match[2])+1,answerSymbol:match[2],type:match[3].trim(),score:Number(match[4])});
     return questions.sort((a,b)=>a.number-b.number);
   }
 
-  async function parse(file,types){if(!file||!/\.hwp$/i.test(file.name))throw new Error(".hwp 파일을 선택하세요.");return parseQuestions(await extractText(await file.arrayBuffer()),types);}
+  async function parse(file){if(!file||!/\.hwp$/i.test(file.name))throw new Error(".hwp 파일을 선택하세요.");return parseQuestions(await extractText(await file.arrayBuffer()));}
   window.HwpQuickImport={parse};
 })();
