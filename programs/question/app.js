@@ -149,7 +149,7 @@ function render() {
               <summary>
                 <div class="card-number">Q.</div>
                 <div class="card-main">
-                  <div class="meta-row"><span class="type-badge type-${escapeHtml(item.type)}">${escapeHtml(item.type)}</span><span>${escapeHtml(item.date)}</span><span class="status-dot"><i></i> 답변완료</span></div>
+                  <div class="meta-row"><span class="type-badge type-${escapeHtml(item.type)}">${escapeHtml(item.type)}</span><span># ${escapeHtml(item.id)}번</span><span>◯ ${escapeHtml(item.author || "비공개")}</span><span>${escapeHtml(item.date)}</span><span class="status-dot"><i></i> 답변완료</span></div>
                   <h3>${highlight(item.title || "제목 없는 질문", state.query)}</h3>
                   <p class="question-preview">${highlight(item.question, state.query)}</p>
                 </div>
