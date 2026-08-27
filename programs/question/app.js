@@ -1,8 +1,73 @@
 const state = { query: "", sort: "relevance", visible: 18 };
+const SHEET_ID = "1e8sLmymatMqV2WaMZfgJd2q_qiMKzBQ2-WuYvbMtlGM";
+const SHEET_NAME = "질문 모음";
+let LIVE_DATA = QA_DATA;
+let sheetState = "connecting";
 const normalize = (value) => (value || "").toLocaleLowerCase("ko-KR").replace(/\s+/g, " ").trim();
 const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
 })[char]);
+
+function sheetCell(cells, index) {
+  const cell = cells[index];
+  return cell ? String(cell.f ?? cell.v ?? "").trim() : "";
+}
+
+function sheetDate(cell) {
+  if (!cell) return "";
+  const formatted = String(cell.f ?? "").trim();
+  const match = formatted.match(/^(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})/);
+  if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  const raw = String(cell.v ?? "");
+  const date = raw.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+  return date ? `${date[1]}-${String(+date[2] + 1).padStart(2, "0")}-${date[3].padStart(2, "0")}` : raw;
+}
+
+function parseSheet(response) {
+  return (response.table?.rows || []).map((row) => {
+    const cells = row.c || [];
+    return {
+      id: sheetCell(cells, 0),
+      type: sheetCell(cells, 1),
+      title: sheetCell(cells, 2),
+      author: sheetCell(cells, 3),
+      date: sheetDate(cells[4]),
+      status: sheetCell(cells, 5),
+      question: sheetCell(cells, 6),
+      answer: sheetCell(cells, 7),
+    };
+  }).filter((item) => item.question || item.answer);
+}
+
+function loadSheet() {
+  const script = document.createElement("script");
+  const timeout = setTimeout(() => {
+    sheetState = "fallback";
+    render();
+  }, 12000);
+  window.__jbQuestionSheetCallback = (response) => {
+    clearTimeout(timeout);
+    const items = parseSheet(response);
+    if (items.length) {
+      LIVE_DATA = items;
+      sheetState = "connected";
+    } else {
+      sheetState = "fallback";
+    }
+    render();
+  };
+  const query = "select A,B,C,D,E,F,G,H where G is not null or H is not null";
+  script.src =
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
+    `sheet=${encodeURIComponent(SHEET_NAME)}&headers=1&tq=${encodeURIComponent(query)}&` +
+    "tqx=responseHandler:__jbQuestionSheetCallback";
+  script.onerror = () => {
+    clearTimeout(timeout);
+    sheetState = "fallback";
+    render();
+  };
+  document.head.appendChild(script);
+}
 
 function score(item, query) {
   if (!query) return 0;
@@ -34,7 +99,7 @@ function highlight(text, query) {
 
 function getResults() {
   const query = normalize(state.query);
-  const rows = QA_DATA
+  const rows = LIVE_DATA
     .map((item) => ({ item, rank: score(item, query) }))
     .filter(({ rank }) => !query || rank > 0);
   rows.sort((a, b) => {
@@ -65,6 +130,7 @@ function render() {
             <button class="search-button">검색</button>
           </form>
           <div class="quick-terms"><span>추천</span>${["중력","산화 환원","판 구조론","엘니뇨"].map((term) => `<button data-term="${term}">${term}</button>`).join("")}</div>
+          <div class="sync-status sync-${sheetState}"><i></i>${sheetState === "connecting" ? "Google Sheets 연결 중" : sheetState === "connected" ? "Google Sheets 실시간 연결됨" : "연결 지연 · 저장된 데이터 표시 중"}</div>
         </div>
         <div class="stage-index">01</div>
       </section>
@@ -95,7 +161,7 @@ function render() {
         </div>
         ${state.visible < rows.length ? `<button class="more-button" id="more">질문 더 보기 <span>${state.visible} / ${rows.length}</span></button>` : ""}
       </section>
-      <footer><div class="footer-brand">J&amp;B <span>INTEGRATED SCIENCE LAB</span></div><p>질문 분석 데이터 기준 · ${QA_DATA.length}건</p></footer>
+      <footer><div class="footer-brand">J&amp;B <span>INTEGRATED SCIENCE LAB</span></div><p>질문 분석 시트 기준 · ${LIVE_DATA.length}건</p></footer>
     </main>`;
   bind();
 }
@@ -124,3 +190,4 @@ function bind() {
 }
 
 render();
+loadSheet();

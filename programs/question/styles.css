@@ -75,6 +75,10 @@ button, input { font: inherit; }
 .quick-terms { display: flex; gap: 10px; align-items: center; margin-top: 17px; font-size: 11px; color: #b8c5d0; }
 .quick-terms > span { color: #ff7772; font-weight: 800; }
 .quick-terms button { color: #d4dde5; border: 0; border-bottom: 1px solid #71869a; background: transparent; padding: 2px 0; cursor: pointer; }
+.sync-status { display: flex; align-items: center; gap: 7px; margin-top: 14px; width: fit-content; color: #9fb0bf; font-size: 10px; }
+.sync-status i { width: 6px; height: 6px; border-radius: 50%; background: #f1b84b; box-shadow: 0 0 0 3px rgba(241,184,75,.13); }
+.sync-connected i { background: #5ed69a; box-shadow: 0 0 0 3px rgba(94,214,154,.13); }
+.sync-fallback i { background: #ff8a7f; box-shadow: 0 0 0 3px rgba(255,138,127,.13); }
 .stage-index { position: absolute; right: 7vw; bottom: -45px; color: rgba(255,255,255,.035); font: 800 220px/1 Georgia, serif; z-index: 0; }
 
 .results-section { width: min(980px, calc(100% - 44px)); margin: 0 auto; padding: 53px 0 70px; }
