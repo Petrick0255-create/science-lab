@@ -45,7 +45,7 @@
 
     <section class="page" id="comparePage">
       <div class="page-head"><div><p class="eyebrow">TYPE COMPARISON</p><h1>모의고사 비교</h1><p>최대 8개를 골라 유형별 문항 배치를 나란히 봅니다.</p></div><div class="head-count"><strong id="compareCount">0</strong><span>/ 8</span></div></div>
-      <section class="analysis-card"><div class="section-title"><div><h2>비교할 모의고사</h2><p>체크한 순서대로 표에 표시됩니다.</p></div></div><div id="examChecks" class="exam-checks"></div></section>
+      <section class="analysis-card"><div class="section-title"><div><h2>비교할 모의고사</h2><p>과목으로 목록을 좁힌 뒤 선택하세요. 다른 과목에서 고른 시험도 선택 상태가 유지됩니다.</p></div><label class="compare-subject-filter">과목<select id="compareSubjectFilter"><option value="전체">전체</option><option value="통합과학">통합과학</option><option value="생명과학">생명과학</option></select></label></div><div id="examChecks" class="exam-checks"></div></section>
       <section class="analysis-card"><div class="section-title"><div><h2 id="compareTableTitle">유형별 비교표</h2><p>이미지를 누르면 문항과 해설을 보고, 카드 아래에 메모할 수 있습니다.</p></div><div class="compare-tools"><button class="button ghost" id="copyCompareBtn" type="button">한글용 표 복사</button><div class="quick-mode-switch" role="group" aria-label="모의고사 비교 기준"><button class="active" type="button" data-record-compare-mode="type">유형별</button><button type="button" data-record-compare-mode="number">번호별</button></div></div></div><div id="compareEmpty" class="empty-state">저장된 모의고사를 위에서 선택하세요.</div><div id="compareScroll" class="table-scroll hidden"><table id="compareTable" class="compare-table"></table></div></section>
     </section>
 
