@@ -47,8 +47,10 @@ function doGet(e) {
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
+  var locked = false;
   try {
-    lock.waitLock(30000);
+    locked = lock.tryLock(1000);
+    if (!locked) return json_({ ok: false, code: 'SYNC_BUSY', message: '다른 동기화를 처리하고 있습니다.', retryAfter: 2000 });
     var p = (e && e.parameter) || {};
     checkKey_(p.key);
     if (p.action !== 'sync') throw new Error('지원하지 않는 요청입니다.');
@@ -67,7 +69,7 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, message: err.message || String(err) });
   } finally {
-    try { lock.releaseLock(); } catch (ignore) {}
+    if (locked) try { lock.releaseLock(); } catch (ignore) {}
   }
 }
 
@@ -113,19 +115,21 @@ function applyImages_(questions, drafts, oldQuestions) {
       q.imageUrl = q.imageUrl || old.imageUrl || '';
     }
     if (draft && draft.dataUrl) {
-      if (q.imageFileId && !isEvaluationQuestion_(old)) {
-        try { DriveApp.getFileById(q.imageFileId).setTrashed(true); } catch (ignore) {}
-      }
+      var previousImageFileId = q.imageFileId;
       var parts = String(draft.dataUrl).split(',');
+      if (parts.length < 2 || !parts[1]) throw new Error((q.number || '?') + '번 이미지 데이터가 올바르지 않습니다.');
       var mime = (parts[0].match(/data:([^;]+)/) || [null, 'image/webp'])[1];
       var bytes = Utilities.base64Decode(parts[1]);
       var extension = mime.indexOf('png') > -1 ? 'png' : mime.indexOf('jpeg') > -1 ? 'jpg' : 'webp';
       var name = safeFilename_([q.year || new Date().getFullYear(), q.subject, q.season, q.round + '회', pad2_(q.number) + '번'].join('-')) + '.' + extension;
-      var file = folder.createFile(Utilities.newBlob(bytes, mime, name));
+      var file = createFileWithRetry_(folder, Utilities.newBlob(bytes, mime, name), q.number);
       try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (ignore2) {}
       q.imageFileId = file.getId();
       q.imageFileName = file.getName();
       q.imageUrl = 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w1600';
+      if (previousImageFileId && previousImageFileId !== q.imageFileId && !isEvaluationQuestion_(old)) {
+        try { DriveApp.getFileById(previousImageFileId).setTrashed(true); } catch (ignore3) {}
+      }
     }
     q.updatedAt = q.updatedAt || new Date().toISOString();
     q.createdAt = q.createdAt || q.updatedAt;
@@ -141,6 +145,19 @@ function trashRemovedImages_(oldQuestions, newQuestions) {
       try { DriveApp.getFileById(q.imageFileId).setTrashed(true); } catch (ignore) {}
     }
   });
+}
+
+function createFileWithRetry_(folder, blob, questionNumber) {
+  var lastError;
+  for (var attempt = 0; attempt < 5; attempt++) {
+    try {
+      return folder.createFile(blob.copyBlob());
+    } catch (err) {
+      lastError = err;
+      if (attempt < 4) Utilities.sleep(Math.pow(2, attempt) * 1000);
+    }
+  }
+  throw new Error((questionNumber || '?') + '번 이미지 업로드에 실패했습니다. 잠시 후 다시 동기화하세요. (' + (lastError && lastError.message ? lastError.message : lastError) + ')');
 }
 
 function isEvaluationQuestion_(q) {
