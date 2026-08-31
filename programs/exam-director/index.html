@@ -23,7 +23,10 @@
         <form class="record-form" id="recordForm">
           <input type="hidden" id="questionId">
           <div class="form-grid">
-            <div class="exam-picker wide"><span>모의고사 제목</span><div><select id="existingExam"><option value="">새 제목 입력</option></select><input id="newExamTitle" required placeholder="예: 26 고2 6월"></div><small id="examHint">처음 입력하는 제목을 적어 주세요.</small></div>
+            <div class="exam-picker wide"><span>시즌·모의고사</span><div><select id="existingExam"><option value="">새 시험 입력</option></select><input id="newExamTitle" required placeholder="예: 시즌1 / 26 고2 6월"></div><small id="examHint">기존 시험을 고르면 과목·연도·회차까지 동일하게 입력됩니다.</small></div>
+            <label>과목<select id="subject" required><option>통합과학</option><option>생명과학</option></select></label>
+            <label>연도<input id="examYear" type="number" min="2000" max="2100" required></label>
+            <label>회차<input id="examRound" type="number" min="1" max="99" value="1" required></label>
             <label class="wide">유형<select id="type" required></select></label>
             <label class="wide">세부 유형<input id="detailType" list="detailTypeList" placeholder="기출 기반 후보를 선택하거나 직접 입력"><datalist id="detailTypeList"></datalist><small>참고 DB의 통합과학 612문항을 바탕으로 정리한 후보입니다.</small></label>
             <label>번호<input id="questionNo" type="number" min="1" max="99" value="1" required></label>
