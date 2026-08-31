@@ -12,36 +12,38 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="../../index.html" aria-label="메인으로"><span class="brand-mark">E</span><span><strong>EXAM DIRECTOR</strong><small>MOCK EXAM MANAGER</small></span></a>
+    <a class="brand" href="./index.html" aria-label="Exam Director 처음으로"><span class="brand-mark">E</span><span><strong>EXAM DIRECTOR</strong><small>MOCK EXAM MANAGER</small></span></a>
     <div class="top-actions"><span id="saveState" class="save-state">로컬 준비됨</span><button class="button ghost" id="settingsBtn">연결 설정</button><button class="button primary" id="syncBtn">동기화</button></div>
   </header>
 
   <main>
     <section class="page active" id="recordPage">
-      <div class="page-head"><div><p class="eyebrow">QUESTION RECORD</p><h1>문항 기록</h1><p>필요한 정보만 입력해 모의고사 제목별로 저장합니다.</p></div><button class="button danger hidden" id="deleteBtn">이 문항 삭제</button></div>
+      <div class="page-head"><div><p class="eyebrow">QUESTION RECORD</p><h1>문항 기록</h1><p>필요한 정보만 입력해 모의고사 제목별로 저장합니다.</p></div><div class="page-head-actions"><span class="head-count"><strong id="recordCount">0</strong><span>문항</span></span><button class="button danger hidden" id="deleteBtn">이 문항 삭제</button></div></div>
       <div class="record-layout">
         <form class="record-form" id="recordForm">
           <input type="hidden" id="questionId">
           <div class="form-grid">
             <div class="exam-picker wide"><span>모의고사 제목</span><div><select id="existingExam"><option value="">새 제목 입력</option></select><input id="newExamTitle" required placeholder="예: 26 고2 6월"></div><small id="examHint">처음 입력하는 제목을 적어 주세요.</small></div>
             <label class="wide">유형<select id="type" required></select></label>
+            <label class="wide">세부 유형<input id="detailType" list="detailTypeList" placeholder="기출 기반 후보를 선택하거나 직접 입력"><datalist id="detailTypeList"></datalist><small>참고 DB의 통합과학 612문항을 바탕으로 정리한 후보입니다.</small></label>
             <label>번호<input id="questionNo" type="number" min="1" max="99" value="1" required></label>
             <label>배점<select id="score" required><option value="1.5">1.5점</option><option value="2" selected>2점</option><option value="2.5">2.5점</option><option value="3">3점</option></select></label>
             <label>난이도<select id="difficulty" required><option>하</option><option selected>중</option><option>상</option><option>최상</option></select></label>
             <label>정답<select id="answer" required><option value="">선택</option><option>①</option><option>②</option><option>③</option><option>④</option><option>⑤</option></select></label>
+            <label class="wide">메모<textarea id="memo" rows="3" placeholder="비교할 때 확인할 포인트를 적어 두세요."></textarea></label>
           </div>
           <div class="rich-field"><div class="field-title"><span>해설</span><small>위첨자·아래첨자 붙여넣기 지원</small></div><div id="explanation" class="rich-editor" contenteditable="true" data-placeholder="정답의 근거와 오답 선지 해설을 입력하세요."></div></div>
           <div class="form-actions"><button type="button" class="button ghost" id="newBtn">새 문항</button><button type="submit" class="button primary">저장</button></div>
         </form>
         <aside class="image-workspace"><div class="image-head"><div><strong>문항 이미지</strong><small id="imageStatus">선택 사항 · 붙여넣기 지원</small></div><button class="text-button" id="clearImageBtn">비우기</button></div><div class="paste-zone" id="pasteZone" tabindex="0"><img id="questionPreview" alt="문항 이미지 미리보기" class="hidden"><div id="pasteGuide"><span class="paste-icon">⌘V</span><strong>이미지를 붙여넣으세요</strong><p>영역을 누른 뒤 Ctrl+V, 드래그 또는 파일 선택</p><label class="button ghost file-button">파일 선택<input type="file" id="imageInput" accept="image/*"></label></div></div><p class="image-note">이미지를 넣지 않아도 저장할 수 있습니다.</p></aside>
       </div>
-      <section class="recent-panel"><div class="section-title"><div><h2>저장된 문항</h2><p>모의고사를 골라 수정하거나 내용을 확인하세요.</p></div><select id="recordExamFilter"><option value="">전체 모의고사</option></select></div><div id="recordList" class="record-list"></div></section>
+      <section class="recent-panel"><div class="section-title"><div><h2>저장된 문항</h2><p>모의고사를 골라 수정하거나 내용을 확인하세요.</p></div><select id="recordExamFilter"><option value="">전체 모의고사</option></select></div><div class="record-list-head"><span>모의고사</span><span>유형</span><span>번호</span><span>배점</span><span>난이도</span><span>정답</span><span>이미지</span><span>관리</span></div><div id="recordList" class="record-list"></div></section>
     </section>
 
     <section class="page" id="comparePage">
       <div class="page-head"><div><p class="eyebrow">TYPE COMPARISON</p><h1>모의고사 비교</h1><p>최대 8개를 골라 유형별 문항 배치를 나란히 봅니다.</p></div><div class="head-count"><strong id="compareCount">0</strong><span>/ 8</span></div></div>
       <section class="analysis-card"><div class="section-title"><div><h2>비교할 모의고사</h2><p>체크한 순서대로 표에 표시됩니다.</p></div></div><div id="examChecks" class="exam-checks"></div></section>
-      <section class="analysis-card"><div class="section-title"><div><h2>유형별 비교표</h2><p>칸을 누르면 이미지와 해설을 볼 수 있습니다.</p></div></div><div id="compareEmpty" class="empty-state">비교할 모의고사를 선택하세요.</div><div id="compareScroll" class="table-scroll hidden"><table id="compareTable" class="compare-table"></table></div></section>
+      <section class="analysis-card"><div class="section-title"><div><h2 id="compareTableTitle">유형별 비교표</h2><p>이미지를 누르면 문항과 해설을 보고, 카드 아래에 메모할 수 있습니다.</p></div><div class="compare-tools"><button class="button ghost" id="copyCompareBtn" type="button">한글용 표 복사</button><div class="quick-mode-switch" role="group" aria-label="모의고사 비교 기준"><button class="active" type="button" data-record-compare-mode="type">유형별</button><button type="button" data-record-compare-mode="number">번호별</button></div></div></div><div id="compareEmpty" class="empty-state">저장된 모의고사를 위에서 선택하세요.</div><div id="compareScroll" class="table-scroll hidden"><table id="compareTable" class="compare-table"></table></div></section>
     </section>
 
     <section class="page" id="analysisPage">
@@ -75,6 +77,7 @@
   <dialog id="detailDialog" class="modal"><div class="modal-head"><div><p class="eyebrow">QUESTION DETAIL</p><h2 id="detailTitle">문항 상세</h2><span id="detailMeta"></span></div><button class="icon-button" data-close="detailDialog">×</button></div><div class="detail-body"><div id="detailImageWrap" class="detail-image"><img id="detailImage" alt="문항 이미지"></div><section><h3>해설</h3><div id="detailExplanation"></div></section><div class="modal-actions"><button class="button ghost" id="detailEditBtn">수정</button></div></div></dialog>
   <dialog id="settingsDialog" class="modal small-modal"><div class="modal-head"><div><p class="eyebrow">CONNECTION</p><h2>연결 설정</h2></div><button class="icon-button" data-close="settingsDialog">×</button></div><div class="modal-body"><label>Apps Script 배포 URL<input id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec"></label><label>동기화 키<input id="syncKey" type="password" autocomplete="off"></label><p class="help-text">기존 Exam Director의 시트·Drive 연결을 그대로 사용합니다.</p><div class="modal-actions"><button class="button ghost" data-close="settingsDialog">취소</button><button class="button primary" id="saveSettingsBtn">저장하고 연결 확인</button></div></div></dialog>
   <div class="toast" id="toast" role="status"></div>
+  <script src="taxonomy.js"></script>
   <script src="hwp-import.js"></script>
   <script src="app.js"></script>
 </body>

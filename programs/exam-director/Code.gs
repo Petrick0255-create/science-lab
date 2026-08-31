@@ -1,7 +1,7 @@
 var SPREADSHEET_ID = '1LvDHhARksHVu4j2FWTR_YuGDlVJcnTZFS2UeBlbSt08';
 var IMAGE_FOLDER_ID = '1IQohwxwwiT6-BSvVDe6WEZWu070FdYlU';
 var SHEETS = { master: '문제 마스터', seasons: '시즌 설정', types: '유형 목록', backup: '백업', settings: '설정' };
-var MASTER_HEADERS = ['문제 ID','과목','연도','모의고사 제목','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일','문제지 링크','해설지 링크'];
+var MASTER_HEADERS = ['문제 ID','과목','연도','시즌','회','번호','유형','세부 유형','난이도','배점','출처','정답','해설 HTML','해설 텍스트','메모','이미지 파일 ID','이미지 파일명','이미지 링크','생성일','수정일','문제지 링크','해설지 링크'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('모의고사 관리')
