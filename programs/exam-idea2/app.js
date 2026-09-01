@@ -59,7 +59,7 @@ const EVIDENCE_DETAIL_TYPES = {
   ],
   "지각과 생명체 구성 물질의 규칙성": [
     "생명체 구성 물질", "단백질", "규산염 광물", "탄소 화합물", "규산염 사면체",
-    "단위체", "핵산", "구성 원소 비교", "아미노산", "펩타이드 결합",
+    "단위체", "핵산", "구성 원소 비교", "아미노산", "펩타이드 결합", "광물의 결정 구조",
   ],
   "물질의 전기적 성질": [
     "도체", "반도체", "자유 전자", "태양 전지", "순수 반도체",
@@ -91,6 +91,7 @@ const EVIDENCE_DETAIL_TYPES = {
   "생명 시스템에서 일어나는 화학 반응": [
     "물질대사", "동화 작용과 이화 작용", "효소의 작용", "기질 특이성", "효소-기질 복합체",
     "카탈레이스 실험", "효소와 반응 속도", "세포 호흡과 연소", "반응의 에너지 출입", "생활 속 효소 활용",
+    "활성화 에너지", "온도와 효소 활성", "pH와 효소 활성",
   ],
   "생명 시스템에서 정보의 흐름": [
     "세포 내 유전 정보의 흐름", "DNA 구조", "핵산의 구조와 기능", "전사", "번역",
@@ -102,7 +103,7 @@ const EVIDENCE_DETAIL_TYPES = {
   ],
   "진화와 생물다양성": [
     "유전적 다양성", "생태계 다양성", "자연선택", "종 다양성", "변이와 진화",
-    "생존 경쟁", "항생제 내성", "살충제 저항성", "서식지 단편화", "생물다양성 보전",
+    "생존 경쟁", "항생제 내성", "살충제 저항성", "서식지 단편화", "생물다양성 보전", "적응과 진화",
   ],
   "산화와 환원": [
     "철의 제련", "광합성과 세포 호흡", "금속과 금속 이온의 반응", "산화 구리의 환원", "산화·환원의 정의",
@@ -118,11 +119,12 @@ const EVIDENCE_DETAIL_TYPES = {
   ],
   "생태계 구성과 환경": [
     "생태계의 구성", "소비자", "생산자", "분해자", "비생물 요소",
-    "생물 요소", "개체", "개체군", "군집", "환경과 생물의 상호 관계",
+    "생물 요소", "개체", "개체군", "군집", "환경과 생물의 상호 관계", "토양 환경과 생물",
   ],
   "생태계 평형": [
     "생태계 평형", "먹이 사슬", "먹이그물", "영양 단계", "개체수 변화",
     "생산자 변화", "1차 소비자 변화", "2차 소비자 변화", "외래 생물 유입", "환경 변화와 생태계",
+    "생태계 교란", "먹이그물의 안정성",
   ],
   "지구 환경 변화와 인간 생활": [
     "온실 기체", "지구 온난화", "온실 효과", "복사 평형과 지구 열수지", "엘니뇨",
@@ -145,13 +147,65 @@ const EVIDENCE_DETAIL_TYPES = {
   ],
   "과학 기술의 활용": [
     "신소재", "신소재의 활용", "빅데이터", "인공지능", "감염병 진단",
-    "유전자 증폭 검사", "진단 키트", "센서", "로봇", "과학기술을 활용한 문제 해결",
+    "유전자 증폭 검사", "진단 키트", "센서", "로봇", "과학기술을 활용한 문제 해결", "의료 영상 기술",
   ],
   "과학 기술의 발전과 쟁점": [
     "과학 관련 사회적 쟁점", "자율주행 자동차", "감염병과 빅데이터", "과학 기술의 양면성", "과학 윤리",
     "데이터 편향", "디지털 격차", "인공지능의 한계", "유전자 편집", "동물 실험",
   ],
 };
+/*
+ * 통합과학 유형별 물·화·생·지 분류입니다.
+ * 통과1 Ⅰ단원과 통과2 Ⅲ단원은 공통으로 표시하고
+ * 분야별 문항 수 집계에서는 제외합니다.
+ */
+const DISCIPLINE_BY_TYPE = {
+  "과학의 기본량": "common",
+  "측정 표준과 정보": "common",
+  "과학 기술의 활용": "common",
+  "과학 기술의 발전과 쟁점": "common",
+  "물질의 전기적 성질": "physics",
+  "중력의 작용": "physics",
+  "운동과 충돌": "physics",
+  "태양 에너지의 생성과 전환": "physics",
+  "전기 에너지의 생산": "physics",
+  "에너지 효율과 신재생 에너지": "physics",
+  "원소의 규칙성": "chemistry",
+  "화학 결합과 물질의 성질": "chemistry",
+  "지각과 생명체 구성 물질의 규칙성": "chemistry",
+  "산화와 환원": "chemistry",
+  "산, 염기와 중화 반응": "chemistry",
+  "물질 변화에서 에너지의 출입": "chemistry",
+  "생명 시스템과 세포": "biology",
+  "생명 시스템에서 일어나는 화학 반응": "biology",
+  "생명 시스템에서 정보의 흐름": "biology",
+  "진화와 생물다양성": "biology",
+  "생태계 구성과 환경": "biology",
+  "생태계 평형": "biology",
+  "우주의 시작과 원소의 생성": "earth",
+  "지구와 생명체를 구성하는 원소의 생성": "earth",
+  "지구 시스템의 구성과 상호 작용": "earth",
+  "지권의 변화와 영향": "earth",
+  "지질 시대의 환경과 생물 변화": "earth",
+  "지구 환경 변화와 인간 생활": "earth",
+};
+
+const COUNTED_DISCIPLINES = [
+  "physics", "chemistry", "biology", "earth",
+];
+
+const DISCIPLINE_LABELS = {
+  physics: "물리",
+  chemistry: "화학",
+  biology: "생명",
+  earth: "지구",
+  common: "공통",
+};
+
+function resolveDiscipline(type) {
+  return DISCIPLINE_BY_TYPE[type] || "common";
+}
+
 /*
  * 한 배열이 실제 모의고사 한 회차의 1~25번 배치입니다.
  *
@@ -390,6 +444,9 @@ const elements = {
   makerButton: document.querySelector("#makerButton"),
   nextMakerButton: document.querySelector("#nextMakerButton"),
   resetMakerButton: document.querySelector("#resetMakerButton"),
+  detailUnitSelect: document.querySelector("#detailUnitSelect"),
+  detailTypePreview: document.querySelector("#detailTypePreview"),
+  detailTypeCount: document.querySelector("#detailTypeCount"),
   makerRound: document.querySelector("#makerRound"),
   makerDashboard: document.querySelector("#makerDashboard"),
   makerEmptyState: document.querySelector("#makerEmptyState"),
@@ -407,6 +464,15 @@ const elements = {
   majorUnitCount: document.querySelector("#majorUnitCount"),
   middleUnitCount: document.querySelector("#middleUnitCount"),
   unitBalanceProgress: document.querySelector("#unitBalanceProgress"),
+  physicsCount: document.querySelector("#physicsCount"),
+  chemistryCount: document.querySelector("#chemistryCount"),
+  biologyCount: document.querySelector("#biologyCount"),
+  earthCount: document.querySelector("#earthCount"),
+  countedDisciplineTotal: document.querySelector("#countedDisciplineTotal"),
+  physicsProgress: document.querySelector("#physicsProgress"),
+  chemistryProgress: document.querySelector("#chemistryProgress"),
+  biologyProgress: document.querySelector("#biologyProgress"),
+  earthProgress: document.querySelector("#earthProgress"),
 
   typeSelect: document.querySelector("#typeSelect"),
   bookSelect: document.querySelector("#bookSelect"),
@@ -562,6 +628,11 @@ function bindEvents() {
   elements.resetMakerButton.addEventListener(
     "click",
     resetMaker,
+  );
+
+  elements.detailUnitSelect.addEventListener(
+    "change",
+    renderDetailTypePreview,
   );
 
   elements.makerHistory.addEventListener(
@@ -936,11 +1007,29 @@ function buildEvidenceMockSources(
         )
         .map((row) => row.subtype);
 
-    const prioritizedSubtypes =
-      [...new Set([
-        ...subtypes,
-        ...lowerPrioritySubtypes,
-      ])].slice(0, 25);
+    const prioritizedSubtypes = [];
+    const seenSubtypeKeys =
+      new Set();
+
+    [
+      ...subtypes,
+      ...lowerPrioritySubtypes,
+    ].forEach((subtype) => {
+      const key = makeSourceKey(
+        type,
+        subtype,
+      );
+
+      if (
+        prioritizedSubtypes.length >= 25 ||
+        seenSubtypeKeys.has(key)
+      ) {
+        return;
+      }
+
+      seenSubtypeKeys.add(key);
+      prioritizedSubtypes.push(subtype);
+    });
 
     return prioritizedSubtypes
       .map((subtype, index) => {
@@ -1034,6 +1123,11 @@ function normalizeUnit(
       )
       .trim();
 
+  const resolvedType =
+    explicitType ||
+    matchedType ||
+    fallbackType;
+
   return {
     id: `unit-${index}`,
 
@@ -1079,10 +1173,10 @@ function normalizeUnit(
      * 2. 모의고사 소스와 연결된 유형
      * 3. 숫자·특수기호를 제거한 소단원명
      */
-    type:
-      explicitType ||
-      matchedType ||
-      fallbackType,
+    type: resolvedType,
+
+    discipline:
+      resolveDiscipline(resolvedType),
   };
 }
 
@@ -1097,6 +1191,8 @@ function initializeFeatures() {
   if (makerReady) {
     elements.makerButton.disabled =
       false;
+
+    populateDetailUnitSelect();
   }
 
   if (ideaReady) {
@@ -1171,6 +1267,154 @@ function initializeFeatures() {
       "모의고사 소스 또는 단원 분류 데이터가 부족해 메이킹 기능은 비활성화되었습니다.",
     );
   }
+}
+
+function populateDetailUnitSelect() {
+  const uniqueUnits =
+    [...new Map(
+      state.units.map((unit) => [
+        unit.type,
+        unit,
+      ]),
+    ).values()]
+      .sort((a, b) =>
+        [
+          a.course,
+          a.majorUnit,
+          a.middleUnit,
+          a.type,
+        ].join(" ").localeCompare(
+          [
+            b.course,
+            b.majorUnit,
+            b.middleUnit,
+            b.type,
+          ].join(" "),
+          "ko",
+        ),
+      );
+
+  elements.detailUnitSelect
+    .replaceChildren();
+
+  const groups = new Map();
+
+  uniqueUnits.forEach((unit) => {
+    const groupName = [
+      unit.course,
+      unit.majorUnit,
+    ].filter(Boolean).join(" · ");
+
+    if (!groups.has(groupName)) {
+      const group =
+        document.createElement(
+          "optgroup",
+        );
+
+      group.label = groupName;
+      groups.set(groupName, group);
+      elements.detailUnitSelect
+        .append(group);
+    }
+
+    const option =
+      document.createElement(
+        "option",
+      );
+
+    option.value = unit.type;
+    option.textContent = [
+      DISCIPLINE_LABELS[
+        unit.discipline ||
+        resolveDiscipline(unit.type)
+      ],
+      unit.middleUnit,
+      unit.type,
+    ].filter(Boolean).join(" · ");
+
+    groups.get(groupName)
+      .append(option);
+  });
+
+  elements.detailUnitSelect.disabled =
+    uniqueUnits.length === 0;
+
+  if (uniqueUnits.length > 0) {
+    elements.detailUnitSelect.value =
+      uniqueUnits[0].type;
+    renderDetailTypePreview();
+  }
+}
+
+function renderDetailTypePreview() {
+  const type = cleanText(
+    elements.detailUnitSelect.value,
+  );
+
+  const sources = type
+    ? getSourcesForType(type)
+    : [];
+
+  elements.detailTypeCount.textContent =
+    formatNumber(sources.length);
+  elements.detailTypePreview
+    .replaceChildren();
+
+  if (sources.length === 0) {
+    const empty =
+      document.createElement("p");
+
+    empty.textContent =
+      "연결된 세부유형이 없습니다.";
+    elements.detailTypePreview
+      .append(empty);
+    return;
+  }
+
+  const heading =
+    document.createElement("div");
+  heading.className =
+    "detail-preview-heading";
+
+  const name =
+    document.createElement("strong");
+  name.textContent =
+    `${DISCIPLINE_LABELS[resolveDiscipline(type)]} · ${type}`;
+
+  const guide =
+    document.createElement("span");
+  guide.textContent =
+    "앞 번호일수록 기출 우선순위가 높습니다.";
+
+  heading.append(name, guide);
+
+  const list =
+    document.createElement("ol");
+  list.className = "detail-chip-list";
+
+  sources.forEach((source, index) => {
+    const item =
+      document.createElement("li");
+
+    const number =
+      document.createElement("b");
+    number.textContent = String(
+      index + 1,
+    ).padStart(2, "0");
+
+    const label =
+      document.createElement("span");
+    label.textContent =
+      source.subtype;
+
+    item.append(number, label);
+    list.append(item);
+  });
+
+  elements.detailTypePreview.append(
+    heading,
+    list,
+  );
 }
 
 function makeFirstRound() {
@@ -1324,6 +1568,9 @@ function generateRoundAttempt(
           smallUnit:
             unit.smallUnit,
           type: unit.type,
+          discipline:
+            unit.discipline ||
+            resolveDiscipline(unit.type),
           source,
         };
       },
@@ -1561,6 +1808,10 @@ function selectUnitsForSlots(
                 unit.teacher,
                 teacherCounts,
                 selected.length + 1,
+              ) +
+              scoreDisciplineBalance(
+                unit,
+                selected,
               ),
           }),
         );
@@ -1630,6 +1881,25 @@ function selectUnitsForSlots(
   ) {
     throw new Error(
       `출제자 비율이 정T ${teacherCounts.정T}문항·백T ${teacherCounts.백T}문항으로 선택되었습니다.`,
+    );
+  }
+
+  const disciplineCounts =
+    getDisciplineCounts(selected);
+
+  const countedValues =
+    COUNTED_DISCIPLINES.map(
+      (discipline) =>
+        disciplineCounts[discipline],
+    );
+
+  if (
+    Math.max(...countedValues) -
+      Math.min(...countedValues) >
+    2
+  ) {
+    throw new Error(
+      "물·화·생·지 문항 수 편차가 2문항을 초과했습니다.",
     );
   }
 
@@ -1887,6 +2157,53 @@ function scoreTeacherBalance(
       nextCount - expected,
     ) * 7
   );
+}
+
+function getDisciplineCounts(items) {
+  const counts = {
+    physics: 0,
+    chemistry: 0,
+    biology: 0,
+    earth: 0,
+    common: 0,
+  };
+
+  items.forEach((item) => {
+    const discipline =
+      item.discipline ||
+      resolveDiscipline(item.type);
+
+    counts[discipline] =
+      (counts[discipline] || 0) + 1;
+  });
+
+  return counts;
+}
+
+function scoreDisciplineBalance(
+  unit,
+  selected,
+) {
+  const discipline =
+    unit.discipline ||
+    resolveDiscipline(unit.type);
+
+  if (discipline === "common") {
+    return 0;
+  }
+
+  const counts =
+    getDisciplineCounts(selected);
+
+  const minimum = Math.min(
+    ...COUNTED_DISCIPLINES.map(
+      (name) => counts[name],
+    ),
+  );
+
+  return (
+    counts[discipline] - minimum
+  ) * 32;
 }
 
 function getSelectedCourseRatio() {
@@ -2350,6 +2667,40 @@ function renderMakerSummary(round) {
       100,
       middleCount * 8,
     )}%`;
+
+  const disciplineCounts =
+    getDisciplineCounts(questions);
+
+  const countedTotal =
+    COUNTED_DISCIPLINES.reduce(
+      (total, discipline) =>
+        total + disciplineCounts[discipline],
+      0,
+    );
+
+  elements.physicsCount.textContent =
+    disciplineCounts.physics;
+  elements.chemistryCount.textContent =
+    disciplineCounts.chemistry;
+  elements.biologyCount.textContent =
+    disciplineCounts.biology;
+  elements.earthCount.textContent =
+    disciplineCounts.earth;
+  elements.countedDisciplineTotal.textContent =
+    countedTotal;
+
+  [
+    ["physics", elements.physicsProgress],
+    ["chemistry", elements.chemistryProgress],
+    ["biology", elements.biologyProgress],
+    ["earth", elements.earthProgress],
+  ].forEach(([discipline, progress]) => {
+    progress.style.width =
+      `${countedTotal > 0
+        ? (disciplineCounts[discipline] /
+            countedTotal) * 100
+        : 0}%`;
+  });
 }
 
 function renderMakerHistory() {
@@ -2444,6 +2795,22 @@ function renderMakerTable(
         question.course === "통과1"
           ? "is-course1"
           : "is-course2",
+      );
+
+      const disciplineBadge =
+        row.querySelector(
+          ".discipline-badge",
+        );
+
+      const discipline =
+        question.discipline ||
+        resolveDiscipline(question.type);
+
+      disciplineBadge.textContent =
+        DISCIPLINE_LABELS[discipline];
+
+      disciplineBadge.classList.add(
+        `is-${discipline}`,
       );
 
       row.querySelector(
@@ -3084,6 +3451,10 @@ function handleQuestionTypeChange(
   question.type =
     unit.type ||
     unit.smallUnit;
+
+  question.discipline =
+    unit.discipline ||
+    resolveDiscipline(question.type);
 
   /*
    * 변경된 유형에 맞는 세부 유형을
@@ -5140,7 +5511,7 @@ function downloadText() {
     round.questions
       .map(
         (question) =>
-          `${question.number}번-${question.type}-${question.teacher}`,
+          `${question.number}번-${DISCIPLINE_LABELS[question.discipline || resolveDiscipline(question.type)]}-${question.type}-${question.teacher}`,
       )
       .join("\r\n");
 
@@ -5183,6 +5554,7 @@ function downloadCsv() {
     "번호",
     "출제자",
     "과목",
+    "분야",
     "대단원",
     "중단원",
     "유형",
@@ -5218,6 +5590,10 @@ function downloadCsv() {
           question.number,
           question.teacher,
           question.course,
+          DISCIPLINE_LABELS[
+            question.discipline ||
+            resolveDiscipline(question.type)
+          ],
           question.majorUnit,
           question.middleUnit,
           question.type ||

@@ -195,6 +195,34 @@
             </div>
           </div>
 
+          <details class="detail-type-browser" id="detailTypeBrowser">
+            <summary>
+              <span>
+                <small>DETAIL TYPE QUICK VIEW</small>
+                <strong>단원별 세부유형 빠르게 보기</strong>
+              </span>
+              <span class="detail-browser-summary-meta">
+                <b id="detailTypeCount">25</b>개
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m7 9 5 5 5-5" />
+                </svg>
+              </span>
+            </summary>
+
+            <div class="detail-browser-body">
+              <label class="detail-unit-field" for="detailUnitSelect">
+                <span>확인할 단원</span>
+                <select id="detailUnitSelect" disabled>
+                  <option value="">단원을 선택해 주세요</option>
+                </select>
+              </label>
+
+              <div class="detail-type-preview" id="detailTypePreview" aria-live="polite">
+                <p>단원을 선택하면 우선순위 순서대로 세부유형이 표시됩니다.</p>
+              </div>
+            </div>
+          </details>
+
           <div class="maker-dashboard" id="makerDashboard" hidden>
             <div class="maker-summary-grid" aria-label="모의고사 구성 요약">
               <article class="summary-card summary-total">
@@ -225,6 +253,21 @@
                 <span>단원 분포</span>
                 <strong><b id="majorUnitCount">-</b> 대단원 · <b id="middleUnitCount">-</b> 중단원</strong>
                 <div class="summary-progress summary-progress-mint"><span id="unitBalanceProgress"></span></div>
+              </article>
+
+              <article class="summary-card summary-discipline">
+                <span>분야 분포 · 통과1 Ⅰ단원 / 통과2 Ⅲ단원 제외</span>
+                <strong class="discipline-counts">
+                  물리 <b id="physicsCount">-</b> · 화학 <b id="chemistryCount">-</b> ·
+                  생명 <b id="biologyCount">-</b> · 지구 <b id="earthCount">-</b>
+                  <small>집계 <b id="countedDisciplineTotal">-</b>문항</small>
+                </strong>
+                <div class="quad-progress" aria-hidden="true">
+                  <span class="progress-physics" id="physicsProgress"></span>
+                  <span class="progress-chemistry" id="chemistryProgress"></span>
+                  <span class="progress-biology" id="biologyProgress"></span>
+                  <span class="progress-earth" id="earthProgress"></span>
+                </div>
               </article>
             </div>
 
@@ -260,6 +303,7 @@
                       <th scope="col">번호</th>
                       <th scope="col">출제자</th>
                       <th scope="col">과목</th>
+                      <th scope="col">분야</th>
                       <th scope="col">대단원</th>
                       <th scope="col">중단원</th>
                       <th scope="col">유형</th>
@@ -268,7 +312,7 @@
                   </thead>
                   <tbody id="makerTableBody">
                     <tr class="table-empty">
-                      <td colspan="7">
+                      <td colspan="8">
                         <div class="empty-table-content">
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h7" />
@@ -553,6 +597,7 @@
         <td class="question-number"></td>
         <td><span class="teacher-badge"></span></td>
         <td><span class="course-badge"></span></td>
+        <td><span class="discipline-badge"></span></td>
         <td class="major-unit"></td>
         <td class="middle-unit"></td>
         <td>
