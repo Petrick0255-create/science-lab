@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root{--ink:#17231d;--muted:#68756e;--line:#dfe6e1;--paper:#f6f7f3;--card:#fff;--green:#18392b;--accent:#dff06f;--danger:#b33a3a;--shadow:0 14px 40px rgba(24,57,43,.09)}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+    .shell{max-width:1460px;margin:auto;padding:30px}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:#587062}.top h1{font-size:34px;line-height:1;margin:8px 0 0;letter-spacing:-.04em}.top-links{display:flex;gap:8px}.ghost{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;text-decoration:none;font-size:13px;font-weight:700}
+    .grid{display:grid;grid-template-columns:390px minmax(0,1fr);gap:22px;align-items:start}.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}.compose{padding:24px;position:sticky;top:20px}.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.panel-title h2{font-size:19px;margin:0;letter-spacing:-.02em}.required{font-size:12px;color:var(--muted)}
+    label{display:block;font-size:12px;font-weight:800;margin:16px 0 7px}.authors{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.author-option input{display:none}.author-option span{display:block;text-align:center;padding:11px 6px;border:1px solid var(--line);border-radius:11px;font-size:13px;font-weight:750;transition:.15s}.author-option input:checked+span{background:var(--green);border-color:var(--green);color:#fff}.field{width:100%;border:1px solid var(--line);background:#fbfcfa;border-radius:12px;padding:12px 13px;outline:0}.field:focus{border-color:#678375;box-shadow:0 0 0 3px rgba(103,131,117,.12)}textarea.field{min-height:150px;resize:vertical;line-height:1.6}
+    .drop{border:1px dashed #afbbb3;background:#f8faf7;border-radius:14px;padding:18px;text-align:center;position:relative}.drop.drag{background:#f0f5d8;border-color:#839532}.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}.drop strong{font-size:13px}.drop p{font-size:11px;color:var(--muted);margin:6px 0 0}.files{display:grid;gap:7px;margin-top:9px}.file-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:12px}.file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-size{color:var(--muted)}.file-remove{border:0;background:none;color:var(--danger);font-size:17px;padding:0 3px}.limit{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px}.save{width:100%;border:0;border-radius:13px;background:var(--accent);padding:14px;margin-top:18px;font-weight:900}.save:disabled{opacity:.55;cursor:wait}.progress{height:5px;background:#e7ece8;border-radius:10px;overflow:hidden;margin-top:10px;display:none}.progress i{display:block;height:100%;background:var(--green);width:0;transition:width .2s}.status{font-size:12px;min-height:18px;margin-top:8px;color:var(--muted)}
+    .content-panel{padding:22px;min-height:640px}.filters{display:grid;grid-template-columns:minmax(180px,1fr) 150px 150px 140px 160px auto;gap:8px;align-items:end;padding-bottom:18px;border-bottom:1px solid var(--line)}.filter label{margin:0 0 6px}.filter .field{padding:10px 11px}.clear{height:42px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:0 14px;font-weight:750}.summary{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 12px}.count{font-size:13px;color:var(--muted)}.sync{border:0;background:none;font-weight:800;font-size:12px;color:#476153}
+    .notice-list{display:grid;gap:11px}.notice{border:1px solid var(--line);border-radius:16px;padding:18px 19px;background:#fff}.notice-head{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}.notice-title{font-size:17px;font-weight:850;letter-spacing:-.02em;margin:0}.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}.badge{background:#edf1ed;color:#345244;padding:4px 8px;border-radius:999px;font-weight:800}.date{font-variant-numeric:tabular-nums}.body{font-size:14px;line-height:1.7;white-space:pre-wrap;margin:15px 0 0;word-break:break-word}.attachments{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.attachment{display:inline-flex;align-items:center;gap:7px;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-decoration:none;font-size:12px;background:#fafbf9}.attachment span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:250px}.empty{text-align:center;padding:90px 20px;color:var(--muted)}.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:7px}.loading{padding:100px;text-align:center;color:var(--muted)}.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:#18231e;color:#fff;padding:12px 17px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:10}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:1050px){.grid{grid-template-columns:340px minmax(0,1fr)}.filters{grid-template-columns:1fr 1fr 1fr}.filter.search{grid-column:1/-1}.clear{align-self:end}}@media(max-width:760px){.shell{padding:18px 12px}.top{align-items:flex-start}.top h1{font-size:28px}.top-links{display:none}.grid{display:block}.compose{position:static;margin-bottom:15px}.content-panel{padding:15px}.filters{grid-template-columns:1fr 1fr}.filter.search,.filter.author{grid-column:1/-1}.notice-head{display:block}.notice{padding:16px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top"><div><div class="eyebrow">INTERNAL NOTICE ARCHIVE</div><h1>공지 모음</h1></div><div class="top-links"><a id="sheetLink" class="ghost" href="#" target="_blank">시트 열기</a><a id="folderLink" class="ghost" href="#" target="_blank">드라이브 열기</a></div></header>
+    <div class="grid">
+      <section class="panel compose">
+        <div class="panel-title"><h2>새 공지 등록</h2><span class="required">* 필수 입력</span></div>
+        <form id="noticeForm">
+          <label>작성자 *</label>
+          <div class="authors">
+            <label class="author-option"><input type="radio" name="author" value="팀장님" required><span>팀장님</span></label>
+            <label class="author-option"><input type="radio" name="author" value="실장님"><span>실장님</span></label>
+            <label class="author-option"><input type="radio" name="author" value="총무님"><span>총무님</span></label>
+          </div>
+          <label for="noticeDate">공지 날짜 *</label><input id="noticeDate" class="field" type="date" required>
+          <label for="title">제목</label><input id="title" class="field" maxlength="150" placeholder="비워 두면 내용 첫 줄이 제목이 됩니다">
+          <label for="content">공지 내용 *</label><textarea id="content" class="field" maxlength="20000" placeholder="지시 사항과 확인할 내용을 입력해 주세요." required></textarea>
+          <label>첨부파일</label>
+          <div id="dropZone" class="drop"><input id="fileInput" type="file" multiple><strong>파일을 끌어 놓거나 눌러서 선택</strong><p>사진, PDF, 문서 등 · 전체 합계 300MB</p></div>
+          <div id="selectedFiles" class="files"></div><div class="limit"><span>첨부 용량</span><span id="totalSize">0 MB / 300 MB</span></div>
+          <button id="saveButton" class="save" type="submit">공지 저장</button><div id="progress" class="progress"><i></i></div><div id="status" class="status"></div>
+        </form>
+      </section>
+      <section class="panel content-panel">
+        <div class="filters">
+          <div class="filter search"><label for="search">내용 검색</label><input id="search" class="field" type="search" placeholder="제목 또는 내용"></div>
+          <div class="filter"><label for="fromDate">시작일</label><input id="fromDate" class="field" type="date"></div>
+          <div class="filter"><label for="toDate">종료일</label><input id="toDate" class="field" type="date"></div>
+          <div class="filter author"><label for="authorFilter">작성자</label><select id="authorFilter" class="field"><option value="">전체 작성자</option><option>팀장님</option><option>실장님</option><option>총무님</option></select></div>
+          <div class="filter"><label for="sort">정렬</label><select id="sort" class="field"><option value="new">최신순</option><option value="old">오래된순</option></select></div>
+          <button id="clearFilters" class="clear" type="button">초기화</button>
+        </div>
+        <div class="summary"><div id="count" class="count"></div><button id="sync" class="sync" type="button">↻ 새로고침</button></div>
+        <div id="noticeList" class="notice-list"><div class="loading">공지를 불러오는 중입니다…</div></div>
+      </section>
+    </div>
+  </main><div id="toast" class="toast"></div>
+  <script>
+    const state={notices:[],files:[],maxBytes:300*1024*1024,uploading:false};
+    const $=id=>document.getElementById(id); const CHUNK_SIZE=4*1024*1024;
+    document.addEventListener('DOMContentLoaded',()=>{ $('noticeDate').value=todayKorea(); bindEvents(); loadInitial(); });
+    function bindEvents(){
+      $('noticeForm').addEventListener('submit',submitNotice); $('fileInput').addEventListener('change',e=>addFiles([...e.target.files]));
+      ['dragenter','dragover'].forEach(n=>$('dropZone').addEventListener(n,e=>{e.preventDefault();$('dropZone').classList.add('drag')}));
+      ['dragleave','drop'].forEach(n=>$('dropZone').addEventListener(n,e=>{e.preventDefault();$('dropZone').classList.remove('drag')}));
+      $('dropZone').addEventListener('drop',e=>addFiles([...e.dataTransfer.files]));
+      ['search','fromDate','toDate','authorFilter','sort'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
+      $('clearFilters').addEventListener('click',()=>{['search','fromDate','toDate','authorFilter'].forEach(id=>$(id).value='');$('sort').value='new';render()});
+      $('sync').addEventListener('click',refresh); document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!state.uploading)refresh(false)});
+    }
+    function gas(fn,...args){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(err=>reject(new Error(err.message||String(err))))[fn](...args))}
+    async function loadInitial(){try{const data=await gas('getInitialData');state.notices=data.notices||[];state.maxBytes=data.maxTotalBytes||state.maxBytes;$('sheetLink').href=data.spreadsheetUrl;$('folderLink').href=data.folderUrl;render()}catch(e){showLoadError(e)}}
+    async function refresh(notify=true){if(state.uploading)return;$('sync').disabled=true;try{state.notices=await gas('listNotices');render();if(notify)toast('최신 공지를 불러왔습니다.')}catch(e){toast(e.message,true)}finally{$('sync').disabled=false}}
+    function addFiles(incoming){const seen=new Set(state.files.map(f=>`${f.name}_${f.size}_${f.lastModified}`));for(const file of incoming){const key=`${file.name}_${file.size}_${file.lastModified}`;if(!seen.has(key)){state.files.push(file);seen.add(key)}}$('fileInput').value='';renderFiles()}
+    function removeFile(index){if(state.uploading)return;state.files.splice(index,1);renderFiles()}
+    function renderFiles(){const total=state.files.reduce((s,f)=>s+f.size,0);$('totalSize').textContent=`${formatBytes(total)} / 300 MB`;$('totalSize').style.color=total>state.maxBytes?'var(--danger)':'';$('selectedFiles').innerHTML=state.files.map((f,i)=>`<div class="file-row"><span class="file-name">${esc(f.name)}</span><span class="file-size">${formatBytes(f.size)}</span><button class="file-remove" type="button" onclick="removeFile(${i})" aria-label="삭제">×</button></div>`).join('')}
+    async function submitNotice(e){e.preventDefault();if(state.uploading)return;const total=state.files.reduce((s,f)=>s+f.size,0);if(total>state.maxBytes)return toast('첨부파일 합계가 300MB를 넘습니다.',true);const author=new FormData(e.target).get('author');if(!author)return toast('작성자를 선택해 주세요.',true);const id=crypto.randomUUID();const base={id,author,noticeDate:$('noticeDate').value,title:$('title').value.trim(),content:$('content').value.trim()};if(!base.content)return toast('공지 내용을 입력해 주세요.',true);
+      setBusy(true);const uploaded=[];try{for(let i=0;i<state.files.length;i++){uploaded.push(await uploadFile(state.files[i],id,base.noticeDate,i,state.files.length,total))}setStatus('시트에 공지를 저장하고 있습니다…');const saved=await gas('saveNotice',{...base,attachments:uploaded});state.notices.unshift(saved);resetForm();render();toast('공지가 저장되었습니다.')}catch(err){setStatus(err.message,true);toast('저장하지 못했습니다. 다시 시도해 주세요.',true)}finally{setBusy(false)}}
+    async function uploadFile(file,noticeId,noticeDate,fileIndex,fileCount,totalAll){setStatus(`${file.name} 업로드 준비 중…`);const session=await gas('startResumableUpload',{noticeId,noticeDate,name:file.name,mimeType:file.type,size:file.size});let offset=0;let completed;while(offset<file.size){const end=Math.min(offset+CHUNK_SIZE,file.size);const buffer=await file.slice(offset,end).arrayBuffer();const base64=arrayBufferToBase64(buffer);completed=await gas('uploadChunk',{sessionUrl:session.sessionUrl,name:session.name,start:offset,end:end-1,total:file.size,base64});offset=end;const previous=state.files.slice(0,fileIndex).reduce((s,f)=>s+f.size,0);const pct=totalAll?Math.round((previous+offset)/totalAll*100):100;setProgress(pct);setStatus(`${fileIndex+1}/${fileCount} ${file.name} · ${pct}%`)}if(!completed||!completed.done)throw new Error(`${file.name} 업로드가 완료되지 않았습니다.`);return completed.file}
+    function render(){const q=$('search').value.trim().toLowerCase(),from=$('fromDate').value,to=$('toDate').value,author=$('authorFilter').value,sort=$('sort').value;const items=state.notices.filter(n=>(!q||`${n.title} ${n.content}`.toLowerCase().includes(q))&&(!from||n.noticeDate>=from)&&(!to||n.noticeDate<=to)&&(!author||n.author===author)).sort((a,b)=>(sort==='new'?-1:1)*(`${a.noticeDate}|${a.createdAt}`.localeCompare(`${b.noticeDate}|${b.createdAt}`)));$('count').textContent=`전체 ${state.notices.length}개 중 ${items.length}개`;$('noticeList').innerHTML=items.length?items.map(noticeCard).join(''):'<div class="empty"><b>조건에 맞는 공지가 없습니다.</b>날짜나 작성자 필터를 바꿔 보세요.</div>'}
+    function noticeCard(n){const attachments=(n.attachments||[]).map(f=>`<a class="attachment" href="${escAttr(f.url)}" target="_blank" rel="noopener"><b>↗</b><span>${esc(f.name)}</span><small>${formatBytes(Number(f.size)||0)}</small></a>`).join('');return `<article class="notice"><div class="notice-head"><div><h3 class="notice-title">${esc(n.title||'제목 없음')}</h3><div class="meta"><span class="badge">${esc(n.author)}</span><span class="date">공지 ${esc(n.noticeDate)}</span><span>등록 ${esc(formatDateTime(n.createdAt))}</span></div></div></div><div class="body">${esc(n.content)}</div>${attachments?`<div class="attachments">${attachments}</div>`:''}</article>`}
+    function resetForm(){$('noticeForm').reset();$('noticeDate').value=todayKorea();state.files=[];renderFiles();setProgress(0);setStatus('')}
+    function setBusy(value){state.uploading=value;$('saveButton').disabled=value;$('saveButton').textContent=value?'저장 중…':'공지 저장';$('progress').style.display=value?'block':'none'}
+    function setProgress(value){$('progress').querySelector('i').style.width=`${Math.max(0,Math.min(100,value))}%`}
+    function setStatus(message,error=false){$('status').textContent=message||'';$('status').style.color=error?'var(--danger)':'var(--muted)'}
+    function showLoadError(error){$('noticeList').innerHTML=`<div class="empty"><b>공지를 불러오지 못했습니다.</b>${esc(error.message)}</div>`}
+    function toast(message,error=false){const el=$('toast');el.textContent=message;el.style.background=error?'#8d2929':'#18231e';el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2600)}
+    function todayKorea(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
+    function formatDateTime(value){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'2-digit',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(d)}
+    function formatBytes(bytes){if(!bytes)return'0 MB';if(bytes<1024*1024)return`${(bytes/1024).toFixed(bytes<10240?1:0)} KB`;return`${(bytes/1024/1024).toFixed(1)} MB`}
+    function arrayBufferToBase64(buffer){const bytes=new Uint8Array(buffer),step=0x8000;let binary='';for(let i=0;i<bytes.length;i+=step)binary+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(binary)}
+    function esc(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+    function escAttr(value){return esc(value).replace(/`/g,'&#96;')}
+  </script>
+</body>
+</html>
