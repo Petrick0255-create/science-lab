@@ -89,18 +89,31 @@
     const first=tables[0],headerCells=first.cells.filter(cell=>cell.row===0),columnCount=Math.max(1,first.colCount-1),columns=Array.from({length:columnCount},(_,index)=>cellText(headerCells.find(cell=>cell.col===index+1)||{texts:[]})||`${index+1}회`);
     const rows=[];
     tables.forEach((table,tableIndex)=>{for(let row=tableIndex===0?1:0;row<table.rowCount;row++){const cells=table.cells.filter(cell=>cell.row===row).sort((a,b)=>a.col-b.col);if(cells.length)rows.push({id:`T${tableIndex}-R${row}`,table:tableIndex,row,cells});}});
-    const allCells=tables.flatMap(table=>table.cells),imageCount=allCells.reduce((sum,cell)=>sum+cell.images.length,0),memoCount=allCells.reduce((sum,cell)=>sum+cell.memos.length,0),urls=new Map(),binEntries=new Map();
+    const allCells=tables.flatMap(table=>table.cells),imageCount=allCells.reduce((sum,cell)=>sum+cell.images.length,0),memoCount=allCells.reduce((sum,cell)=>sum+cell.memos.length,0),urls=new Map(),blobs=new Map(),copyUrls=new Map(),binEntries=new Map();
     cfb.entries.filter(entry=>/^BIN[0-9A-F]{4}\./i.test(entry.name)).forEach(entry=>binEntries.set(entry.name.slice(0,7).toUpperCase(),entry));
-    async function getImageUrl(id){
-      if(urls.has(id))return urls.get(id);
+    async function getImageBlob(id){
+      if(blobs.has(id))return blobs.get(id);
       const key=`BIN${Number(id).toString(16).padStart(4,"0").toUpperCase()}`,entry=binEntries.get(key);if(!entry)throw new Error(`${key} 이미지를 찾지 못했습니다.`);
       let bytes=cfb.stream(entry),mime=/\.png$/i.test(entry.name)?"image/png":/\.jpe?g$/i.test(entry.name)?"image/jpeg":/\.gif$/i.test(entry.name)?"image/gif":"image/bmp";
       const known=bytes[0]===0x89&&bytes[1]===0x50||bytes[0]===0xff&&bytes[1]===0xd8||bytes[0]===0x42&&bytes[1]===0x4d||bytes[0]===0x47&&bytes[1]===0x49;
       if(!known)bytes=await inflateRaw(bytes);
       if(bytes[0]===0x42&&bytes[1]===0x4d)mime="image/bmp";
-      const url=URL.createObjectURL(new Blob([bytes],{type:mime}));urls.set(id,url);return url;
+      const blob=new Blob([bytes],{type:mime});blobs.set(id,blob);return blob;
     }
-    return{name:file.name.replace(/\.hwp$/i,""),columns,rows,tables,cells:allCells,imageCount,memoCount,getImageUrl,dispose(){urls.forEach(url=>URL.revokeObjectURL(url));urls.clear();}};
+    async function getImageUrl(id){if(urls.has(id))return urls.get(id);const url=URL.createObjectURL(await getImageBlob(id));urls.set(id,url);return url;}
+    const blobToDataUrl=blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
+    async function getImageCopyUrl(id){
+      if(copyUrls.has(id))return copyUrls.get(id);
+      const blob=await getImageBlob(id);let dataUrl;
+      try{
+        const bitmap=await createImageBitmap(blob),scale=Math.min(1,600/bitmap.width),canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+        canvas.getContext("2d",{alpha:false}).drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
+        const png=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error("이미지 변환 실패")),"image/png"));dataUrl=await blobToDataUrl(png);
+      }catch{dataUrl=await blobToDataUrl(blob);}
+      copyUrls.set(id,dataUrl);return dataUrl;
+    }
+    return{name:file.name.replace(/\.hwp$/i,""),columns,rows,tables,cells:allCells,imageCount,memoCount,getImageUrl,getImageCopyUrl,dispose(){urls.forEach(url=>URL.revokeObjectURL(url));urls.clear();blobs.clear();copyUrls.clear();}};
   }
 
   async function parse(file){if(!file||!/\.hwp$/i.test(file.name))throw new Error(".hwp 파일을 선택하세요.");return parseQuestions(await extractText(await file.arrayBuffer()));}

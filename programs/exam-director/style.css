@@ -19,3 +19,15 @@ main{max-width:1480px;margin:0 auto;padding:31px 28px 115px}.page{display:none}.
 @media(max-width:720px){.quick-score-counts{grid-template-columns:repeat(3,1fr)}.quick-compare-answer-tables{grid-template-columns:1fr}.quick-compare-table{min-width:680px}.quick-compare-head{gap:12px}.quick-mode-switch{width:100%}.quick-mode-switch button{flex:1}}
 @media(max-width:720px){#quickHwpMetrics{grid-template-columns:1fr 1fr}.quick-layout-table th,.quick-layout-table td{width:245px;min-width:245px}.quick-layout-table thead th:first-child,.quick-layout-table .quick-layout-type{width:135px;min-width:135px}.quick-layout-image{height:240px}}
 @media(max-width:1060px){.record-list-head{display:none}}
+
+/* 빠른 비교: 편집 가능한 셀과 행·열 이미지 탐색 */
+.quick-layout-cell-text{width:100%;min-height:70px;padding:8px 9px;border:1px solid #dfe4ec;border-radius:8px;background:#f4f6f9;color:#374357;font-family:inherit;font-size:9px;font-weight:650;line-height:1.6;white-space:pre-wrap;resize:vertical}
+.quick-layout-cell-text:focus{outline:2px solid #b9cbff;border-color:var(--blue);background:#fff}
+.quick-image-modal-head{justify-content:center;gap:14px}
+.quick-image-modal-head>div{min-width:0;flex:1;text-align:center}
+.quick-image-modal-head h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quick-image-nav{width:42px;height:42px;flex:0 0 auto;border:1px solid var(--line);border-radius:10px;background:#f1f4f8;color:var(--navy);font-size:20px;font-weight:800;cursor:pointer}
+.quick-image-nav:hover{background:#dfe8ff;color:var(--blue)}
+#quickImagePosition{display:block;margin-top:3px}
+.quick-large-image-wrap{max-height:calc(90vh - 92px)}
+.quick-large-image-wrap img{max-height:calc(90vh - 130px)}
