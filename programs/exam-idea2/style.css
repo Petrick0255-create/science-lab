@@ -802,6 +802,17 @@ svg {
   background: #fff;
   border: 1px solid #e0e6ee;
   border-radius: 8px;
+  cursor: help;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.detail-chip-list li:hover {
+  border-color: #9db9e8;
+  box-shadow: 0 5px 14px rgba(41, 82, 148, 0.12);
+  transform: translateY(-1px);
 }
 
 .detail-chip-list b {

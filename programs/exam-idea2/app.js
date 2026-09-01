@@ -1430,6 +1430,22 @@ function renderDetailTypePreview() {
     const item =
       document.createElement("li");
 
+    const explanation = [
+      source.situation,
+      source.representativeChoice,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    item.title = explanation
+      ? `${source.subtype} · ${explanation}`
+      : `${source.subtype} · 등록된 설명 없음`;
+
+    item.setAttribute(
+      "aria-label",
+      item.title,
+    );
+
     const number =
       document.createElement("b");
     number.textContent = String(
