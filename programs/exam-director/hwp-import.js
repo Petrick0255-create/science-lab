@@ -1,5 +1,6 @@
 (function(){
   "use strict";
+  // 본 제품은 한컴의 HWP 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
 
   const FREE=0xffffffff,END=0xfffffffe,CIRCLED="①②③④⑤";
   const readName=(bytes,offset,length)=>new TextDecoder("utf-16le").decode(bytes.subarray(offset,offset+Math.max(0,length-2)));
@@ -51,6 +52,57 @@
     return questions.sort((a,b)=>a.number-b.number);
   }
 
+  const recordList=bytes=>{const result=[],view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);for(let offset=0;offset+4<=bytes.length;){const record=view.getUint32(offset,true);offset+=4;const tag=record&0x3ff,level=record>>>10&0x3ff;let size=record>>>20;if(size===0xfff){if(offset+4>bytes.length)break;size=view.getUint32(offset,true);offset+=4;}if(offset+size>bytes.length)break;result.push({tag,level,data:bytes.subarray(offset,offset+size)});offset+=size;}return result;};
+  const isMemoControl=data=>data.length>=4&&data[0]===0x6b&&data[1]===0x6e&&data[2]===0x75&&data[3]===0x25;
+  const cellText=cell=>cell.texts.join("\n").trim();
+
+  async function parseLayout(file){
+    if(!file||!/\.hwp$/i.test(file.name))throw new Error(".hwp 파일을 선택하세요.");
+    const cfb=new CompoundFile(await file.arrayBuffer()),header=cfb.entries.find(entry=>entry.name==="FileHeader");
+    if(!header)throw new Error("HWP 파일 헤더가 없습니다.");
+    const headerBytes=cfb.stream(header),headerView=new DataView(headerBytes.buffer,headerBytes.byteOffset,headerBytes.byteLength),compressed=Boolean(headerView.getUint32(36,true)&1);
+    const sections=cfb.entries.filter(entry=>/^Section\d+$/.test(entry.name)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+    const tables=[],memoBlocks=[],memoAnchors=[];let currentTable=null,currentCell=null,currentMemo=null;
+    for(const section of sections){
+      let bytes=cfb.stream(section);if(compressed)bytes=await inflateRaw(bytes);
+      for(const record of recordList(bytes)){
+        const {tag,level,data}=record;
+        if(tag===77&&level===2&&data.length>=8){
+          const view=new DataView(data.buffer,data.byteOffset,data.byteLength);
+          currentTable={index:tables.length,rowCount:view.getUint16(4,true),colCount:view.getUint16(6,true),cells:[]};tables.push(currentTable);currentCell=null;currentMemo=null;
+        }else if(tag===72&&level===2&&data.length>=30&&currentTable){
+          const view=new DataView(data.buffer,data.byteOffset,data.byteLength);
+          currentCell={id:`T${currentTable.index}-R${view.getUint16(10,true)}-C${view.getUint16(8,true)}`,table:currentTable.index,col:view.getUint16(8,true),row:view.getUint16(10,true),colSpan:Math.max(1,view.getUint16(12,true)),rowSpan:Math.max(1,view.getUint16(14,true)),texts:[],images:[],memos:[]};
+          currentTable.cells.push(currentCell);currentMemo=null;
+        }else if(tag===72&&level===1&&data.length===16&&tables.length){
+          currentCell=null;currentMemo={texts:[]};memoBlocks.push(currentMemo);
+        }else if(tag===67){
+          const text=paragraphText(data).replace(/[ \t]+/g," ").trim();
+          if(text&&currentCell)currentCell.texts.push(text);else if(text&&currentMemo)currentMemo.texts.push(text);
+        }else if(tag===85&&currentCell&&data.length>=73){
+          const id=new DataView(data.buffer,data.byteOffset,data.byteLength).getUint16(71,true);if(id&&!currentCell.images.includes(id))currentCell.images.push(id);
+        }else if(tag===71&&currentCell&&isMemoControl(data))memoAnchors.push(currentCell);
+      }
+    }
+    if(!tables.length||!tables.some(table=>table.colCount>1))throw new Error("회차 비교 표를 찾지 못했습니다.");
+    memoAnchors.forEach((cell,index)=>{const text=memoBlocks[index]?.texts.join("\n").trim();if(text)cell.memos.push(text);});
+    const first=tables[0],headerCells=first.cells.filter(cell=>cell.row===0),columnCount=Math.max(1,first.colCount-1),columns=Array.from({length:columnCount},(_,index)=>cellText(headerCells.find(cell=>cell.col===index+1)||{texts:[]})||`${index+1}회`);
+    const rows=[];
+    tables.forEach((table,tableIndex)=>{for(let row=tableIndex===0?1:0;row<table.rowCount;row++){const cells=table.cells.filter(cell=>cell.row===row).sort((a,b)=>a.col-b.col);if(cells.length)rows.push({id:`T${tableIndex}-R${row}`,table:tableIndex,row,cells});}});
+    const allCells=tables.flatMap(table=>table.cells),imageCount=allCells.reduce((sum,cell)=>sum+cell.images.length,0),memoCount=allCells.reduce((sum,cell)=>sum+cell.memos.length,0),urls=new Map(),binEntries=new Map();
+    cfb.entries.filter(entry=>/^BIN[0-9A-F]{4}\./i.test(entry.name)).forEach(entry=>binEntries.set(entry.name.slice(0,7).toUpperCase(),entry));
+    async function getImageUrl(id){
+      if(urls.has(id))return urls.get(id);
+      const key=`BIN${Number(id).toString(16).padStart(4,"0").toUpperCase()}`,entry=binEntries.get(key);if(!entry)throw new Error(`${key} 이미지를 찾지 못했습니다.`);
+      let bytes=cfb.stream(entry),mime=/\.png$/i.test(entry.name)?"image/png":/\.jpe?g$/i.test(entry.name)?"image/jpeg":/\.gif$/i.test(entry.name)?"image/gif":"image/bmp";
+      const known=bytes[0]===0x89&&bytes[1]===0x50||bytes[0]===0xff&&bytes[1]===0xd8||bytes[0]===0x42&&bytes[1]===0x4d||bytes[0]===0x47&&bytes[1]===0x49;
+      if(!known)bytes=await inflateRaw(bytes);
+      if(bytes[0]===0x42&&bytes[1]===0x4d)mime="image/bmp";
+      const url=URL.createObjectURL(new Blob([bytes],{type:mime}));urls.set(id,url);return url;
+    }
+    return{name:file.name.replace(/\.hwp$/i,""),columns,rows,tables,cells:allCells,imageCount,memoCount,getImageUrl,dispose(){urls.forEach(url=>URL.revokeObjectURL(url));urls.clear();}};
+  }
+
   async function parse(file){if(!file||!/\.hwp$/i.test(file.name))throw new Error(".hwp 파일을 선택하세요.");return parseQuestions(await extractText(await file.arrayBuffer()));}
-  window.HwpQuickImport={parse};
+  window.HwpQuickImport={parse,parseLayout};
 })();
