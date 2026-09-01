@@ -203,7 +203,41 @@ const DISCIPLINE_LABELS = {
 };
 
 function resolveDiscipline(type) {
-  return DISCIPLINE_BY_TYPE[type] || "common";
+  if (DISCIPLINE_BY_TYPE[type]) {
+    return DISCIPLINE_BY_TYPE[type];
+  }
+
+  const target =
+    normalizeForMatch(type);
+
+  if (!target) {
+    return "common";
+  }
+
+  const matched =
+    Object.entries(
+      DISCIPLINE_BY_TYPE,
+    )
+      .sort(
+        ([a], [b]) =>
+          normalizeForMatch(b).length -
+          normalizeForMatch(a).length,
+      )
+      .find(([name]) => {
+        const normalizedName =
+          normalizeForMatch(name);
+
+        return (
+          target.includes(
+            normalizedName,
+          ) ||
+          normalizedName.includes(
+            target,
+          )
+        );
+      });
+
+  return matched?.[1] || "common";
 }
 
 /*
@@ -1463,6 +1497,9 @@ function generateRound(roundNumber) {
   } = getSelectedCourseRatio();
 
   let lastError = null;
+  let bestRound = null;
+  let bestDisciplineSpread =
+    Infinity;
 
   /*
    * 정T·백T 비율까지 정확히 맞는 결과가 나올 때까지
@@ -1474,14 +1511,51 @@ function generateRound(roundNumber) {
     attempt += 1
   ) {
     try {
-      return generateRoundAttempt(
+      const round =
+        generateRoundAttempt(
         roundNumber,
         course1,
         course2,
       );
+
+      const counts =
+        getDisciplineCounts(
+          round.questions,
+        );
+
+      const countedValues =
+        COUNTED_DISCIPLINES.map(
+          (discipline) =>
+            counts[discipline],
+        );
+
+      const spread =
+        Math.max(...countedValues) -
+        Math.min(...countedValues);
+
+      if (
+        spread <
+        bestDisciplineSpread
+      ) {
+        bestRound = round;
+        bestDisciplineSpread =
+          spread;
+      }
+
+      if (spread <= 2) {
+        return round;
+      }
     } catch (error) {
       lastError = error;
     }
+  }
+
+  /*
+   * 실시간 시트 분류 조합상 편차 2 이내가 불가능해도
+   * 생성 자체를 막지 않고 500회 중 가장 균형 잡힌 결과를 사용합니다.
+   */
+  if (bestRound) {
+    return bestRound;
   }
 
   throw new Error(
@@ -1881,25 +1955,6 @@ function selectUnitsForSlots(
   ) {
     throw new Error(
       `출제자 비율이 정T ${teacherCounts.정T}문항·백T ${teacherCounts.백T}문항으로 선택되었습니다.`,
-    );
-  }
-
-  const disciplineCounts =
-    getDisciplineCounts(selected);
-
-  const countedValues =
-    COUNTED_DISCIPLINES.map(
-      (discipline) =>
-        disciplineCounts[discipline],
-    );
-
-  if (
-    Math.max(...countedValues) -
-      Math.min(...countedValues) >
-    2
-  ) {
-    throw new Error(
-      "물·화·생·지 문항 수 편차가 2문항을 초과했습니다.",
     );
   }
 
