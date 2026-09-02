@@ -35,11 +35,19 @@
         <label>보기<select id="columnSelect"><option value="2">2열</option><option value="3" selected>3열</option></select></label>
       </div>
 
+      <div class="extra-filters">
+        <label class="file-mode"><input id="evaluationOnly" type="checkbox"><span>평가원만</span></label>
+        <span>고3 6월·9월·11월 문항만 검색합니다.</span>
+      </div>
+
       <div class="summary-row">
-        <div class="result-summary"><div id="resultCount">총 0문항</div><div id="dataStatus"><span class="spinner"></span> 데이터 불러오는 중</div></div>
+        <div class="result-summary"><div id="resultCount">총 0문항</div><div id="editedCount">유형 수정 0문항</div><div id="dataStatus"><span class="spinner"></span> 데이터 불러오는 중</div></div>
         <div class="data-buttons">
           <label class="file-mode"><input id="localFileMode" type="checkbox"><span>PDF 로컬 우선</span></label>
           <button id="copyAllBtn" type="button" disabled>표시 출처 복사</button>
+          <button id="resetChangesBtn" type="button" disabled>유형 수정 취소</button>
+          <button id="syncTypesBtn" type="button" disabled>유형 DB 동기화</button>
+          <button id="syncSettingsBtn" type="button">DB 연결 설정</button>
           <button id="resetBtn" type="button">검색 초기화</button>
           <a class="db-button" href="https://docs.google.com/spreadsheets/d/1u9dPjf4FAEifmS_jQ_xjaN5R8CNecKx49pdIPFuzp0c/edit" target="_blank" rel="noopener noreferrer">DB 원본 열기</a>
         </div>
@@ -52,7 +60,7 @@
     </section>
 
     <section class="problem-panel">
-      <div class="section-head"><h2>관련 문제</h2><span>이미지를 누르면 크게 볼 수 있습니다.</span></div>
+      <div class="section-head"><h2>관련 문제</h2><span>이미지를 누르면 크게 볼 수 있고, 카드에서 유형을 수정할 수 있습니다.</span></div>
       <div id="problemGrid" class="problem-grid cols-3"><div class="empty">키워드 또는 필터를 선택해 문항을 검색하세요.</div></div>
       <button id="loadMoreBtn" class="load-more hidden" type="button">문항 더 보기</button>
     </section>
@@ -66,6 +74,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=7"></script>
+  <script src="./app.js?v=8"></script>
 </body>
 </html>
