@@ -164,7 +164,7 @@ function searchHaystack(item){return normalize(`${item.x||""} ${item.t||""} ${so
 function previewUrl(url){const id=driveFileId(url);return id?`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`:url||""}
 function driveFileId(url){const match=String(url||"").match(/\/file\/d\/([^/]+)/);return match?match[1]:""}
 function resourceCandidates(item,kind){
-  if(kind==="image")return[item.lim].filter(Boolean);
+  if(kind==="image")return[item.lim,item.im].filter(Boolean);
   const pairs={image:[item.im,item.lim],problem:[item.p,item.lp],solution:[item.sol,item.lsol]};
   const pair=pairs[kind]||[];return (state.preferLocal?[pair[1],pair[0]]:pair).filter(Boolean);
 }
