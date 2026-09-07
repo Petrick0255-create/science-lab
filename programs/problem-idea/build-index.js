@@ -25,7 +25,7 @@ for(const sourceFile of sourceFiles){
   const details=lines.map(line=>{
     const row=Object.fromEntries(Object.entries(JSON.parse(line)).map(([key,value])=>[key,clean(value)]));
     const local=localUrls(row);
-    return{id:row.id,grade:row.grade,subject:row.subject,year:row.year,month:row.month,sourceYear:sourceYear(row),exam:row.exam,number:row.number,type:canonicalType(row.subject,typeMap[row.id]||row.type),prompt:row.prompt,view:row.view,choices:[row.c1,row.c2,row.c3,row.c4,row.c5],answer:row.answer,explanation:row.explanation,imageName:row.imageName,imageUrl:row.imageUrl,problemUrl:row.problemUrl,solutionUrl:row.solutionUrl,localImageUrl:local.image,localProblemUrl:local.problem,localSolutionUrl:local.solution,status:row.status};
+    return{id:row.id,grade:row.grade,subject:row.subject,year:row.year,month:row.month,sourceYear:sourceYear(row),exam:row.exam,number:row.number,type:canonicalType(row.subject,row.type||typeMap[row.id]),prompt:row.prompt,view:row.view,choices:[row.c1,row.c2,row.c3,row.c4,row.c5],answer:row.answer,explanation:row.explanation,imageName:row.imageName,imageUrl:row.imageUrl,problemUrl:row.problemUrl,solutionUrl:row.solutionUrl,localImageUrl:local.image,localProblemUrl:local.problem,localSolutionUrl:local.solution,status:row.status};
   });
   details.forEach((row,rowIndex)=>{
     const storedLabel=`${String(row.year).padStart(2,"0")} ${String(row.month).padStart(2,"0")} ${row.grade} ${row.subject}`;
