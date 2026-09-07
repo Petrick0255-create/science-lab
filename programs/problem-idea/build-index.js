@@ -9,7 +9,7 @@ const TYPE_ALIASES={"물리학|반도체":"에너지띠와 반도체","생명과
 function canonicalType(subject,type){const value=String(type||"미분류").trim()||"미분류";return TYPE_ALIASES[`${subject}|${value}`]||value}
 function normalize(value){return String(value||"").replace(/[Ⅰⅰ]/g,"1").normalize("NFKC").toLocaleLowerCase("ko-KR").replace(/(물리학|화학|생명과학|지구과학)\s*(?:1|i)\b/g,"$1").replace(/\s+/g," ").trim()}
 function clean(value){return typeof value==="string"?value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,""):value}
-function sourceYear(row){const year=Number(row.year)||0,month=Number(row.month)||0;return row.grade==="고3"&&![6,9,11].includes(month)?year-1:year}
+function sourceYear(row){const year=Number(row.year)||0,month=Number(row.month)||0;return row.grade==="고3"&&[3,4,5,7,10].includes(month)?year-1:year}
 function localUrls(row){
   const pdfKey=String(row.id||"").slice(0,6),base=`../exam-search/data/${row.grade} 기출/${row.subject}`;
   return{image:`${base}/문제 이미지 파일/${row.imageName||`${row.id}.png`}`,problem:`${base}/${pdfKey}.pdf`,solution:`${base}/${pdfKey} 해설.pdf`};

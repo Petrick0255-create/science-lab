@@ -156,9 +156,12 @@ function makeTypeEditor(item){
 function link(text,url,className){const a=document.createElement("a");a.textContent=text;a.className=className;a.target="_blank";a.rel="noopener noreferrer";if(url)a.href=url;else{a.classList.add("disabled");a.removeAttribute("href")}return a}
 function copyButton(item){const button=document.createElement("button");button.type="button";button.className="copy-button";button.title="출처 복사";button.textContent="📋";button.addEventListener("click",async()=>{await copyText(sourceText(item));button.textContent="✓";setTimeout(()=>button.textContent="📋",900)});return button}
 function makeEmpty(text){const div=document.createElement("div");div.className="empty";div.textContent=text;return div}
+function displaySubject(subject){return({"물리학":"물리학Ⅰ","화학":"화학Ⅰ","생명과학":"생명과학Ⅰ","지구과학":"지구과학Ⅰ"})[subject]||subject}
 function sourceText(item){
-  if(item.g==="고3"&&Number(item.m)===11)return `${String(item.sy||item.y).padStart(2,"0")} 수능 ${item.s} ${String(item.n).padStart(2,"0")}번`;
-  return `${item.e} ${item.n}번`;
+  const year=String(item.sy??item.y).padStart(2,"0"),month=String(item.m).padStart(2,"0"),number=String(item.n).padStart(2,"0"),subject=displaySubject(item.s);
+  if(item.g==="고3"&&Number(item.m)===11)return `${year} 수능 ${subject} ${number}번`;
+  if(item.g==="고3")return `${year} ${month} ${subject} ${number}번`;
+  return `${item.e} ${number}번`;
 }
 function searchHaystack(item){return normalize(`${item.x||""} ${item.t||""} ${sourceText(item)}`)}
 function previewUrl(url){const id=driveFileId(url);return id?`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`:url||""}
