@@ -2,7 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BLOCK_LABELS, coverage, MAX_PDF_BYTES, validateDocument } from '../shared/document.js';
 import { planQuestion } from '../shared/layout.js';
+import { analyzePdfInBrowser, DEFAULT_MODEL } from './gemini-client.js';
+import { createPptxBlob } from './pptx-client.js';
 import './style.css';
+import './key.css';
+
+const storage = {
+  get(key, fallback = '') { try { return window.localStorage.getItem(key) || fallback; } catch { return fallback; } },
+  set(key, value) { try { if (value) window.localStorage.setItem(key, value); else window.localStorage.removeItem(key); } catch {} },
+};
 
 function ScientificEditor({ label, value, onChange, rows = 4 }) {
   const ref = useRef();
@@ -34,22 +42,17 @@ function SlidePreview({ question, numberStyle }) {
     <p className="help">화면 미리보기는 근사 배치입니다. 최종 모양은 설치된 글꼴과 PowerPoint에서 확인하세요.</p></section>;
 }
 
-async function responseJson(response) {
-  let result;
-  try { result = await response.json(); }
-  catch { throw new Error('서버 응답을 읽을 수 없습니다. API 서버 실행 상태를 확인하세요.'); }
-  if (!response.ok) throw new Error(result.error || '요청을 처리하지 못했습니다.');
-  return result;
-}
-
 function App() {
   const input = useRef(); const controller = useRef(null);
-  const [health, setHealth] = useState(null); const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState(() => storage.get('bbh-gemini-api-key'));
+  const [model, setModel] = useState(() => storage.get('bbh-gemini-model', DEFAULT_MODEL));
   const [file, setFile] = useState(null); const [sourceUrl, setSourceUrl] = useState('');
   const [data, setData] = useState(null); const [expectedCount, setExpectedCount] = useState(25);
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [message, setMessage] = useState('');
   const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28'); const [showSource, setShowSource] = useState(false);
-  useEffect(() => { fetch('/api/health').then(responseJson).then(setHealth).catch(e => setErr(e.message)); return () => controller.current?.abort(); }, []);
+  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => { storage.set('bbh-gemini-api-key', apiKey); }, [apiKey]);
+  useEffect(() => { storage.set('bbh-gemini-model', model); }, [model]);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setSourceUrl(url); return () => URL.revokeObjectURL(url); }, [file]);
   useEffect(() => { const prevent = e => { if (data) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', prevent); return () => window.removeEventListener('beforeunload', prevent); }, [data]);
   const choose = f => {
@@ -60,7 +63,6 @@ function App() {
     setFile(f); setData(null); setSelected(0); setErr(''); setMessage(''); setShowSource(false);
   };
   useEffect(() => { const paste = e => { const f = [...(e.clipboardData?.files || [])].find(v => v.type === 'application/pdf'); if (f) { e.preventDefault(); choose(f); } }; window.addEventListener('paste', paste); return () => window.removeEventListener('paste', paste); });
-  const headers = () => password ? { Authorization: `Bearer ${password}` } : {};
   const questions = data?.questions || []; const q = questions[selected];
   const check = useMemo(() => data ? coverage({ ...data, expectedCount }) : null, [data, expectedCount]);
   const patchQ = change => setData(d => ({ ...d, questions: d.questions.map((v, i) => i === selected ? { ...v, ...change } : v) }));
@@ -73,9 +75,7 @@ function App() {
     const ac = new AbortController(); controller.current = ac;
     const timeout = setTimeout(() => ac.abort(), 195000);
     try {
-      const body = new FormData(); body.append('pdf', file); body.append('expectedCount', String(expectedCount));
-      const res = await fetch('/api/analyze', { method: 'POST', headers: headers(), body, signal: ac.signal });
-      const doc = validateDocument(await responseJson(res));
+      const doc = validateDocument(await analyzePdfInBrowser(file, { apiKey, model, expectedCount, signal: ac.signal }));
       setData(doc); setSelected(0); setMessage(`${doc.questions.length}개 문항을 인식했습니다. 원문과 첨자를 확인하세요.`);
     } catch (e) { setErr(e.name === 'AbortError' ? '분석을 취소했거나 응답 시간이 초과되었습니다.' : e.message); setMessage(''); }
     finally { clearTimeout(timeout); controller.current = null; setBusy(''); }
@@ -84,12 +84,13 @@ function App() {
     if (!data || busy) return;
     setBusy('export'); setErr('');
     try {
-      const res = await fetch('/api/export', { method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, expectedCount, numberStyle: style }) });
-      if (!res.ok) { await responseJson(res); return; }
-      const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      const doc = validateDocument({ ...data, expectedCount });
+      doc.questions.sort((a, b) => Number(a.number) - Number(b.number));
+      const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `${data.title.replace(/[\\/:*?"<>|]/g, '_') || '모의고사'}_문항별.pptx`;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setMessage(`${expectedCount}문항 · ${res.headers.get('X-Slide-Count')}장 PPTX를 만들었습니다.`);
+      setMessage(`${expectedCount}문항 · ${slideCount}장 PPTX를 만들었습니다.`);
     } catch (e) { setErr(e.message); } finally { setBusy(''); }
   };
   const addQuestion = () => {
@@ -107,10 +108,11 @@ function App() {
       <h2>01 원본 PDF</h2><button className="drop" onClick={() => input.current.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files[0]); }}><b>{file ? file.name : 'PDF를 놓거나 선택하세요'}</b><small>{file ? `${(file.size / 1048576).toFixed(1)} MB` : '최대 10MB · PDF 파일 붙여넣기 가능'}</small></button>
       <input ref={input} hidden type="file" accept=".pdf,application/pdf" onChange={e => { choose(e.target.files[0]); e.target.value = ''; }} />
       <label className="field">문항 수<select value={expectedCount} onChange={e => setExpectedCount(Number(e.target.value))}><option value={20}>20문항</option><option value={25}>25문항</option></select></label>
-      {health?.authRequired && <label className="field">앱 접속 암호<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" /><small>Gemini API 키를 여기에 입력하지 마세요.</small></label>}
-      <button className="primary" onClick={analyze} disabled={!file || !health?.configured}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
-      {health && !health.configured && <p className="help warning">서버의 .env에 GEMINI_API_KEY를 설정해야 분석할 수 있습니다.</p>}
-      <p className="help">분석 시 PDF가 Gemini로 전송됩니다. 이용 권한이 있는 자료만 업로드하세요.</p>
+      <label className="field">Gemini API 키<input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" placeholder="AIza…" /><small>이 브라우저의 로컬 저장소에 저장됩니다.</small></label>
+      <div className="key-actions"><button type="button" onClick={() => setApiKey('')} disabled={!apiKey}>저장된 키 삭제</button></div>
+      <label className="field">Gemini 모델<input value={model} onChange={e => setModel(e.target.value)} spellCheck={false} /></label>
+      <button className="primary" onClick={analyze} disabled={!file || !apiKey.trim()}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
+      <p className="help">키와 PDF는 이 페이지에서 Gemini API로 직접 전송됩니다. GitHub나 별도 서버에는 저장되지 않습니다.</p>
       <div className="rule" /><h2>02 번호 스타일</h2>
       <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>노란색 28pt<small>별도 텍스트 상자</small></span></label>
       <label className={`style-option ${style === 'white40' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white40'} onChange={() => setStyle('white40')} /><strong>01번</strong><span>흰색 40pt<small>별도 텍스트 상자</small></span></label>
@@ -136,7 +138,7 @@ function App() {
               {q.warnings?.length > 0 && <div className="notice warning">{q.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>}
             </fieldset></article><SlidePreview question={q} numberStyle={style} /></>}</div>
           </div></>}
-      </section></div><footer>편집 내용은 새로고침하면 사라집니다. 앱은 PDF를 디스크에 저장하지 않으며, Gemini 측 처리는 해당 서비스 정책을 따릅니다.</footer>
+      </section></div><footer>API 키는 현재 브라우저의 로컬 저장소에 남습니다. 공용 PC에서는 사용 후 저장된 키를 삭제하세요.</footer>
   </main>;
 }
 createRoot(document.getElementById('root')).render(<App />);

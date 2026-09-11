@@ -4,8 +4,8 @@ import JSZip from 'jszip';
 import { parseScientificText, wrapScientificText } from '../shared/scientific-text.js';
 import { coverage, FONT, validateDocument } from '../shared/document.js';
 import { planQuestion } from '../shared/layout.js';
-import { createPptx } from '../server/pptx.js';
-import { parseExtraction } from '../server/gemini.js';
+import { createPptxBlob } from '../src/pptx-client.js';
+import { parseGeminiPayload } from '../src/gemini-client.js';
 import { sampleExam, sampleQuestion } from './fixtures.js';
 
 test('native superscripts, subscripts, unicode and underline preserve meaning', () => {
@@ -35,8 +35,8 @@ test('long content paginates without deleting text or losing script', () => {
 });
 test('PPTX contains the requested font, separate number and real baseline runs', async () => {
   for (const numberStyle of ['yellow28', 'white40']) {
-    const { buffer, slideCount } = await createPptx(sampleExam(20), { numberStyle });
-    const zip = await JSZip.loadAsync(buffer);
+    const { blob, slideCount } = await createPptxBlob(sampleExam(20), { numberStyle });
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer());
     const files = Object.keys(zip.files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n));
     assert.equal(files.length, slideCount);
     const xml = await zip.file('ppt/slides/slide1.xml').async('string');
@@ -53,9 +53,12 @@ test('PPTX contains the requested font, separate number and real baseline runs',
     assert.match(presentation, /cx="9144000" cy="6858000"/);
   }
 });
-test('truncated Gemini output is not silently accepted', () => {
-  assert.throws(() => parseExtraction({ candidates: [{ finishReason: 'MAX_TOKENS' }] }, 25), /한도/);
-  assert.throws(() => parseExtraction({ candidates: [{ finishReason: 'STOP' }], text: '{' }, 25), /완전하지/);
-  const result = parseExtraction({ candidates: [{ finishReason: 'STOP' }], text: JSON.stringify(sampleExam()) }, 25);
+test('invalid Gemini output is not silently accepted', () => {
+  const payload = value => ({ status: 'completed', output_text: value });
+  assert.throws(() => parseGeminiPayload({ status: 'failed' }, 25), /완료/);
+  assert.throws(() => parseGeminiPayload(payload('{'), 25), /JSON/);
+  const result = parseGeminiPayload(payload(JSON.stringify(sampleExam())), 25);
   assert.equal(result.questions.length, 25);
+  const restResult = parseGeminiPayload({ steps: [{ content: [{ type: 'text', text: JSON.stringify(sampleExam()) }] }] }, 25);
+  assert.equal(restResult.questions.length, 25);
 });
