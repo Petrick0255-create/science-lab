@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.sites-runtime/
+.openai/
+coverage/
+tmp/
+output/
+*.zip
+*.pptx
+*.pdf
+*.ttf
+*.otf
+*.log
+.DS_Store
