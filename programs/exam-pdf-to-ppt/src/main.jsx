@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BLOCK_LABELS, coverage, MAX_PDF_BYTES, validateDocument } from '../shared/document.js';
+import { BLOCK_LABELS, coverage, MAX_PDF_BYTES, MAX_QUESTIONS, validateDocument } from '../shared/document.js';
 import { planQuestion } from '../shared/layout.js';
 import { analyzePdfInBrowser, DEFAULT_MODEL } from './gemini-client.js';
 import { createPptxBlob } from './pptx-client.js';
 import './style.css';
 import './key.css';
+import './range.css';
 
 const storage = {
   get(key, fallback = '') { try { return window.localStorage.getItem(key) || fallback; } catch { return fallback; } },
@@ -48,6 +49,7 @@ function App() {
   const [model, setModel] = useState(() => storage.get('bbh-gemini-model', DEFAULT_MODEL));
   const [file, setFile] = useState(null); const [sourceUrl, setSourceUrl] = useState('');
   const [data, setData] = useState(null); const [expectedCount, setExpectedCount] = useState(25);
+  const [examMode, setExamMode] = useState('fixed'); const [rangeStart, setRangeStart] = useState(''); const [rangeEnd, setRangeEnd] = useState('');
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [message, setMessage] = useState('');
   const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28'); const [showSource, setShowSource] = useState(false);
   useEffect(() => () => controller.current?.abort(), []);
@@ -64,7 +66,10 @@ function App() {
   };
   useEffect(() => { const paste = e => { const f = [...(e.clipboardData?.files || [])].find(v => v.type === 'application/pdf'); if (f) { e.preventDefault(); choose(f); } }; window.addEventListener('paste', paste); return () => window.removeEventListener('paste', paste); });
   const questions = data?.questions || []; const q = questions[selected];
-  const check = useMemo(() => data ? coverage({ ...data, expectedCount }) : null, [data, expectedCount]);
+  const rangeValid = /^\d{1,3}$/.test(rangeStart.trim()) && /^\d{1,3}$/.test(rangeEnd.trim()) && Number(rangeStart) >= 1 && Number(rangeEnd) >= Number(rangeStart) && Number(rangeEnd) - Number(rangeStart) + 1 <= MAX_QUESTIONS;
+  const selection = examMode === 'range' ? { questionRange: { start: rangeStart.trim(), end: rangeEnd.trim() } } : { expectedCount };
+  const targetCount = examMode === 'range' ? (rangeValid ? Number(rangeEnd) - Number(rangeStart) + 1 : null) : expectedCount;
+  const check = useMemo(() => data && (examMode !== 'range' || rangeValid) ? coverage({ ...data, ...selection }) : null, [data, expectedCount, examMode, rangeStart, rangeEnd, rangeValid]);
   const patchQ = change => setData(d => ({ ...d, questions: d.questions.map((v, i) => i === selected ? { ...v, ...change } : v) }));
   const patchBlock = (index, change) => patchQ({ blocks: q.blocks.map((b, i) => i === index ? { ...b, ...change } : b) });
 
@@ -75,7 +80,7 @@ function App() {
     const ac = new AbortController(); controller.current = ac;
     const timeout = setTimeout(() => ac.abort(), 195000);
     try {
-      const doc = validateDocument(await analyzePdfInBrowser(file, { apiKey, model, expectedCount, signal: ac.signal }));
+      const doc = validateDocument(await analyzePdfInBrowser(file, { apiKey, model, selection, signal: ac.signal }));
       setData(doc); setSelected(0); setMessage(`${doc.questions.length}개 문항을 인식했습니다. 원문과 첨자를 확인하세요.`);
     } catch (e) { setErr(e.name === 'AbortError' ? '분석을 취소했거나 응답 시간이 초과되었습니다.' : e.message); setMessage(''); }
     finally { clearTimeout(timeout); controller.current = null; setBusy(''); }
@@ -84,18 +89,18 @@ function App() {
     if (!data || busy) return;
     setBusy('export'); setErr('');
     try {
-      const doc = validateDocument({ ...data, expectedCount });
+      const doc = validateDocument({ ...data, ...selection });
       doc.questions.sort((a, b) => Number(a.number) - Number(b.number));
       const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style });
       const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `${data.title.replace(/[\\/:*?"<>|]/g, '_') || '모의고사'}_문항별.pptx`;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setMessage(`${expectedCount}문항 · ${slideCount}장 PPTX를 만들었습니다.`);
+      setMessage(`${targetCount}문항 · ${slideCount}장 PPTX를 만들었습니다.`);
     } catch (e) { setErr(e.message); } finally { setBusy(''); }
   };
   const addQuestion = () => {
-    if (questions.length >= 50) return;
-    const number = String(check?.missing[0] || questions.length + 1);
+    if (questions.length >= MAX_QUESTIONS) return;
+    const number = String(check?.missing[0] || (examMode === 'range' && rangeValid ? rangeStart : questions.length + 1));
     setData(d => ({ ...d, questions: [...d.questions, { number, sourcePage: 1, blocks: [{ kind: 'text', text: '' }], choices: [], visual_note: '', warnings: [] }] }));
     setSelected(questions.length);
   };
@@ -107,22 +112,24 @@ function App() {
     <div className="workspace"><aside><fieldset disabled={Boolean(busy)}><legend>원본과 출력 설정</legend>
       <h2>01 원본 PDF</h2><button className="drop" onClick={() => input.current.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files[0]); }}><b>{file ? file.name : 'PDF를 놓거나 선택하세요'}</b><small>{file ? `${(file.size / 1048576).toFixed(1)} MB` : '최대 10MB · PDF 파일 붙여넣기 가능'}</small></button>
       <input ref={input} hidden type="file" accept=".pdf,application/pdf" onChange={e => { choose(e.target.files[0]); e.target.value = ''; }} />
-      <label className="field">문항 수<select value={expectedCount} onChange={e => setExpectedCount(Number(e.target.value))}><option value={20}>20문항</option><option value={25}>25문항</option></select></label>
+      <label className="field">문항 형식<select value={examMode === 'range' ? 'range' : String(expectedCount)} onChange={e => { if (e.target.value === 'range') setExamMode('range'); else { setExamMode('fixed'); setExpectedCount(Number(e.target.value)); } }}><option value={20}>20문항</option><option value={25}>25문항</option><option value="range">자유 형식 · 번호 범위</option></select></label>
+      {examMode === 'range' && <div className="range-fields"><label className="field">시작 번호<input inputMode="numeric" maxLength={3} value={rangeStart} onChange={e => setRangeStart(e.target.value.replace(/\D/g, ''))} placeholder="예: 012" /></label><label className="field">끝 번호<input inputMode="numeric" maxLength={3} value={rangeEnd} onChange={e => setRangeEnd(e.target.value.replace(/\D/g, ''))} placeholder="예: 027" /></label></div>}
+      {examMode === 'range' && !rangeValid && <p className="help warning">1~3자리 시작·끝 번호를 입력하세요. 한 번에 최대 {MAX_QUESTIONS}문항입니다.</p>}
       <label className="field">Gemini API 키<input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" placeholder="AIza…" /><small>이 브라우저의 로컬 저장소에 저장됩니다.</small></label>
       <div className="key-actions"><button type="button" onClick={() => setApiKey('')} disabled={!apiKey}>저장된 키 삭제</button></div>
       <label className="field">Gemini 모델<input value={model} onChange={e => setModel(e.target.value)} spellCheck={false} /></label>
-      <button className="primary" onClick={analyze} disabled={!file || !apiKey.trim()}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
+      <button className="primary" onClick={analyze} disabled={!file || !apiKey.trim() || (examMode === 'range' && !rangeValid)}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
       <p className="help">키와 PDF는 이 페이지에서 Gemini API로 직접 전송됩니다. GitHub나 별도 서버에는 저장되지 않습니다.</p>
       <div className="rule" /><h2>02 번호 스타일</h2>
       <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>노란색 28pt<small>별도 텍스트 상자</small></span></label>
       <label className={`style-option ${style === 'white40' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white40'} onChange={() => setStyle('white40')} /><strong>01번</strong><span>흰색 40pt<small>별도 텍스트 상자</small></span></label>
       <p className="help">본문은 24pt를 유지합니다. 긴 문항은 여러 장으로 나뉘며, 첨자만 작게 표시합니다.</p>
-      <div className="rule" /><div className="summary"><span>인식 문항</span><b>{questions.length} / {expectedCount}</b></div>
+      <div className="rule" /><div className="summary"><span>인식 문항</span><b>{questions.length} / {targetCount ?? '?'}</b></div>
       <button className="export" disabled={!check?.complete} onClick={download}>{busy === 'export' ? 'PPT 생성 중…' : 'PPTX 내려받기'}</button>
       <p className="help">PowerPoint를 여는 PC에 210 M고딕 070이 설치되어 있어야 합니다. 글꼴 파일은 포함하지 않습니다.</p>
     </fieldset>{busy === 'analyze' && <button className="cancel" onClick={() => controller.current?.abort()}>분석 취소</button>}</aside>
       <section className="content" aria-busy={Boolean(busy)}>{err && <p className="notice error" role="alert">{err}</p>}{message && <p className="notice" role="status">{message}</p>}
-        {!data ? <div className="empty"><h1>문항을 읽고, 첨자를 확인하고,<br />PPT로 내려받으세요.</h1><p>왼쪽에서 PDF와 문항 수를 선택하면 시작합니다.</p><div className="sample-formula">H<sub>2</sub>O <span>·</span> x<sup>2</sup> <span>·</span> SO<sub>4</sub><sup>2−</sup></div><p className="help">첨자는 PPT에서 수정할 수 있는 서식으로 변환됩니다.</p></div> : <>
+        {!data ? <div className="empty"><h1>문항을 읽고, 첨자를 확인하고,<br />PPT로 내려받으세요.</h1><p>왼쪽에서 PDF와 문항 형식 또는 번호 범위를 선택하면 시작합니다.</p><div className="sample-formula">H<sub>2</sub>O <span>·</span> x<sup>2</sup> <span>·</span> SO<sub>4</sub><sup>2−</sup></div><p className="help">첨자는 PPT에서 수정할 수 있는 서식으로 변환됩니다.</p></div> : <>
           <div className="toolbar"><label className="title-field">PPT 제목<input value={data.title} maxLength={200} onChange={e => setData(d => ({ ...d, title: e.target.value }))} disabled={Boolean(busy)} /></label><button onClick={() => setShowSource(v => !v)}>{showSource ? '원본 닫기' : '원본 PDF 보기'}</button></div>
           {!check.complete && <div className="notice warning" role="status">번호 확인 필요{check.missing.length > 0 && <div>누락: {check.missing.join(', ')}</div>}{check.duplicate.length > 0 && <div>중복: {check.duplicate.join(', ')}</div>}{check.extra.length > 0 && <div>범위 밖: {check.extra.join(', ')}</div>}<small>번호와 누락 내용을 수정하면 내보내기가 활성화됩니다. 번호가 모두 있어도 내용 정확성은 원본과 대조해야 합니다.</small></div>}
           {(data.warnings || []).length > 0 && <div className="notice warning">{data.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>}

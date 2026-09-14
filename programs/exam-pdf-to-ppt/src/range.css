@@ -1,0 +1,9 @@
+.range-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.range-fields .field {
+  margin-top: 10px;
+}

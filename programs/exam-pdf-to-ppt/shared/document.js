@@ -1,5 +1,6 @@
 export const FONT = '210 M고딕 070';
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
+export const MAX_QUESTIONS = 100;
 export const BLOCK_KINDS = ['text', 'passage', 'statements', 'question', 'table'];
 export const BLOCK_LABELS = { text: '본문', passage: '자료·제시문', statements: 'ㄱ·ㄴ·ㄷ 보기', question: '질문 문장', table: '표 안의 텍스트' };
 
@@ -17,10 +18,24 @@ function strings(value, name, count, length) {
   if (!Array.isArray(value) || value.length > count) throw new UserError(`${name} 형식이 올바르지 않습니다.`);
   return value.map(v => text(v, name, length));
 }
+export function validateSelection(input = {}) {
+  if (typeof input === 'number') input = { expectedCount: input };
+  if (input.questionRange) {
+    const start = String(input.questionRange.start ?? '').trim();
+    const end = String(input.questionRange.end ?? '').trim();
+    if (!/^\d{1,3}$/.test(start) || !/^\d{1,3}$/.test(end) || Number(start) < 1 || Number(end) < Number(start))
+      throw new UserError('자유 형식의 시작·끝 문제 번호를 확인하세요.');
+    const expectedCount = Number(end) - Number(start) + 1;
+    if (expectedCount > MAX_QUESTIONS) throw new UserError(`자유 형식은 한 번에 최대 ${MAX_QUESTIONS}문항까지 선택할 수 있습니다.`);
+    return { expectedCount, questionRange: { start, end } };
+  }
+  if (![20, 25].includes(input.expectedCount)) throw new UserError('20문항, 25문항 또는 자유 형식을 선택하세요.');
+  return { expectedCount: input.expectedCount };
+}
 export function validateDocument(input) {
   if (!input || typeof input !== 'object' || !Array.isArray(input.questions)) throw new UserError('문항 데이터 형식이 올바르지 않습니다.');
-  if (!input.questions.length || input.questions.length > 50) throw new UserError('분석된 문항 수를 확인하세요.');
-  if (![20, 25].includes(input.expectedCount)) throw new UserError('20문항 또는 25문항을 선택하세요.');
+  if (!input.questions.length || input.questions.length > MAX_QUESTIONS) throw new UserError('분석된 문항 수를 확인하세요.');
+  const selection = validateSelection(input);
   const questions = input.questions.map((q, index) => {
     if (!q || typeof q !== 'object') throw new UserError(`${index + 1}번째 문항을 확인하세요.`);
     const number = text(q.number, '문항 번호', 4);
@@ -36,18 +51,23 @@ export function validateDocument(input) {
     return { number, sourcePage: q.sourcePage, blocks, choices,
       visual_note: text(q.visual_note, '그림 확인 메모', 2000, ''), warnings: strings(q.warnings, '검토 메모', 30, 1000) };
   });
-  const doc = { title: text(input.title, '제목', 200, '모의고사') || '모의고사', expectedCount: input.expectedCount,
+  const doc = { title: text(input.title, '제목', 200, '모의고사') || '모의고사', ...selection,
     questions, warnings: strings(input.warnings, '전체 검토 메모', 100, 1000) };
   if (JSON.stringify(doc).length > 300000) throw new UserError('데이터가 너무 큽니다. 문항별 텍스트를 확인하세요.');
   return doc;
 }
 export function coverage(doc) {
+  const selection = validateSelection(doc);
+  const start = selection.questionRange ? Number(selection.questionRange.start) : 1;
+  const end = selection.questionRange ? Number(selection.questionRange.end) : selection.expectedCount;
+  const width = selection.questionRange ? Math.max(selection.questionRange.start.length, selection.questionRange.end.length) : 0;
+  const format = n => selection.questionRange ? String(n).padStart(width, '0') : n;
   const counts = new Map();
   for (const q of doc.questions) counts.set(Number(q.number), (counts.get(Number(q.number)) || 0) + 1);
-  const missing = Array.from({ length: doc.expectedCount }, (_, i) => i + 1).filter(n => !counts.has(n));
-  const duplicate = [...counts].filter(([, n]) => n > 1).map(([n]) => n);
-  const extra = [...counts.keys()].filter(n => n < 1 || n > doc.expectedCount || !Number.isInteger(n));
-  return { missing, duplicate, extra, complete: !missing.length && !duplicate.length && !extra.length && doc.questions.length === doc.expectedCount };
+  const missing = Array.from({ length: end - start + 1 }, (_, i) => start + i).filter(n => !counts.has(n)).map(format);
+  const duplicate = [...counts].filter(([, n]) => n > 1).map(([n]) => format(n));
+  const extra = [...counts.keys()].filter(n => n < start || n > end || !Number.isInteger(n)).map(format);
+  return { missing, duplicate, extra, complete: !missing.length && !duplicate.length && !extra.length && doc.questions.length === selection.expectedCount };
 }
 export function validateOptions(input = {}) {
   const numberStyle = input.numberStyle ?? 'yellow28';

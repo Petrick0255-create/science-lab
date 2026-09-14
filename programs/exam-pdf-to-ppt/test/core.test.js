@@ -24,6 +24,18 @@ test('20/25 exams reject missing, duplicate and out-of-range numbers', () => {
   assert.deepEqual(coverage(doc).missing, [2, 3, 25]);
   assert.deepEqual(coverage(doc).duplicate, [1]); assert.deepEqual(coverage(doc).extra, [99]);
 });
+test('custom range preserves leading zero labels and accepts non-01 starts', () => {
+  const doc = sampleExam(7);
+  doc.expectedCount = undefined;
+  doc.questionRange = { start: '012', end: '018' };
+  doc.questions.forEach((q, i) => { q.number = String(i + 12).padStart(3, '0'); });
+  assert.equal(coverage(validateDocument(doc)).complete, true);
+  doc.questions[1].number = '012';
+  doc.questions.pop();
+  const result = coverage(doc);
+  assert.deepEqual(result.missing, ['013', '018']);
+  assert.deepEqual(result.duplicate, ['012']);
+});
 test('long content paginates without deleting text or losing script', () => {
   const q = { ...sampleQuestion, blocks: [{ kind: 'text', text: '가나다 x<sup>2</sup> '.repeat(300) }], choices: [] };
   const plans = planQuestion(q);
