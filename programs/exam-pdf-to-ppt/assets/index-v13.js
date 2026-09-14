@@ -8314,13 +8314,30 @@ function cv(l) {
   if (o.length) throw new Ae("\uB2EB\uD788\uC9C0 \uC54A\uC740 \uCCA8\uC790\xB7\uBC11\uC904 \uD0DC\uADF8\uAC00 \uC788\uC2B5\uB2C8\uB2E4.");
   return f;
 }
+function figureColorRuns(l) {
+  const f = l.map((h) => h.text).join(""), o = [...f.matchAll(/\[\s*그림\s*:[^\]\n]*\]/g)].map((h) => [h.index, h.index + h[0].length]);
+  if (!o.length) return l;
+  const c = [];
+  let A = 0;
+  for (const h of l) {
+    const p = A, v = A + h.text.length, d = /* @__PURE__ */ new Set([p, v]);
+    for (const [S, w] of o) S > p && S < v && d.add(S), w > p && w < v && d.add(w);
+    const s = [...d].sort((S, w) => S - w);
+    for (let S = 0; S < s.length - 1; S++) {
+      const w = s[S], N = s[S + 1], D = o.some(([T, R]) => w >= T && w < R) ? "FF0000" : "FFFFFF", k = { ...h, text: h.text.slice(w - p, N - p), color: D }, U = c.at(-1);
+      U && U.script === k.script && U.underline === k.underline && U.color === k.color ? U.text += k.text : c.push(k);
+    }
+    A = v;
+  }
+  return c;
+}
 function fv(l, f) {
   return (new RegExp("\\p{Mark}", "u").test(l) ? 0 : /\s/u.test(l) ? 0.5 : /[MW@%]/.test(l) ? 1 : /[A-Z]/.test(l) ? 0.78 : /[a-z0-9]/.test(l) ? 0.66 : /[.,:;!'"()\[\]{}\-]/.test(l) ? 0.5 : 1.1) * (f === "normal" ? 1 : 0.75);
 }
 function dv(l, f = 24) {
   const o = [[]];
   let c = 0;
-  for (const A of cv(l)) for (const h of A.text) {
+  for (const A of figureColorRuns(cv(l))) for (const h of A.text) {
     if (h === `
 `) {
       o.at(-1).hardBreakAfter = true, o.push([]), c = 0;
@@ -8329,7 +8346,7 @@ function dv(l, f = 24) {
     const p = fv(h, A.script);
     c + p > f && o.at(-1).length && (o.push([]), c = 0);
     const v = o.at(-1), d = v.at(-1);
-    d && d.script === A.script && d.underline === A.underline ? d.text += h : v.push({ ...A, text: h }), c += p;
+    d && d.script === A.script && d.underline === A.underline && d.color === A.color ? d.text += h : v.push({ ...A, text: h }), c += p;
   }
   return o;
 }
@@ -12374,7 +12391,7 @@ async function Ey(l, f) {
         s.addTable(S, { x: m.x, y: m.y, w: m.w, h: m.h, rowH: m.h / m.rows, colW: m.w / m.columns, fontFace: ka, fontSize: 24, color: "FFFFFF", align: "center", valign: "middle", margin: 0, fill: { color: "000000" }, border: { type: "solid", color: "FFFFFF", pt: 1.5 }, autoPage: false, objectName: `question-table-${C + 1}` });
         return;
       }
-      const y = m.lines.flatMap((S) => S.map((w, N) => ({ text: w.text, options: { fontFace: ka, fontSize: w.script === "normal" ? 24 : 18, superscript: w.script === "sup", subscript: w.script === "sub", underline: w.underline ? { style: "sng" } : void 0, breakLine: !!(S.hardBreakAfter && N === S.length - 1) } })));
+      const y = m.lines.flatMap((S) => S.map((w, N) => ({ text: w.text, options: { fontFace: ka, fontSize: w.script === "normal" ? 24 : 18, color: w.color || "FFFFFF", superscript: w.script === "sup", subscript: w.script === "sub", underline: w.underline ? { style: "sng" } : void 0, breakLine: !!(S.hardBreakAfter && N === S.length - 1) } })));
       s.addText(y, { ...u, x: m.x, y: m.y, w: m.w, h: m.h, fontSize: 24, color: "FFFFFF", objectName: `question-block-${C + 1}-${m.kind}` });
     }), d.condition && s.addText(d.condition.text, { ...u, ...d.condition, margin: 0, valign: "mid", breakLine: false, objectName: "question-condition" }), s.addNotes(`\uC6D0\uBCF8 PDF ${d.sourcePage}\uCABD \xB7 ${d.questionNumber}\uBC88 \xB7 ${d.page}/${d.pageCount}
 ${d.notes}`);
@@ -12432,7 +12449,7 @@ function zy({ question: l, numberStyle: f }) {
   const h = A[Math.min(o, A.length - 1)];
   if (!h) return at.jsx("p", { className: "muted", children: "\uBCF8\uBB38\uC744 \uC785\uB825\uD558\uBA74 \uBBF8\uB9AC\uBCF4\uAE30\uAC00 \uD45C\uC2DC\uB429\uB2C8\uB2E4." });
   const p = (v, d, s) => ({ left: `${v * 10}%`, top: `${d / 7.5 * 100}%`, width: `${s * 10}%` });
-  return at.jsxs("section", { className: "preview-section", children: [at.jsxs("div", { className: "section-title", children: [at.jsx("b", { children: "\uC2AC\uB77C\uC774\uB4DC \uBBF8\uB9AC\uBCF4\uAE30" }), at.jsx("span", { children: A.length > 1 ? `${A.length}\uC7A5\uC73C\uB85C \uC774\uC5B4\uC9D0` : "1\uC7A5" })] }), at.jsx("div", { className: "slide-frame", children: at.jsxs("div", { className: "slide", children: [at.jsx("div", { className: "slide-number", style: { ...p(h.number.x, h.number.y, h.number.w), color: `#${h.number.color}`, fontSize: `${h.number.fontSize / 7.2}cqw` }, children: h.number.text }), h.body.groups.map((v, d) => v.kind === "table" ? at.jsx("div", { className: "slide-table", style: { ...p(v.x, v.y, v.w), height: `${v.h / 7.5 * 100}%`, gridTemplateColumns: `repeat(${v.columns}, 1fr)`, gridTemplateRows: `repeat(${v.rows}, 1fr)` }, children: Array.from({ length: v.rows * v.columns }, (s, u) => at.jsx("span", {}, u)) }, d) : at.jsx("div", { className: `slide-group group-${v.kind}`, style: { ...p(v.x, v.y, v.w), height: `${v.h / 7.5 * 100}%` }, children: v.lines.map((s, u) => at.jsx("div", { className: "slide-line", style: d === 0 && u === 0 && v.firstLineIndent ? { paddingLeft: `${v.firstLineIndent * 10}%` } : void 0, children: s.map((m, C) => at.jsx("span", { className: `script-${m.script}`, style: { textDecoration: m.underline ? "underline" : "none" }, children: m.text }, C)) }, u)) }, d)), h.condition && at.jsx("div", { className: "slide-condition", style: p(h.condition.x, h.condition.y, h.condition.w), children: h.condition.text })] }) }), at.jsxs("div", { className: "preview-controls", children: [at.jsx("button", { onClick: () => c((v) => Math.max(0, v - 1)), disabled: o === 0, children: "\uC774\uC804 \uC7A5" }), at.jsxs("span", { children: [Math.min(o + 1, A.length), " / ", A.length] }), at.jsx("button", { onClick: () => c((v) => v + 1), disabled: o >= A.length - 1, children: "\uB2E4\uC74C \uC7A5" })] }), at.jsx("p", { className: "help", children: "\uD654\uBA74 \uBBF8\uB9AC\uBCF4\uAE30\uB294 \uADFC\uC0AC \uBC30\uCE58\uC785\uB2C8\uB2E4. \uCD5C\uC885 \uBAA8\uC591\uC740 \uC124\uCE58\uB41C \uAE00\uAF34\uACFC PowerPoint\uC5D0\uC11C \uD655\uC778\uD558\uC138\uC694." })] });
+  return at.jsxs("section", { className: "preview-section", children: [at.jsxs("div", { className: "section-title", children: [at.jsx("b", { children: "\uC2AC\uB77C\uC774\uB4DC \uBBF8\uB9AC\uBCF4\uAE30" }), at.jsx("span", { children: A.length > 1 ? `${A.length}\uC7A5\uC73C\uB85C \uC774\uC5B4\uC9D0` : "1\uC7A5" })] }), at.jsx("div", { className: "slide-frame", children: at.jsxs("div", { className: "slide", children: [at.jsx("div", { className: "slide-number", style: { ...p(h.number.x, h.number.y, h.number.w), color: `#${h.number.color}`, fontSize: `${h.number.fontSize / 7.2}cqw` }, children: h.number.text }), h.body.groups.map((v, d) => v.kind === "table" ? at.jsx("div", { className: "slide-table", style: { ...p(v.x, v.y, v.w), height: `${v.h / 7.5 * 100}%`, gridTemplateColumns: `repeat(${v.columns}, 1fr)`, gridTemplateRows: `repeat(${v.rows}, 1fr)` }, children: Array.from({ length: v.rows * v.columns }, (s, u) => at.jsx("span", {}, u)) }, d) : at.jsx("div", { className: `slide-group group-${v.kind}`, style: { ...p(v.x, v.y, v.w), height: `${v.h / 7.5 * 100}%` }, children: v.lines.map((s, u) => at.jsx("div", { className: "slide-line", style: d === 0 && u === 0 && v.firstLineIndent ? { paddingLeft: `${v.firstLineIndent * 10}%` } : void 0, children: s.map((m, C) => at.jsx("span", { className: `script-${m.script}`, style: { color: `#${m.color || "FFFFFF"}`, textDecoration: m.underline ? "underline" : "none" }, children: m.text }, C)) }, u)) }, d)), h.condition && at.jsx("div", { className: "slide-condition", style: p(h.condition.x, h.condition.y, h.condition.w), children: h.condition.text })] }) }), at.jsxs("div", { className: "preview-controls", children: [at.jsx("button", { onClick: () => c((v) => Math.max(0, v - 1)), disabled: o === 0, children: "\uC774\uC804 \uC7A5" }), at.jsxs("span", { children: [Math.min(o + 1, A.length), " / ", A.length] }), at.jsx("button", { onClick: () => c((v) => v + 1), disabled: o >= A.length - 1, children: "\uB2E4\uC74C \uC7A5" })] }), at.jsx("p", { className: "help", children: "\uD654\uBA74 \uBBF8\uB9AC\uBCF4\uAE30\uB294 \uADFC\uC0AC \uBC30\uCE58\uC785\uB2C8\uB2E4. \uCD5C\uC885 \uBAA8\uC591\uC740 \uC124\uCE58\uB41C \uAE00\uAF34\uACFC PowerPoint\uC5D0\uC11C \uD655\uC778\uD558\uC138\uC694." })] });
 }
 function My() {
   const l = fe.useRef(), f = fe.useRef(null), [o, c] = fe.useState(() => Xo.get("bbh-gemini-api-key")), [A, h] = fe.useState(() => Xo.get("bbh-gemini-model", Dv)), [p, v] = fe.useState(null), [d, s] = fe.useState(""), [u, m] = fe.useState(null), [C, y] = fe.useState(25), [S, w] = fe.useState(""), [N, D] = fe.useState(""), [T, R] = fe.useState(""), [k, U] = fe.useState(0), [W, q] = fe.useState("yellow28"), [nt, j] = fe.useState(false);
@@ -12507,7 +12524,7 @@ function My() {
   }, ot = () => {
     window.confirm(`${z.number}\uBC88 \uBB38\uD56D\uC744 \uD3B8\uC9D1 \uBAA9\uB85D\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?`) && (m((K) => ({ ...K, questions: K.questions.filter((F, P) => P !== k) })), U(Math.max(0, k - 1)));
   };
-  return at.jsxs("main", { children: [at.jsxs("header", { children: [at.jsxs("div", { className: "brand", children: [at.jsx("span", { className: "mark", children: "Q" }), at.jsxs("div", { children: [at.jsx("b", { children: "\uBB38\uD56D \uC2AC\uB77C\uC774\uB4DC \uC2A4\uD29C\uB514\uC624" }), at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v13" })] })] }), at.jsxs("div", { className: "spec", children: [at.jsx("span", { children: "4:3" }), at.jsx("span", { children: "210 M\uACE0\uB515 070" }), at.jsx("span", { children: "\uBCF8\uBB38 24pt" })] })] }), at.jsxs("div", { className: "workspace", children: [at.jsxs("aside", { children: [at.jsxs("fieldset", { disabled: !!S, children: [at.jsx("legend", { children: "\uC6D0\uBCF8\uACFC \uCD9C\uB825 \uC124\uC815" }), at.jsx("h2", { children: "01 \uC6D0\uBCF8 PDF" }), at.jsxs("button", { className: "drop", onClick: () => l.current.click(), onDragOver: (K) => K.preventDefault(), onDrop: (K) => {
+  return at.jsxs("main", { children: [at.jsxs("header", { children: [at.jsxs("div", { className: "brand", children: [at.jsx("span", { className: "mark", children: "Q" }), at.jsxs("div", { children: [at.jsx("b", { children: "\uBB38\uD56D \uC2AC\uB77C\uC774\uB4DC \uC2A4\uD29C\uB514\uC624" }), at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v14" })] })] }), at.jsxs("div", { className: "spec", children: [at.jsx("span", { children: "4:3" }), at.jsx("span", { children: "210 M\uACE0\uB515 070" }), at.jsx("span", { children: "\uBCF8\uBB38 24pt" })] })] }), at.jsxs("div", { className: "workspace", children: [at.jsxs("aside", { children: [at.jsxs("fieldset", { disabled: !!S, children: [at.jsx("legend", { children: "\uC6D0\uBCF8\uACFC \uCD9C\uB825 \uC124\uC815" }), at.jsx("h2", { children: "01 \uC6D0\uBCF8 PDF" }), at.jsxs("button", { className: "drop", onClick: () => l.current.click(), onDragOver: (K) => K.preventDefault(), onDrop: (K) => {
     K.preventDefault(), lt(K.dataTransfer.files[0]);
   }, children: [at.jsx("b", { children: p ? p.name : "PDF\uB97C \uB193\uAC70\uB098 \uC120\uD0DD\uD558\uC138\uC694" }), at.jsx("small", { children: p ? `${(p.size / 1048576).toFixed(1)} MB` : "\uCD5C\uB300 10MB \xB7 PDF \uD30C\uC77C \uBD99\uC5EC\uB123\uAE30 \uAC00\uB2A5" })] }), at.jsx("input", { ref: l, hidden: true, type: "file", accept: ".pdf,application/pdf", onChange: (K) => {
     lt(K.target.files[0]), K.target.value = "";
