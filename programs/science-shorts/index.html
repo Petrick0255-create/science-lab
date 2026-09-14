@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' https://accounts.google.com/gsi/style; connect-src 'self' https://generativelanguage.googleapis.com https://sheets.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; img-src 'self' data: https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>과학 쇼츠 작업실 · J&B LAB</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="../../">J&amp;B <span>LAB</span></a><span class="header-note">SCIENCE SHORTS STUDIO</span><button id="settings-toggle" class="quiet" aria-expanded="false" aria-controls="settings">연결 설정</button></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">관찰에서 시작해, 여운으로 끝나는</p><h1>과학 쇼츠 작업실<span class="spark">✳</span></h1><p class="lead">하나의 과학 원리, 1분의 이야기.</p></div><div class="duration-seal"><strong>60</strong><span>SECONDS<br>OF SCIENCE</span></div></section>
+    <section id="settings" class="panel settings" hidden aria-labelledby="settings-heading">
+      <h2 id="settings-heading">연결 설정</h2>
+      <div class="settings-grid"><label>Gemini API 키<input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Gemini API 키를 입력하세요"></label><label>Google OAuth 클라이언트 ID<input id="client-id" autocomplete="off" spellcheck="false" placeholder="…apps.googleusercontent.com"></label></div>
+      <p class="muted">API 키는 이 브라우저의 localStorage에만 저장하고, 호출할 때 Google Gemini API로만 전송합니다. Google 로그인 토큰은 메모리에만 유지합니다.</p>
+      <div class="actions"><button id="settings-save">설정 저장</button><button id="check-models" class="quiet">모델 접근 확인</button><button id="forget-key" class="quiet">API 키 삭제</button><a href="setup.html" target="_blank" rel="noopener">최초 연결 안내 ↗</a></div>
+      <p id="model-status" class="muted" role="status">모델 접근 여부는 API 키 입력 후 확인합니다.</p>
+    </section>
+    <div class="connection-bar"><div><span id="db-dot" class="dot"></span><span id="db-status">Google DB 연결이 필요합니다</span></div><div class="actions"><a id="sheet-link" target="_blank" rel="noopener">주제 DB ↗</a><button id="connect" class="small">Google DB 연결</button><button id="disconnect" class="quiet small" hidden>연결 해제</button></div></div>
+    <p id="status" class="status" role="status" aria-live="polite">연결 설정에서 키를 저장하고 Google DB를 연결해 주세요.</p>
+    <div class="workspace">
+      <section class="panel topics" aria-labelledby="topic-heading"><p class="eyebrow">01 / FIND A STORY</p><h2 id="topic-heading">어떤 과학을 이야기할까요?</h2><p class="muted">기록한 주제는 제외하고, 새로운 다섯 가지를 골라요.</p><button id="recommend" class="recommend">✦ 주제 추천</button><div id="suggestions" class="suggestions"><p class="empty-small">아직 고르지 않은<br>이야기가 기다리고 있어요.</p></div><label for="topic">직접 주제 입력</label><input id="topic" maxlength="60" placeholder="예: 표면 장력, 관성, 삼투압"><div class="input-row"><label>사용 모델<select id="model"></select></label><label>낭독 속도<select id="speed"><option value="5">차분하게 · 초당 5자</option><option value="6" selected>보통 · 초당 6자</option><option value="7">빠르게 · 초당 7자</option></select></label></div><p id="model-id" class="model-id"></p><button id="generate" class="primary">1분 대본 만들기 <span>→</span></button><p class="footnote">완성된 대본은 Google Sheet에 자동 저장합니다.</p></section>
+      <section class="panel script-panel" aria-labelledby="script-heading"><div class="script-heading"><div><p class="eyebrow">02 / WRITE THE SHORT</p><h2 id="script-heading">오늘의 대본</h2></div><span id="duration" class="duration">— 초</span></div><ol class="flow"><li>관찰</li><li>현상</li><li>옛 설명</li><li>반전</li><li>원리</li><li>여운</li></ol><div id="script-empty" class="script-empty"><span class="quote">“</span><p>여기, 하나의 이야기가 있습니다.</p><span>주제를 고르면 이곳에서 시작됩니다.</span></div><label class="sr-only" for="script">생성된 대본</label><textarea id="script" hidden spellcheck="false" placeholder="생성된 대본"></textarea><div class="script-footer"><span id="save-state" class="muted">대본을 기다리는 중</span><div class="actions"><button id="copy" class="quiet" disabled>복사</button><button id="save" disabled>DB 저장 / 재시도</button></div></div><p id="timing-note" class="footnote">예상 시간은 글자 수와 쉼표가 아닌 문장·문단 휴지로 계산합니다. 실제 낭독으로 확인해 주세요.</p></section>
+    </div>
+    <section class="history-section"><div class="history-heading"><div><p class="eyebrow">STORY ARCHIVE</p><h2>쌓여가는 이야기 <span id="history-count">0</span></h2></div><button id="refresh" class="quiet">DB 새로고침</button></div><div id="history" class="history"><p class="muted">DB를 연결하면 이전 대본을 볼 수 있습니다.</p></div></section>
+  </main><footer>J&amp;B LAB <span>작은 관찰이, 하나의 이야기가 되도록.</span></footer>
+</body>
+</html>
