@@ -160,7 +160,7 @@ function displaySubject(subject){return({"물리학":"물리학Ⅰ","화학":"�
 function sourceText(item){
   const year=String(item.sy??item.y).padStart(2,"0"),month=String(item.m).padStart(2,"0"),number=String(item.n).padStart(2,"0"),subject=displaySubject(item.s);
   if(item.g==="고3"&&Number(item.m)===11)return `${year} 수능 ${subject} ${number}번`;
-  if(item.g==="고3")return `${year} ${month} ${subject} ${number}번`;
+  if(item.g==="고3")return `${year} ${month} 고3 ${subject} ${number}번`;
   return `${item.e} ${number}번`;
 }
 function searchHaystack(item){return normalize(`${item.x||""} ${item.t||""} ${sourceText(item)}`)}
