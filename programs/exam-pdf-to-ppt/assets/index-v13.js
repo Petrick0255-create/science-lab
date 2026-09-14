@@ -12375,7 +12375,7 @@ async function Ey(l, f) {
         return;
       }
       const y = m.lines.flatMap((S) => S.map((w, N) => ({ text: w.text, options: { fontFace: ka, fontSize: w.script === "normal" ? 24 : 18, superscript: w.script === "sup", subscript: w.script === "sub", underline: w.underline ? { style: "sng" } : void 0, breakLine: !!(S.hardBreakAfter && N === S.length - 1) } })));
-      s.addText(y, { ...u, x: m.x, y: m.y, w: m.w, h: m.h, fontSize: 24, color: "FFFFFF", objectName: `question-block-${C + 1}-${m.kind}` });
+      s.addText(y, { ...u, x: m.x, y: m.y, w: m.w, h: m.h, fontSize: 24, color: "FFFFFF", align: "justify", objectName: `question-block-${C + 1}-${m.kind}` });
     }), d.condition && s.addText(d.condition.text, { ...u, ...d.condition, margin: 0, valign: "mid", breakLine: false, objectName: "question-condition" }), s.addNotes(`\uC6D0\uBCF8 PDF ${d.sourcePage}\uCABD \xB7 ${d.questionNumber}\uBC88 \xB7 ${d.page}/${d.pageCount}
 ${d.notes}`);
   }
@@ -12386,6 +12386,7 @@ ${d.notes}`);
     m = m.replace(/<p:sp>[\s\S]*?<\/p:sp>/g, (C) => {
       const y = C.match(/name="question-block-(\d+)-(text|passage|statements)"/);
       if (!y) return C;
+      C = C.replace(/<a:pPr\b[^>]*>/g, (nt) => nt.replace(/\s(?:algn|eaLnBrk)="[^"]*"/g, "").replace(/>$/, ' algn="just" eaLnBrk="1">'));
       const S = Number(y[1]) - 1;
       return C.replace(/<a:p>([\s\S]*?)<\/a:p>/g, (w, N, D) => {
         const T = N.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").trim(), R = /^\([가-하]\)/.test(T) ? 622300 : /^[ㄱ-ㅎ][.)]/.test(T) ? 469900 : 0, k = C.slice(0, D).lastIndexOf("<a:p>") === -1, U = S === 0 && k && !R ? Math.round((u?.body?.groups?.[0]?.firstLineIndent || 0) * 914400) : 0;
@@ -12507,7 +12508,7 @@ function My() {
   }, ot = () => {
     window.confirm(`${z.number}\uBC88 \uBB38\uD56D\uC744 \uD3B8\uC9D1 \uBAA9\uB85D\uC5D0\uC11C \uC0AD\uC81C\uD560\uAE4C\uC694?`) && (m((K) => ({ ...K, questions: K.questions.filter((F, P) => P !== k) })), U(Math.max(0, k - 1)));
   };
-  return at.jsxs("main", { children: [at.jsxs("header", { children: [at.jsxs("div", { className: "brand", children: [at.jsx("span", { className: "mark", children: "Q" }), at.jsxs("div", { children: [at.jsx("b", { children: "\uBB38\uD56D \uC2AC\uB77C\uC774\uB4DC \uC2A4\uD29C\uB514\uC624" }), at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v13" })] })] }), at.jsxs("div", { className: "spec", children: [at.jsx("span", { children: "4:3" }), at.jsx("span", { children: "210 M\uACE0\uB515 070" }), at.jsx("span", { children: "\uBCF8\uBB38 24pt" })] })] }), at.jsxs("div", { className: "workspace", children: [at.jsxs("aside", { children: [at.jsxs("fieldset", { disabled: !!S, children: [at.jsx("legend", { children: "\uC6D0\uBCF8\uACFC \uCD9C\uB825 \uC124\uC815" }), at.jsx("h2", { children: "01 \uC6D0\uBCF8 PDF" }), at.jsxs("button", { className: "drop", onClick: () => l.current.click(), onDragOver: (K) => K.preventDefault(), onDrop: (K) => {
+  return at.jsxs("main", { children: [at.jsxs("header", { children: [at.jsxs("div", { className: "brand", children: [at.jsx("span", { className: "mark", children: "Q" }), at.jsxs("div", { children: [at.jsx("b", { children: "\uBB38\uD56D \uC2AC\uB77C\uC774\uB4DC \uC2A4\uD29C\uB514\uC624" }), at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v14" })] })] }), at.jsxs("div", { className: "spec", children: [at.jsx("span", { children: "4:3" }), at.jsx("span", { children: "210 M\uACE0\uB515 070" }), at.jsx("span", { children: "\uBCF8\uBB38 24pt" })] })] }), at.jsxs("div", { className: "workspace", children: [at.jsxs("aside", { children: [at.jsxs("fieldset", { disabled: !!S, children: [at.jsx("legend", { children: "\uC6D0\uBCF8\uACFC \uCD9C\uB825 \uC124\uC815" }), at.jsx("h2", { children: "01 \uC6D0\uBCF8 PDF" }), at.jsxs("button", { className: "drop", onClick: () => l.current.click(), onDragOver: (K) => K.preventDefault(), onDrop: (K) => {
     K.preventDefault(), lt(K.dataTransfer.files[0]);
   }, children: [at.jsx("b", { children: p ? p.name : "PDF\uB97C \uB193\uAC70\uB098 \uC120\uD0DD\uD558\uC138\uC694" }), at.jsx("small", { children: p ? `${(p.size / 1048576).toFixed(1)} MB` : "\uCD5C\uB300 10MB \xB7 PDF \uD30C\uC77C \uBD99\uC5EC\uB123\uAE30 \uAC00\uB2A5" })] }), at.jsx("input", { ref: l, hidden: true, type: "file", accept: ".pdf,application/pdf", onChange: (K) => {
     lt(K.target.files[0]), K.target.value = "";
