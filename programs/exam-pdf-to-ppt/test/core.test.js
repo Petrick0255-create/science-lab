@@ -45,7 +45,7 @@ test('long content paginates without deleting text or losing script', () => {
   assert.ok(plans.every(p => p.body.fontSize === 24 && p.body.y + p.body.h <= 7.5));
   assert.ok(wrapScientificText('x<sup>2</sup>').flat().some(r => r.script === 'sup'));
 });
-test('PPTX contains the requested font, separate number and real baseline runs', async () => {
+test('PPTX uses native superscript/subscript formatting without shrinking the declared font', async () => {
   for (const numberStyle of ['yellow28', 'white40']) {
     const { blob, slideCount } = await createPptxBlob(sampleExam(20), { numberStyle });
     const zip = await JSZip.loadAsync(await blob.arrayBuffer());
@@ -57,7 +57,10 @@ test('PPTX contains the requested font, separate number and real baseline runs',
     assert.match(xml, /sz="2400"/);
     assert.match(xml, numberStyle === 'yellow28' ? /sz="2800"/ : /sz="4000"/);
     assert.match(xml, numberStyle === 'yellow28' ? /val="FFFF00"/ : /val="FFFFFF"/);
-    assert.match(xml, /baseline="[1-9]\d*"/); assert.match(xml, /baseline="-\d+"/);
+    assert.match(xml, /<a:rPr(?=[^>]*sz="2400")(?=[^>]*baseline="30000")[^>]*>/);
+    assert.match(xml, /<a:rPr(?=[^>]*sz="2400")(?=[^>]*baseline="-25000")[^>]*>/);
+    assert.doesNotMatch(xml, /baseline="-40000"/);
+    assert.doesNotMatch(xml, /<a:rPr(?=[^>]*sz="1800")(?=[^>]*baseline=)[^>]*>/);
     assert.match(xml, /u="sng"/);
     assert.doesNotMatch(xml, /<a:normAutofit|<a:spAutoFit/);
     assert.doesNotMatch(xml, /&lt;\/?(?:sup|sub)&gt;/);

@@ -5,6 +5,9 @@ export const DEFAULT_MODEL = 'gemini-3.8-flash';
 const schema = {
   type: 'object', properties: {
     title: { type: 'string' }, warnings: { type: 'array', items: { type: 'string' } },
+    formatAudit: { type: 'object', properties: {
+      underlinedTexts: { type: 'array', items: { type: 'string' } },
+    }, required: ['underlinedTexts'] },
     questions: { type: 'array', items: { type: 'object', properties: {
       number: { type: 'string' }, sourcePage: { type: 'integer' },
       blocks: { type: 'array', items: { type: 'object', properties: {
@@ -14,7 +17,7 @@ const schema = {
       choices: { type: 'array', items: { type: 'string' } },
       visual_note: { type: 'string' }, warnings: { type: 'array', items: { type: 'string' } },
     }, required: ['number', 'sourcePage', 'blocks', 'choices', 'visual_note', 'warnings'] } },
-  }, required: ['title', 'questions', 'warnings'],
+  }, required: ['title', 'questions', 'warnings', 'formatAudit'],
 };
 
 const instruction = `한국 고등학교 모의고사 PDF를 문항별로 정확히 전사한다.
@@ -25,6 +28,8 @@ blocks에는 본문(text), 자료·제시문(passage), ㄱ·ㄴ·ㄷ 보기(stat
 ①②③④⑤ 선택지는 번호 기호를 포함해 choices에 하나씩 넣고 blocks에 중복하지 않는다.
 원문 문장, 줄바꿈, 점수, 숫자, 단위, 화학식과 기호를 보존하고 요약·교정·번역·문제 풀이는 하지 않는다.
 위첨자는 <sup>내용</sup>, 아래첨자는 <sub>내용</sub>, 밑줄은 <u>내용</u>로 표시한다. 그 외 HTML이나 마크다운은 쓰지 않는다.
+밑줄은 글자 바로 아래에 인쇄된 가는 수평선을 뜻한다. 길거나 희미한 밑줄도 빠뜨리지 말고, 밑줄이 실제로 그어진 정확한 글자 범위만 <u>와 </u>로 감싼다. 표 테두리, 분수선, 빈칸 표시선, 상자 테두리는 밑줄로 처리하지 않는다.
+최종 JSON을 반환하기 전에 PDF의 각 문항을 확대해 본문·자료·질문·ㄱㄴㄷ 보기·선택지를 다시 훑고, 눈에 보이는 모든 밑줄이 해당 text 또는 choices의 <u> 태그와 일치하는지 한 번 더 대조한다. formatAudit.underlinedTexts에는 발견한 밑줄 문자열을 빠짐없이 적고, 각 문자열이 본문의 <u> 태그 범위와 정확히 대응하게 한다.
 예: H<sub>2</sub>O, x<sup>2</sup>, Na<sup>+</sup>, SO<sub>4</sub><sup>2−</sup>, v<sub>0</sub>.
 세로 분수·근호·행렬은 읽을 수 있는 텍스트로 전사하고 warnings에 수식 재확인이 필요하다고 적는다. 불확실한 글자는 [판독 확인]으로 표시하며 추측하지 않는다.
 그림·그래프·그림 선택지는 [그림: 원본 PDF N쪽 확인]으로 표시하고 visual_note에 보충할 내용을 적는다. 말풍선 안 글씨는 전사한다.

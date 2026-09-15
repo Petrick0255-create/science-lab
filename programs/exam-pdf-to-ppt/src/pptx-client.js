@@ -17,8 +17,14 @@ export async function createPptxBlob(doc, options) {
     plan.body.lines.forEach((line, i) => {
       if (!line.length) return;
       const runs = line.map(run => ({ text: run.text, options: {
-        fontFace: FONT, fontSize: run.script === 'normal' ? 24 : 18,
-        superscript: run.script === 'sup', subscript: run.script === 'sub',
+        // Keep the declared font size unchanged. PowerPoint's native
+        // superscript/subscript formatting performs the visual treatment.
+        fontFace: FONT, fontSize: 24,
+        superscript: run.script === 'sup',
+        // PowerPoint stores native subscript as a negative DrawingML baseline.
+        // PptxGenJS's subscript preset is -40%, which is too deep at 24pt;
+        // -25% matches the normal PowerPoint appearance more closely.
+        baseline: run.script === 'sub' ? -500 : undefined,
         underline: run.underline ? { style: 'sng' } : undefined,
       } }));
       slide.addText(runs, { ...base, x: plan.body.x, y: plan.body.y + i * plan.body.lineHeight,
