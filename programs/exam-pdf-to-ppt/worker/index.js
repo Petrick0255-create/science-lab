@@ -87,11 +87,6 @@ function loginPage(base, error = '') {
   </style></head><body><main class="card"><span class="mark">Q</span><h1>문항 슬라이드 스튜디오</h1><p>공용 비밀번호를 입력하면 8시간 동안 사용할 수 있습니다.</p>${warning}<form method="post" action="${base}api/login"><label>공용 비밀번호<input type="password" name="password" required maxlength="200" autocomplete="current-password" autofocus></label><button type="submit">로그인</button></form></main></body></html>`;
 }
 
-function sameOrigin(request) {
-  const origin = request.headers.get('Origin');
-  return !origin || origin === new URL(request.url).origin;
-}
-
 function redirect(location, cookie) {
   const headers = { Location: location, 'Cache-Control': 'no-store' };
   if (cookie) headers['Set-Cookie'] = cookie;
@@ -104,7 +99,6 @@ async function checkLimit(binding, key) {
 }
 
 async function handleLogin(request, env, base) {
-  if (!sameOrigin(request)) return new Response('Forbidden', { status: 403 });
   if (!env.APP_PASSWORD || !env.SESSION_SECRET) return new Response('로그인 Secret이 설정되지 않았습니다.', { status: 503, headers: securityHeaders('text/plain; charset=utf-8') });
   const clientKey = request.headers.get('CF-Connecting-IP') || 'unknown';
   if (!await checkLimit(env.LOGIN_RATE_LIMITER, `login:${clientKey}`)) return new Response('로그인 시도가 너무 많습니다. 1분 후 다시 시도하세요.', { status: 429, headers: securityHeaders('text/plain; charset=utf-8') });
@@ -117,7 +111,6 @@ async function handleLogin(request, env, base) {
 }
 
 async function handleAnalyze(request, env, session) {
-  if (!sameOrigin(request)) return new Response('Forbidden', { status: 403 });
   if (!env.GEMINI_API_KEY) return new Response(JSON.stringify({ error: 'Gemini API Secret이 설정되지 않았습니다.' }), { status: 503, headers: securityHeaders('application/json; charset=utf-8') });
   if (!await checkLimit(env.ANALYZE_RATE_LIMITER, `analyze:${session.sid}`)) return new Response(JSON.stringify({ error: '분석 요청이 너무 많습니다. 1분 후 다시 시도하세요.' }), { status: 429, headers: securityHeaders('application/json; charset=utf-8') });
   const contentLength = Number(request.headers.get('Content-Length') || 0);

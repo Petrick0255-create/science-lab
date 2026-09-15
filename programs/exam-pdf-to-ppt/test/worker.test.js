@@ -32,6 +32,24 @@ test('app is password-gated and successful login grants access', async () => {
   assert.equal(await authenticated.text(), 'APP');
 });
 
+test('login also works when a Workers preview changes the Origin header', async () => {
+  const env = {
+    ...secrets,
+    APP_BASE: '/programs/exam-pdf-to-ppt/',
+    LOGIN_RATE_LIMITER: { limit: async () => ({ success: true }) },
+    ASSETS: { fetch: async () => new Response('APP') },
+  };
+  const form = new FormData();
+  form.set('password', env.APP_PASSWORD);
+  const response = await worker.fetch(new Request('https://example.com/programs/exam-pdf-to-ppt/api/login', {
+    method: 'POST',
+    headers: { Origin: 'https://preview.example.invalid' },
+    body: form,
+  }), env);
+  assert.equal(response.status, 303);
+  assert.match(response.headers.get('Set-Cookie') || '', /bbh_exam_session=/);
+});
+
 test('analysis endpoint rejects unauthenticated requests', async () => {
   const response = await worker.fetch(new Request('https://example.com/programs/exam-pdf-to-ppt/api/analyze', { method: 'POST' }), {
     ...secrets,

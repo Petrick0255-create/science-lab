@@ -31,10 +31,14 @@ npx wrangler secret put SESSION_SECRET
 - `APP_PASSWORD`: 사용자들과 공유할 접속 비밀번호. 12자 이상의 긴 비밀번호 권장
 - `SESSION_SECRET`: 쿠키 서명용 무작위 문자열. 공용 비밀번호와 다른 32자 이상의 값을 사용
 
-Windows PowerShell에서 `SESSION_SECRET`용 무작위 값을 만들려면 다음 명령을 실행할 수 있습니다.
+Windows PowerShell에서 `SESSION_SECRET`용 무작위 값을 만들려면 다음 명령을 실행합니다. Windows PowerShell 5.1에서도 동작합니다.
 
 ```powershell
-[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+$bytes = New-Object byte[] 32
+$rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($bytes)
+[Convert]::ToBase64String($bytes)
+$rng.Dispose()
 ```
 
 Secret 이름은 대소문자를 포함하여 정확히 입력해야 합니다.
