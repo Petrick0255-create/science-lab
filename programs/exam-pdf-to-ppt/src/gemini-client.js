@@ -56,28 +56,20 @@ export function parseGeminiPayload(payload, selection) {
   return validateDocument({ ...raw, ...validateSelection(selection) });
 }
 
-export async function analyzePdfInBrowser(file, { apiKey, model, selection, signal }) {
-  if (!apiKey.trim()) throw new UserError('Gemini API 키를 입력하세요.');
+export async function analyzePdfInBrowser(file, { model, selection, signal }) {
   if (!/^[a-zA-Z0-9._-]+$/.test(model)) throw new UserError('Gemini 모델 이름을 확인하세요.');
   const data = await fileToBase64(file);
   const normalizedSelection = validateSelection(selection);
   const selectionInstruction = normalizedSelection.questionRange
     ? `문항 번호 ${normalizedSelection.questionRange.start}부터 ${normalizedSelection.questionRange.end}까지(양 끝 포함)만 전사하라. PDF에 인쇄된 번호의 앞자리 0을 그대로 보존하고, 범위 밖 문항은 포함하지 않는다.`
     : `예상 문항 수는 ${normalizedSelection.expectedCount}개다. 원문에 실제로 있는 전체 문항을 전사하라.`;
-  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+  const endpoint = new URL('./api/analyze', window.location.href).toString();
   let response;
   try {
     response = await fetch(endpoint, {
       method: 'POST', signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
-      body: JSON.stringify({
-        model,
-        input: [
-          { type: 'document', data, mime_type: 'application/pdf' },
-          { type: 'text', text: `${instruction}\n${selectionInstruction}` },
-        ],
-        response_format: { type: 'text', mime_type: 'application/json', schema },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, documentData: data, instruction: `${instruction}\n${selectionInstruction}`, schema }),
     });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
@@ -86,7 +78,8 @@ export async function analyzePdfInBrowser(file, { apiKey, model, selection, sign
   let payload;
   try { payload = await response.json(); } catch { throw new UserError('Gemini 응답을 읽지 못했습니다.'); }
   if (!response.ok) {
-    if (response.status === 400 || response.status === 403) throw new UserError('API 키, 모델 사용 권한 또는 요청 형식을 확인하세요.');
+    if (response.status === 401) throw new UserError('로그인이 만료되었습니다. 페이지를 새로 열고 다시 로그인하세요.');
+    if (response.status === 400 || response.status === 403) throw new UserError('Gemini 모델 사용 권한 또는 요청 형식을 확인하세요.');
     if (response.status === 429) throw new UserError('Gemini 사용 한도에 도달했습니다. 잠시 후 다시 시도하세요.');
     throw new UserError(`Gemini 요청에 실패했습니다. HTTP ${response.status}`);
   }

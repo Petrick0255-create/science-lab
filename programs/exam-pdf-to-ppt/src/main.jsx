@@ -45,7 +45,6 @@ function SlidePreview({ question, numberStyle }) {
 
 function App() {
   const input = useRef(); const controller = useRef(null);
-  const [apiKey, setApiKey] = useState(() => storage.get('bbh-gemini-api-key'));
   const [model, setModel] = useState(() => storage.get('bbh-gemini-model', DEFAULT_MODEL));
   const [file, setFile] = useState(null); const [sourceUrl, setSourceUrl] = useState('');
   const [data, setData] = useState(null); const [expectedCount, setExpectedCount] = useState(25);
@@ -53,7 +52,6 @@ function App() {
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [message, setMessage] = useState('');
   const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28'); const [showSource, setShowSource] = useState(false);
   useEffect(() => () => controller.current?.abort(), []);
-  useEffect(() => { storage.set('bbh-gemini-api-key', apiKey); }, [apiKey]);
   useEffect(() => { storage.set('bbh-gemini-model', model); }, [model]);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setSourceUrl(url); return () => URL.revokeObjectURL(url); }, [file]);
   useEffect(() => { const prevent = e => { if (data) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', prevent); return () => window.removeEventListener('beforeunload', prevent); }, [data]);
@@ -80,7 +78,7 @@ function App() {
     const ac = new AbortController(); controller.current = ac;
     const timeout = setTimeout(() => ac.abort(), 195000);
     try {
-      const doc = validateDocument(await analyzePdfInBrowser(file, { apiKey, model, selection, signal: ac.signal }));
+      const doc = validateDocument(await analyzePdfInBrowser(file, { model, selection, signal: ac.signal }));
       setData(doc); setSelected(0); setMessage(`${doc.questions.length}개 문항을 인식했습니다. 원문과 첨자를 확인하세요.`);
     } catch (e) { setErr(e.name === 'AbortError' ? '분석을 취소했거나 응답 시간이 초과되었습니다.' : e.message); setMessage(''); }
     finally { clearTimeout(timeout); controller.current = null; setBusy(''); }
@@ -115,11 +113,9 @@ function App() {
       <label className="field">문항 형식<select value={examMode === 'range' ? 'range' : String(expectedCount)} onChange={e => { if (e.target.value === 'range') setExamMode('range'); else { setExamMode('fixed'); setExpectedCount(Number(e.target.value)); } }}><option value={20}>20문항</option><option value={25}>25문항</option><option value="range">자유 형식 · 번호 범위</option></select></label>
       {examMode === 'range' && <div className="range-fields"><label className="field">시작 번호<input inputMode="numeric" maxLength={3} value={rangeStart} onChange={e => setRangeStart(e.target.value.replace(/\D/g, ''))} placeholder="예: 012" /></label><label className="field">끝 번호<input inputMode="numeric" maxLength={3} value={rangeEnd} onChange={e => setRangeEnd(e.target.value.replace(/\D/g, ''))} placeholder="예: 027" /></label></div>}
       {examMode === 'range' && !rangeValid && <p className="help warning">1~3자리 시작·끝 번호를 입력하세요. 한 번에 최대 {MAX_QUESTIONS}문항입니다.</p>}
-      <label className="field">Gemini API 키<input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" placeholder="AIza…" /><small>이 브라우저의 로컬 저장소에 저장됩니다.</small></label>
-      <div className="key-actions"><button type="button" onClick={() => setApiKey('')} disabled={!apiKey}>저장된 키 삭제</button></div>
       <label className="field">Gemini 모델<input value={model} onChange={e => setModel(e.target.value)} spellCheck={false} /></label>
-      <button className="primary" onClick={analyze} disabled={!file || !apiKey.trim() || (examMode === 'range' && !rangeValid)}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
-      <p className="help">키와 PDF는 이 페이지에서 Gemini API로 직접 전송됩니다. GitHub나 별도 서버에는 저장되지 않습니다.</p>
+      <button className="primary" onClick={analyze} disabled={!file || (examMode === 'range' && !rangeValid)}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
+      <p className="help">PDF는 로그인된 요청에 한해 이 사이트의 보안 중계 서버를 거쳐 Gemini API로 전송되며 저장되지 않습니다.</p>
       <div className="rule" /><h2>02 번호 스타일</h2>
       <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>노란색 28pt<small>별도 텍스트 상자</small></span></label>
       <label className={`style-option ${style === 'white40' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white40'} onChange={() => setStyle('white40')} /><strong>01번</strong><span>흰색 40pt<small>별도 텍스트 상자</small></span></label>
@@ -145,7 +141,7 @@ function App() {
               {q.warnings?.length > 0 && <div className="notice warning">{q.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>}
             </fieldset></article><SlidePreview question={q} numberStyle={style} /></>}</div>
           </div></>}
-      </section></div><footer>API 키는 현재 브라우저의 로컬 저장소에 남습니다. 공용 PC에서는 사용 후 저장된 키를 삭제하세요.</footer>
+      </section></div><footer>공용 PC에서는 사용 후 브라우저를 닫거나 로그아웃하세요. Gemini API 키는 서버에만 보관됩니다.</footer>
   </main>;
 }
 createRoot(document.getElementById('root')).render(<App />);
