@@ -1,11 +1,13 @@
-import { FONT, UserError } from './document.js';
+import { FONT, UserError, validateOptions } from './document.js';
 import { wrapScientificText } from './scientific-text.js';
 export const SLIDE = { width: 10, height: 7.5, background: '000000' };
 const BODY = { x: .35, y: 1.02, w: 9.25, fontSize: 24, lineHeight: .44 };
 const MAX_LINES = 13;
 
-export function planQuestion(q, numberStyle = 'yellow28') {
-  const paragraphs = [...q.blocks.map(b => b.text), ...q.choices].filter(Boolean);
+export function planQuestion(q, inputOptions = {}) {
+  const options = validateOptions(typeof inputOptions === 'string' ? { numberStyle: inputOptions } : inputOptions);
+  const blocks = options.contentMode === 'contentOnly' ? q.blocks.filter(b => b.kind !== 'statements') : q.blocks;
+  const paragraphs = [...blocks.map(b => b.text), ...q.choices].filter(Boolean);
   const pages = []; let lines = [];
   const flush = () => {
     while (lines.length && !lines.at(-1).length) lines.pop();
@@ -21,17 +23,18 @@ export function planQuestion(q, numberStyle = 'yellow28') {
   flush();
   return pages.map((rows, page) => ({
     ...SLIDE, page: page + 1, pageCount: pages.length,
-    number: { text: numberStyle === 'white40' ? `${q.number}번` : q.number,
-      x: .12, y: .08, w: numberStyle === 'white40' ? 2.7 : 1.35, h: .85,
-      fontSize: numberStyle === 'white40' ? 40 : 28,
-      color: numberStyle === 'white40' ? 'FFFFFF' : 'FFFF00', fontFace: FONT },
+    number: { text: String(q.number).padStart(options.numberStyle === 'white3' ? 3 : 2, '0'),
+      x: .12, y: .08, w: options.numberStyle === 'white3' ? 1.8 : 1.35, h: .85,
+      fontSize: options.numberFontSize,
+      color: options.numberStyle === 'yellow28' ? 'FFFF00' : 'FFFFFF', fontFace: FONT },
     body: { ...BODY, h: rows.length * BODY.lineHeight + .12, lines: rows, fontFace: FONT, color: 'FFFFFF' },
     notes: [q.visual_note, ...(q.warnings || [])].filter(Boolean).join('\n'),
     sourcePage: q.sourcePage, questionNumber: q.number,
   }));
 }
 export function planDocument(doc, options) {
-  const slides = doc.questions.flatMap(q => planQuestion(q, options.numberStyle));
+  const normalized = validateOptions(options);
+  const slides = doc.questions.flatMap(q => planQuestion(q, normalized));
   if (slides.length > 300) throw new UserError('생성 슬라이드가 300장을 초과합니다. 텍스트를 확인하세요.');
   return slides;
 }

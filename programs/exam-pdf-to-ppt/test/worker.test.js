@@ -58,3 +58,19 @@ test('analysis endpoint rejects unauthenticated requests', async () => {
   });
   assert.equal(response.status, 401);
 });
+
+test('analysis endpoint rejects models outside the dropdown allowlist', async () => {
+  const token = await createSession(secrets.SESSION_SECRET);
+  const response = await worker.fetch(new Request('https://example.com/programs/exam-pdf-to-ppt/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: `bbh_exam_session=${token}` },
+    body: JSON.stringify({ model: 'gemini-3.1-pro', documentData: 'cGRm', instruction: '문항을 정확하게 전사합니다.', schema: {} }),
+  }), {
+    ...secrets,
+    GEMINI_API_KEY: 'test-key',
+    APP_BASE: '/programs/exam-pdf-to-ppt/',
+    ANALYZE_RATE_LIMITER: { limit: async () => ({ success: true }) },
+    ASSETS: { fetch: async () => new Response('APP') },
+  });
+  assert.equal(response.status, 400);
+});

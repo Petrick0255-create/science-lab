@@ -1,6 +1,11 @@
 import { UserError, validateDocument, validateSelection } from '../shared/document.js';
 
-export const DEFAULT_MODEL = 'gemini-3.8-flash';
+export const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+export const MODEL_OPTIONS = [
+  { value: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite · 기본/저비용' },
+  { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash · 균형' },
+  { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash · 고성능' },
+];
 
 const schema = {
   type: 'object', properties: {

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BLOCK_LABELS, coverage, MAX_PDF_BYTES, MAX_QUESTIONS, validateDocument } from '../shared/document.js';
 import { planQuestion } from '../shared/layout.js';
-import { analyzePdfInBrowser, DEFAULT_MODEL } from './gemini-client.js';
+import { analyzePdfInBrowser, DEFAULT_MODEL, MODEL_OPTIONS } from './gemini-client.js';
 import { createPptxBlob } from './pptx-client.js';
 import './style.css';
 import './key.css';
@@ -25,11 +25,11 @@ function ScientificEditor({ label, value, onChange, rows = 4 }) {
     <div className="format-tools"><span>선택한 글자</span><button type="button" onClick={() => format('sup')} title="위첨자">x² 위첨자</button><button type="button" onClick={() => format('sub')} title="아래첨자">x₂ 아래첨자</button><button type="button" onClick={() => format('u')}>밑줄</button></div></div>;
 }
 
-function SlidePreview({ question, numberStyle }) {
+function SlidePreview({ question, options }) {
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [question.number]);
   let plans;
-  try { plans = planQuestion(question, numberStyle); }
+  try { plans = planQuestion(question, options); }
   catch (e) { return <p className="notice error">{e.message}</p>; }
   const current = plans[Math.min(page, plans.length - 1)];
   if (!current) return <p className="muted">본문을 입력하면 미리보기가 표시됩니다.</p>;
@@ -45,14 +45,16 @@ function SlidePreview({ question, numberStyle }) {
 
 function App() {
   const input = useRef(); const controller = useRef(null);
-  const [model, setModel] = useState(() => storage.get('bbh-gemini-model', DEFAULT_MODEL));
+  const [model, setModel] = useState(() => storage.get('bbh-gemini-model-v2', DEFAULT_MODEL));
   const [file, setFile] = useState(null); const [sourceUrl, setSourceUrl] = useState('');
   const [data, setData] = useState(null); const [expectedCount, setExpectedCount] = useState(25);
   const [examMode, setExamMode] = useState('fixed'); const [rangeStart, setRangeStart] = useState(''); const [rangeEnd, setRangeEnd] = useState('');
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [message, setMessage] = useState('');
-  const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28'); const [showSource, setShowSource] = useState(false);
+  const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28');
+  const [numberFontSize, setNumberFontSize] = useState(28); const [contentMode, setContentMode] = useState('withStatements');
+  const [showSource, setShowSource] = useState(false);
   useEffect(() => () => controller.current?.abort(), []);
-  useEffect(() => { storage.set('bbh-gemini-model', model); }, [model]);
+  useEffect(() => { storage.set('bbh-gemini-model-v2', model); }, [model]);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setSourceUrl(url); return () => URL.revokeObjectURL(url); }, [file]);
   useEffect(() => { const prevent = e => { if (data) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', prevent); return () => window.removeEventListener('beforeunload', prevent); }, [data]);
   const choose = f => {
@@ -89,7 +91,7 @@ function App() {
     try {
       const doc = validateDocument({ ...data, ...selection });
       doc.questions.sort((a, b) => Number(a.number) - Number(b.number));
-      const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style });
+      const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style, numberFontSize, contentMode });
       const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `${data.title.replace(/[\\/:*?"<>|]/g, '_') || '모의고사'}_문항별.pptx`;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
@@ -113,13 +115,16 @@ function App() {
       <label className="field">문항 형식<select value={examMode === 'range' ? 'range' : String(expectedCount)} onChange={e => { if (e.target.value === 'range') setExamMode('range'); else { setExamMode('fixed'); setExpectedCount(Number(e.target.value)); } }}><option value={20}>20문항</option><option value={25}>25문항</option><option value="range">자유 형식 · 번호 범위</option></select></label>
       {examMode === 'range' && <div className="range-fields"><label className="field">시작 번호<input inputMode="numeric" maxLength={3} value={rangeStart} onChange={e => setRangeStart(e.target.value.replace(/\D/g, ''))} placeholder="예: 012" /></label><label className="field">끝 번호<input inputMode="numeric" maxLength={3} value={rangeEnd} onChange={e => setRangeEnd(e.target.value.replace(/\D/g, ''))} placeholder="예: 027" /></label></div>}
       {examMode === 'range' && !rangeValid && <p className="help warning">1~3자리 시작·끝 번호를 입력하세요. 한 번에 최대 {MAX_QUESTIONS}문항입니다.</p>}
-      <label className="field">Gemini 모델<input value={model} onChange={e => setModel(e.target.value)} spellCheck={false} /></label>
+      <label className="field">Gemini 모델<select value={model} onChange={e => setModel(e.target.value)}>{MODEL_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
       <button className="primary" onClick={analyze} disabled={!file || (examMode === 'range' && !rangeValid)}>{busy === 'analyze' ? '문항 분석 중…' : 'Gemini로 문항 분석'}</button>
       <p className="help">PDF는 로그인된 요청에 한해 이 사이트의 보안 중계 서버를 거쳐 Gemini API로 전송되며 저장되지 않습니다.</p>
       <div className="rule" /><h2>02 번호 스타일</h2>
-      <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>노란색 28pt<small>별도 텍스트 상자</small></span></label>
-      <label className={`style-option ${style === 'white40' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white40'} onChange={() => setStyle('white40')} /><strong>01번</strong><span>흰색 40pt<small>별도 텍스트 상자</small></span></label>
-      <p className="help">본문은 24pt를 유지합니다. 긴 문항은 여러 장으로 나뉘며, 첨자만 작게 표시합니다.</p>
+      <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>기존 노란색<small>2자리 번호</small></span></label>
+      <label className={`style-option ${style === 'white2' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white2'} onChange={() => setStyle('white2')} /><strong>01</strong><span>흰색 2자리<small>예: 01, 25</small></span></label>
+      <label className={`style-option ${style === 'white3' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white3'} onChange={() => setStyle('white3')} /><strong>001</strong><span>흰색 3자리<small>예: 001, 025</small></span></label>
+      <label className="field">번호 글자 크기<select value={numberFontSize} onChange={e => setNumberFontSize(Number(e.target.value))}>{[20, 24, 28, 32, 36, 40, 44, 48].map(size => <option key={size} value={size}>{size}pt</option>)}</select></label>
+      <label className="field">PPT에 넣을 내용<select value={contentMode} onChange={e => setContentMode(e.target.value)}><option value="contentOnly">발문+내용만</option><option value="withStatements">발문+내용+ㄱ·ㄴ·ㄷ 보기</option></select></label>
+      <p className="help">번호는 기본 28pt입니다. 본문은 24pt를 유지하며, 보기 제외를 선택해도 분석·편집 데이터에는 ㄱ·ㄴ·ㄷ이 남아 있습니다.</p>
       <div className="rule" /><div className="summary"><span>인식 문항</span><b>{questions.length} / {targetCount ?? '?'}</b></div>
       <button className="export" disabled={!check?.complete} onClick={download}>{busy === 'export' ? 'PPT 생성 중…' : 'PPTX 내려받기'}</button>
       <p className="help">PowerPoint를 여는 PC에 210 M고딕 070이 설치되어 있어야 합니다. 글꼴 파일은 포함하지 않습니다.</p>
@@ -139,7 +144,7 @@ function App() {
               <button className="add-block" disabled={q.choices.length >= 10} onClick={() => patchQ({ choices: [...q.choices, ''] })}>선택지 추가</button>
               <label className="field">그림·수식 보충 메모<textarea rows={2} value={q.visual_note} onChange={e => patchQ({ visual_note: e.target.value })} /></label>
               {q.warnings?.length > 0 && <div className="notice warning">{q.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>}
-            </fieldset></article><SlidePreview question={q} numberStyle={style} /></>}</div>
+            </fieldset></article><SlidePreview question={q} options={{ numberStyle: style, numberFontSize, contentMode }} /></>}</div>
           </div></>}
       </section></div><footer>공용 PC에서는 사용 후 브라우저를 닫거나 로그아웃하세요. Gemini API 키는 서버에만 보관됩니다.</footer>
   </main>;

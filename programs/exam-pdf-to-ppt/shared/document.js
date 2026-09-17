@@ -71,6 +71,11 @@ export function coverage(doc) {
 }
 export function validateOptions(input = {}) {
   const numberStyle = input.numberStyle ?? 'yellow28';
-  if (!['yellow28', 'white40'].includes(numberStyle)) throw new UserError('번호 스타일을 확인하세요.');
-  return { numberStyle };
+  if (!['yellow28', 'white2', 'white3'].includes(numberStyle)) throw new UserError('번호 스타일을 확인하세요.');
+  const numberFontSize = Number(input.numberFontSize ?? 28);
+  if (!Number.isInteger(numberFontSize) || numberFontSize < 20 || numberFontSize > 48)
+    throw new UserError('번호 글자 크기는 20~48pt로 선택하세요.');
+  const contentMode = input.contentMode ?? 'withStatements';
+  if (!['contentOnly', 'withStatements'].includes(contentMode)) throw new UserError('PPT에 넣을 내용을 확인하세요.');
+  return { numberStyle, numberFontSize, contentMode };
 }

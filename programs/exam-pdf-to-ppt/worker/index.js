@@ -3,6 +3,7 @@ const SESSION_SECONDS = 8 * 60 * 60;
 const COOKIE_NAME = 'bbh_exam_session';
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024;
 const MAX_DOCUMENT_BASE64 = 14_100_000;
+const ALLOWED_MODELS = new Set(['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash']);
 const encoder = new TextEncoder();
 
 function appBase(env) {
@@ -121,7 +122,7 @@ async function handleAnalyze(request, env, session) {
   const documentData = String(body.documentData || '');
   const instruction = String(body.instruction || '');
   const schemaText = JSON.stringify(body.schema || null);
-  if (!/^gemini-[a-zA-Z0-9._-]{1,80}$/.test(model) || !documentData || documentData.length > MAX_DOCUMENT_BASE64 || instruction.length < 10 || instruction.length > 30_000 || schemaText.length > 30_000)
+  if (!ALLOWED_MODELS.has(model) || !documentData || documentData.length > MAX_DOCUMENT_BASE64 || instruction.length < 10 || instruction.length > 30_000 || schemaText.length > 30_000)
     return new Response(JSON.stringify({ error: '분석 요청 형식을 확인하세요.' }), { status: 400, headers: securityHeaders('application/json; charset=utf-8') });
   const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
     method: 'POST',
