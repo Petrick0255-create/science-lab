@@ -51,7 +51,7 @@ function App() {
   const [examMode, setExamMode] = useState('fixed'); const [rangeStart, setRangeStart] = useState(''); const [rangeEnd, setRangeEnd] = useState('');
   const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [message, setMessage] = useState('');
   const [selected, setSelected] = useState(0); const [style, setStyle] = useState('yellow28');
-  const [numberFontSize, setNumberFontSize] = useState(28); const [contentMode, setContentMode] = useState('withStatements');
+  const [numberFontSize, setNumberFontSize] = useState(28); const [numberSuffix, setNumberSuffix] = useState(false); const [contentMode, setContentMode] = useState('withStatements');
   const [showSource, setShowSource] = useState(false);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => { storage.set('bbh-gemini-model-v2', model); }, [model]);
@@ -91,7 +91,7 @@ function App() {
     try {
       const doc = validateDocument({ ...data, ...selection });
       doc.questions.sort((a, b) => Number(a.number) - Number(b.number));
-      const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style, numberFontSize, contentMode });
+      const { blob, slideCount } = await createPptxBlob(doc, { numberStyle: style, numberFontSize, numberSuffix, contentMode });
       const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = `${data.title.replace(/[\\/:*?"<>|]/g, '_') || '모의고사'}_문항별.pptx`;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
@@ -122,7 +122,8 @@ function App() {
       <label className={`style-option ${style === 'yellow28' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'yellow28'} onChange={() => setStyle('yellow28')} /><strong className="yellow">01</strong><span>기존 노란색<small>2자리 번호</small></span></label>
       <label className={`style-option ${style === 'white2' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white2'} onChange={() => setStyle('white2')} /><strong>01</strong><span>흰색 2자리<small>예: 01, 25</small></span></label>
       <label className={`style-option ${style === 'white3' ? 'selected' : ''}`}><input type="radio" name="numberStyle" checked={style === 'white3'} onChange={() => setStyle('white3')} /><strong>001</strong><span>흰색 3자리<small>예: 001, 025</small></span></label>
-      <label className="field">번호 글자 크기<select value={numberFontSize} onChange={e => setNumberFontSize(Number(e.target.value))}>{[20, 24, 28, 32, 36, 40, 44, 48].map(size => <option key={size} value={size}>{size}pt</option>)}</select></label>
+      <label className="field">번호 글자 크기<select value={numberFontSize} onChange={e => setNumberFontSize(Number(e.target.value))}>{[20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48].map(size => <option key={size} value={size}>{size}pt</option>)}</select></label>
+      <label className="field"><input type="checkbox" checked={numberSuffix} onChange={e => setNumberSuffix(e.target.checked)} style={{ display: "inline-block", width: "auto", margin: "0 8px 0 0" }} />번호 뒤에 번 붙이기 (01 → 01번)</label>
       <label className="field">PPT에 넣을 내용<select value={contentMode} onChange={e => setContentMode(e.target.value)}><option value="contentOnly">발문+내용만</option><option value="withStatements">발문+내용+ㄱ·ㄴ·ㄷ 보기</option></select></label>
       <p className="help">번호는 기본 28pt입니다. 본문은 24pt를 유지하며, 보기 제외를 선택해도 분석·편집 데이터에는 ㄱ·ㄴ·ㄷ이 남아 있습니다.</p>
       <div className="rule" /><div className="summary"><span>인식 문항</span><b>{questions.length} / {targetCount ?? '?'}</b></div>
@@ -144,7 +145,7 @@ function App() {
               <button className="add-block" disabled={q.choices.length >= 10} onClick={() => patchQ({ choices: [...q.choices, ''] })}>선택지 추가</button>
               <label className="field">그림·수식 보충 메모<textarea rows={2} value={q.visual_note} onChange={e => patchQ({ visual_note: e.target.value })} /></label>
               {q.warnings?.length > 0 && <div className="notice warning">{q.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>}
-            </fieldset></article><SlidePreview question={q} options={{ numberStyle: style, numberFontSize, contentMode }} /></>}</div>
+            </fieldset></article><SlidePreview question={q} options={{ numberStyle: style, numberFontSize, numberSuffix, contentMode }} /></>}</div>
           </div></>}
       </section></div><footer>공용 PC에서는 사용 후 브라우저를 닫거나 로그아웃하세요. Gemini API 키는 서버에만 보관됩니다.</footer>
   </main>;

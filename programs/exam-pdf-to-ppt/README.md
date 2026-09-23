@@ -1,5 +1,7 @@
 # 문항 슬라이드 스튜디오
 
+이번 v21 수정본의 변경 내용과 배포 방법: [UPDATE_DEPLOY_KO.md](UPDATE_DEPLOY_KO.md)
+
 공용 비밀번호로 로그인한 사용자만 이용할 수 있으며, Gemini API 키는 Cloudflare Worker Secret에만 저장됩니다. 배포 순서와 Secret 설정 방법은 [DEPLOY_PASSWORD.md](DEPLOY_PASSWORD.md)를 참고하세요.
 
 20문항, 25문항 또는 사용자가 지정한 문제 번호 범위의 PDF를 Gemini로 전사하고, 편집 가능한 PowerPoint 파일로 내려받는 Cloudflare Worker 앱입니다. Worker가 로그인, 정적 사이트, Gemini API 중계를 함께 처리합니다.
@@ -34,7 +36,7 @@ PDF는 로그인된 요청에 한해 Worker를 거쳐 Gemini API로 전송됩니
 | 기본 글꼴 | `210 M고딕 070` |
 | 본문 | 흰색 24pt |
 | 번호 스타일 | 기존 노란색 2자리, 흰색 2자리, 흰색 3자리 |
-| 번호 크기 | 기본 28pt, 20~48pt 선택 |
+| 번호 크기 | 기본 28pt, 20~48pt를 2pt 단위로 선택 |
 | 내용 범위 | 발문+내용만 또는 발문+내용+ㄱ·ㄴ·ㄷ 보기 |
 | 위·아래첨자 | PowerPoint 첨자 서식 |
 | 긴 문항 | 24pt를 유지하며 다음 슬라이드로 분할 |

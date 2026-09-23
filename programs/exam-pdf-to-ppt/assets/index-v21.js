@@ -8470,7 +8470,7 @@ function wv(l, f, o, c = Ba.y) {
 }
 function Ku(l, f = {}) {
   const options = typeof f === "string" ? { numberStyle: f } : f || {}, numberStyle = ["yellow28", "white2", "white3"].includes(options.numberStyle) ? options.numberStyle : "yellow28", numberFontSize = Number.isInteger(Number(options.numberFontSize)) && Number(options.numberFontSize) >= 20 && Number(options.numberFontSize) <= 48 ? Number(options.numberFontSize) : 28, contentMode = options.contentMode === "contentOnly" ? "contentOnly" : "withStatements", filtered = contentMode === "contentOnly" ? { ...l, blocks: (l.blocks || []).filter((d) => d.kind !== "statements") } : l;
-  const o = gv(filtered), c = vv(o), A = String(l.number).padStart(numberStyle === "white3" ? 3 : 2, "0"), h = { text: A, x: 0.02, y: 0.03, w: Math.max(numberStyle === "white3" ? 1.02 : 0.72, xv(A, numberFontSize) + 0.1), h: Math.max(0.72, numberFontSize / 72 + 0.08), fontSize: numberFontSize, color: numberStyle === "yellow28" ? "FFFF00" : "FFFFFF", fontFace: ka }, p = numberFontSize >= 36 ? 0.2 : Ba.y, v = bv(c, !!o.condition, p).map((d) => Cv(d, h));
+  const o = gv(filtered), c = vv(o), A = String(l.number).padStart(numberStyle === "white3" ? 3 : 2, "0") + (options.numberSuffix === true ? "번" : ""), h = { text: A, x: 0.02, y: 0.03, w: Math.max(numberStyle === "white3" ? 1.02 : 0.72, xv(A, numberFontSize) + 0.1), h: Math.max(0.72, numberFontSize / 72 + 0.08), fontSize: numberFontSize, color: numberStyle === "yellow28" ? "FFFF00" : "FFFFFF", fontFace: ka }, p = numberFontSize >= 36 ? 0.2 : Ba.y, v = bv(c, !!o.condition, p).map((d) => Cv(d, h));
   return v.map((d, s) => {
     const u = s === v.length - 1;
     return { ...Qo, page: s + 1, pageCount: v.length, number: h, body: { ...Ba, y: p, groups: wv(d, u, !!o.condition, p), fontFace: ka, color: "FFFFFF" }, condition: u && o.condition ? { text: o.condition, x: 0.2, y: hv, w: 9.65, h: 0.44, fontSize: 18, color: "FFFFFF", fontFace: ka, align: "right" } : null, notes: [l.visual_note, ...l.warnings || []].filter(Boolean).join(`
@@ -12456,12 +12456,12 @@ function _y({ label: l, value: f, onChange: o, rows: c = 4 }) {
 function Ry({ block: l, onChange: f }) {
   return at.jsx("div", { className: "table-editor", children: at.jsx("p", { children: "\uD45C\uB294 \uC140 \uB0B4\uC6A9\uC744 \uBE44\uC6B0\uACE0 2\uD589\xD73\uC5F4\uB85C \uACE0\uC815 \uC0DD\uC131\uD569\uB2C8\uB2E4." }) });
 }
-function zy({ question: l, numberStyle: f, numberFontSize, contentMode }) {
+function zy({ question: l, numberStyle: f, numberFontSize, numberSuffix, contentMode }) {
   const [o, c] = fe.useState(0);
   fe.useEffect(() => c(0), [l.number]);
   let A;
   try {
-    A = Ku(l, { numberStyle: f, numberFontSize, contentMode });
+    A = Ku(l, { numberStyle: f, numberFontSize, numberSuffix, contentMode });
   } catch (v) {
     return at.jsx("p", { className: "notice error", children: v.message });
   }
@@ -12477,7 +12477,7 @@ function zy({ question: l, numberStyle: f, numberFontSize, contentMode }) {
   at.jsx("p", { className: "help", children: "\uD654\uBA74 \uBBF8\uB9AC\uBCF4\uAE30\uB294 \uADFC\uC0AC \uBC30\uCE58\uC785\uB2C8\uB2E4. \uCD5C\uC885 \uBAA8\uC591\uC740 \uC124\uCE58\uB41C \uAE00\uAF34\uACFC PowerPoint\uC5D0\uC11C \uD655\uC778\uD558\uC138\uC694." })] });
 }
 function My() {
-  const l = fe.useRef(), f = fe.useRef(null), [A, h] = fe.useState(() => Xo.get("bbh-gemini-model-v2", Dv)), [p, v] = fe.useState(null), [d, s] = fe.useState(""), [u, m] = fe.useState(null), [C, y] = fe.useState(25), [examMode, setExamMode] = fe.useState("fixed"), [rangeStart, setRangeStart] = fe.useState(""), [rangeEnd, setRangeEnd] = fe.useState(""), [S, w] = fe.useState(""), [N, D] = fe.useState(""), [T, R] = fe.useState(""), [k, U] = fe.useState(0), [W, q] = fe.useState("yellow28"), [numberFontSize, setNumberFontSize] = fe.useState(28), [contentMode, setContentMode] = fe.useState("withStatements"), [nt, j] = fe.useState(false);
+  const l = fe.useRef(), f = fe.useRef(null), [A, h] = fe.useState(() => Xo.get("bbh-gemini-model-v2", Dv)), [p, v] = fe.useState(null), [d, s] = fe.useState(""), [u, m] = fe.useState(null), [C, y] = fe.useState(25), [examMode, setExamMode] = fe.useState("fixed"), [rangeStart, setRangeStart] = fe.useState(""), [rangeEnd, setRangeEnd] = fe.useState(""), [S, w] = fe.useState(""), [N, D] = fe.useState(""), [T, R] = fe.useState(""), [k, U] = fe.useState(0), [W, q] = fe.useState("yellow28"), [numberFontSize, setNumberFontSize] = fe.useState(28), [numberSuffix, setNumberSuffix] = fe.useState(false), [contentMode, setContentMode] = fe.useState("withStatements"), [nt, j] = fe.useState(false);
   fe.useEffect(() => () => f.current?.abort(), []), fe.useEffect(() => {
     Xo.set("bbh-gemini-api-key", "");
   }, []), fe.useEffect(() => {
@@ -12532,9 +12532,9 @@ function My() {
       try {
         const K = Fu({ ...u, ...selection });
         K.questions.sort((ht, Ct) => Number(ht.number) - Number(Ct.number));
-        const F = Sv(K, { numberStyle: W, numberFontSize, contentMode });
+        const F = Sv(K, { numberStyle: W, numberFontSize, numberSuffix, contentMode });
         if (F.length && !window.confirm(`${F.join(", ")}\uBC88 \uBB38\uD56D\uC740 2\uD398\uC774\uC9C0\uB97C \uCD08\uACFC\uD569\uB2C8\uB2E4. \uADF8\uB798\uB3C4 \uB2E4\uC6B4\uB85C\uB4DC\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?`)) return;
-        const { blob: P, slideCount: yt } = await Ey(K, { numberStyle: W, numberFontSize, contentMode }), E = URL.createObjectURL(P), X = document.createElement("a");
+        const { blob: P, slideCount: yt } = await Ey(K, { numberStyle: W, numberFontSize, numberSuffix, contentMode }), E = URL.createObjectURL(P), X = document.createElement("a");
         X.href = E, X.download = `${u.title.replace(/[\\/:*?"<>|]/g, "_") || "\uBAA8\uC758\uACE0\uC0AC"}_\uBB38\uD56D\uBCC4.pptx`, document.body.appendChild(X), X.click(), X.remove(), setTimeout(() => URL.revokeObjectURL(E), 3e4), R(`${targetCount}\uBB38\uD56D \xB7 ${yt}\uC7A5 PPTX\uB97C \uB9CC\uB4E4\uC5C8\uC2B5\uB2C8\uB2E4.`);
       } catch (K) {
         D(K.message);
@@ -12582,7 +12582,8 @@ function My() {
   at.jsxs("label", { className: `style-option ${W === "white3" ? "selected" : ""}`, children: [at.jsx("input", { type: "radio", name: "numberStyle", checked: W === "white3", onChange: () => q("white3") }),
   at.jsx("strong", { children: "001" }),
   at.jsxs("span", { children: ["\uD770\uC0C9 3\uC790\uB9AC", at.jsx("small", { children: "\uC608: 001, 025" })] })] }),
-  at.jsxs("label", { className: "field", children: ["\uBC88\uD638 \uAE00\uC790 \uD06C\uAE30", at.jsx("select", { value: numberFontSize, onChange: (K) => setNumberFontSize(Number(K.target.value)), children: [20, 24, 28, 32, 36, 40, 44, 48].map((K) => at.jsxs("option", { value: K, children: [K, "pt"] }, K)) })] }),
+  at.jsxs("label", { className: "field", children: ["\uBC88\uD638 \uAE00\uC790 \uD06C\uAE30", at.jsx("select", { value: numberFontSize, onChange: (K) => setNumberFontSize(Number(K.target.value)), children: [20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48].map((K) => at.jsxs("option", { value: K, children: [K, "pt"] }, K)) })] }),
+  at.jsxs("label", { className: "field", children: [at.jsx("input", { type: "checkbox", checked: numberSuffix, onChange: (event) => setNumberSuffix(event.target.checked), style: { display: "inline-block", width: "auto", margin: "0 8px 0 0" } }), "번호 뒤에 번 붙이기 (01 → 01번)"] }),
   at.jsxs("label", { className: "field", children: ["PPT\uC5D0 \uB123\uC744 \uB0B4\uC6A9", at.jsxs("select", { value: contentMode, onChange: (K) => setContentMode(K.target.value), children: [at.jsx("option", { value: "contentOnly", children: "\uBC1C\uBB38+\uB0B4\uC6A9\uB9CC" }),
   at.jsx("option", { value: "withStatements", children: "\uBC1C\uBB38+\uB0B4\uC6A9+\u3131\xB7\u3134\xB7\u3137 \uBCF4\uAE30" })] })] }),
   at.jsx("p", { className: "help", children: "\uBC88\uD638\uB294 \uAE30\uBCF8 28pt\uC785\uB2C8\uB2E4. \uBCF8\uBB38\uC740 24pt\uB97C \uC720\uC9C0\uD558\uBA70, \uBCF4\uAE30 \uC81C\uC678\uB97C \uC120\uD0DD\uD574\uB3C4 \uBD84\uC11D\xB7\uD3B8\uC9D1 \uB370\uC774\uD130\uC5D0\uB294 \u3131\xB7\u3134\xB7\u3137\uC774 \uB0A8\uC544 \uC788\uC2B5\uB2C8\uB2E4." }),
@@ -12604,7 +12605,7 @@ function My() {
   at.jsx("button", { "aria-label": `${F + 1}\uBC88\uC9F8 \uD14D\uC2A4\uD2B8 \uC0AD\uC81C`, onClick: () => b({ blocks: z.blocks.filter((P, yt) => yt !== F) }), children: "\uC0AD\uC81C" })] }), K.kind === "table" ? at.jsx(Ry, { block: K, onChange: (P) => V(F, P) }) : at.jsx(_y, { label: `${F + 1}. ${Mp[K.kind]}`, value: K.text, onChange: (P) => V(F, { text: P }) })] }, F)), at.jsx("button", { className: "add-block", onClick: () => b({ blocks: [...z.blocks, { kind: "text", text: "" }] }), children: "\uBCF8\uBB38 \uC0C1\uC790 \uCD94\uAC00" }),
   at.jsx("p", { className: "help", children: "\uC9C8\uBB38 \uBB38\uC7A5\uACFC \u2460~\u2464 \uC120\uD0DD\uC9C0\uB294 \uC81C\uC678\uB429\uB2C8\uB2E4. \uD45C\uB294 2\uD589\xD73\uC5F4\uC758 \uBE48 \uD3B8\uC9D1 \uD45C\uB85C \uB9CC\uB4E4\uACE0, `(\uB2E8, \u2026)` \uC870\uAC74\uC740 \uC6B0\uCE21 \uD558\uB2E8 18pt \uD55C \uC904\uB85C \uBC30\uCE58\uD569\uB2C8\uB2E4." }),
   at.jsxs("label", { className: "field", children: ["\uADF8\uB9BC\xB7\uC218\uC2DD \uBCF4\uCDA9 \uBA54\uBAA8", at.jsx("textarea", { rows: 2, value: z.visual_note, onChange: (K) => b({ visual_note: K.target.value }) })] }), z.warnings?.length > 0 && at.jsx("div", { className: "notice warning", children: z.warnings.map((K, F) => at.jsx("div", { children: K }, F)) })] }) }),
-  at.jsx(zy, { question: z, numberStyle: W, numberFontSize, contentMode })] }) })] })] }) : at.jsxs("div", { className: "empty", children: [at.jsxs("h1", { children: ["\uBB38\uD56D\uC744 \uC77D\uACE0, \uCCA8\uC790\uB97C \uD655\uC778\uD558\uACE0,", at.jsx("br", {}), "PPT\uB85C \uB0B4\uB824\uBC1B\uC73C\uC138\uC694."] }),
+  at.jsx(zy, { question: z, numberStyle: W, numberFontSize, numberSuffix, contentMode })] }) })] })] }) : at.jsxs("div", { className: "empty", children: [at.jsxs("h1", { children: ["\uBB38\uD56D\uC744 \uC77D\uACE0, \uCCA8\uC790\uB97C \uD655\uC778\uD558\uACE0,", at.jsx("br", {}), "PPT\uB85C \uB0B4\uB824\uBC1B\uC73C\uC138\uC694."] }),
   at.jsx("p", { children: "\uC67C\uCABD\uC5D0\uC11C PDF\uC640 \uBB38\uD56D \uD615\uC2DD \uB610\uB294 \uBC88\uD638 \uBC94\uC704\uB97C \uC120\uD0DD\uD558\uBA74 \uC2DC\uC791\uD569\uB2C8\uB2E4." }),
   at.jsxs("div", { className: "sample-formula", children: ["H", at.jsx("sub", { children: "2" }), "O ", at.jsx("span", { children: "\xB7" }), " x", at.jsx("sup", { children: "2" }), " ", at.jsx("span", { children: "\xB7" }), " SO", at.jsx("sub", { children: "4" }),
   at.jsx("sup", { children: "2\u2212" })] }),

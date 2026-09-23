@@ -77,5 +77,5 @@ export function validateOptions(input = {}) {
     throw new UserError('번호 글자 크기는 20~48pt로 선택하세요.');
   const contentMode = input.contentMode ?? 'withStatements';
   if (!['contentOnly', 'withStatements'].includes(contentMode)) throw new UserError('PPT에 넣을 내용을 확인하세요.');
-  return { numberStyle, numberFontSize, contentMode };
+  return { numberStyle, numberFontSize, numberSuffix: input.numberSuffix === true, contentMode };
 }

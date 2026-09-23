@@ -23,8 +23,8 @@ export function planQuestion(q, inputOptions = {}) {
   flush();
   return pages.map((rows, page) => ({
     ...SLIDE, page: page + 1, pageCount: pages.length,
-    number: { text: String(q.number).padStart(options.numberStyle === 'white3' ? 3 : 2, '0'),
-      x: .12, y: .08, w: options.numberStyle === 'white3' ? 1.8 : 1.35, h: .85,
+    number: { text: String(q.number).padStart(options.numberStyle === 'white3' ? 3 : 2, '0') + (options.numberSuffix ? '번' : ''),
+      x: .12, y: .08, w: (options.numberStyle === 'white3' ? 1.8 : 1.35) + (options.numberSuffix ? options.numberFontSize / 72 : 0), h: .85,
       fontSize: options.numberFontSize,
       color: options.numberStyle === 'yellow28' ? 'FFFF00' : 'FFFFFF', fontFace: FONT },
     body: { ...BODY, h: rows.length * BODY.lineHeight + .12, lines: rows, fontFace: FONT, color: 'FFFFFF' },
