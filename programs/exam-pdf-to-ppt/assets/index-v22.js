@@ -12573,7 +12573,7 @@ function My() {
   };
   return at.jsxs("main", { children: [at.jsxs("header", { children: [at.jsxs("div", { className: "brand", children: [at.jsx("span", { className: "mark", children: "Q" }),
   at.jsxs("div", { children: [at.jsx("b", { children: "\uBB38\uD56D \uC2AC\uB77C\uC774\uB4DC \uC2A4\uD29C\uB514\uC624 v22" }),
-  at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v21" })] })] }),
+  at.jsx("small", { children: "PDF\uC5D0\uC11C \uD3B8\uC9D1 \uAC00\uB2A5\uD55C PPT\uB85C \xB7 \uBC30\uD3EC v22" })] })] }),
   at.jsxs("div", { className: "spec", children: [at.jsx("span", { children: "4:3" }),
   at.jsx("span", { children: "210 M\uACE0\uB515 070" }),
   at.jsx("span", { children: "\uBCF8\uBB38 24pt" })] })] }),

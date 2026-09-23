@@ -1,6 +1,6 @@
 # 문항 슬라이드 스튜디오
 
-이번 v21 수정본의 변경 내용과 배포 방법: [UPDATE_DEPLOY_KO.md](UPDATE_DEPLOY_KO.md)
+이번 v22 수정본의 변경 내용과 배포 방법: [UPDATE_DEPLOY_KO.md](UPDATE_DEPLOY_KO.md)
 
 공용 비밀번호로 로그인한 사용자만 이용할 수 있으며, Gemini API 키는 Cloudflare Worker Secret에만 저장됩니다. 배포 순서와 Secret 설정 방법은 [DEPLOY_PASSWORD.md](DEPLOY_PASSWORD.md)를 참고하세요.
 

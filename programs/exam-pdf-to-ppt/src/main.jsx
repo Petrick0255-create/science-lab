@@ -108,7 +108,7 @@ function App() {
     if (!window.confirm(`${q.number}번 문항을 편집 목록에서 삭제할까요?`)) return;
     setData(d => ({ ...d, questions: d.questions.filter((_, i) => i !== selected) })); setSelected(Math.max(0, selected - 1));
   };
-  return <main><header><div className="brand"><span className="mark">Q</span><div><b>문항 슬라이드 스튜디오</b><small>PDF에서 편집 가능한 PPT로</small></div></div><div className="spec"><span>4:3</span><span>210 M고딕 070</span><span>본문 24pt</span></div></header>
+  return <main><header><div className="brand"><span className="mark">Q</span><div><b>문항 슬라이드 스튜디오 v22</b><small>PDF에서 편집 가능한 PPT로</small></div></div><div className="spec"><span>4:3</span><span>210 M고딕 070</span><span>본문 24pt</span></div></header>
     <div className="workspace"><aside><fieldset disabled={Boolean(busy)}><legend>원본과 출력 설정</legend>
       <h2>01 원본 PDF</h2><button className="drop" onClick={() => input.current.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files[0]); }}><b>{file ? file.name : 'PDF를 놓거나 선택하세요'}</b><small>{file ? `${(file.size / 1048576).toFixed(1)} MB` : '최대 10MB · PDF 파일 붙여넣기 가능'}</small></button>
       <input ref={input} hidden type="file" accept=".pdf,application/pdf" onChange={e => { choose(e.target.files[0]); e.target.value = ''; }} />
