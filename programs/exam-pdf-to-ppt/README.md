@@ -1,3 +1,7 @@
+# v23 그림 캡처 추가
+
+기존 글자 추출 기능을 유지한 그림 캡처 추가 버전입니다. 배포와 사용 방법은 [V23_DEPLOY_KO.md](V23_DEPLOY_KO.md)를 먼저 확인하세요.
+
 # 문항 슬라이드 스튜디오
 
 이번 v22 수정본의 변경 내용과 배포 방법: [UPDATE_DEPLOY_KO.md](UPDATE_DEPLOY_KO.md)

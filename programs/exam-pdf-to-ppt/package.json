@@ -9,7 +9,8 @@
     "build:v22": "node scripts/build-v22.js",
     "preview": "vite preview",
     "test": "node --test test/*.test.js",
-    "check": "npm test && vite build"
+    "check": "npm test && vite build",
+    "build:v23": "node scripts/build-v23.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",
@@ -21,5 +22,7 @@
     "jszip": "^3.10.1",
     "vite": "^7.1.5"
   },
-  "engines": { "node": ">=22.12.0" }
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }
