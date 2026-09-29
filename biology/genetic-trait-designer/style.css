@@ -31,54 +31,13 @@ body{
   font-family:var(--jb-font);
 }
 
-header{
-  height:68px;
-  background:var(--jb-header);
-  border-bottom:1px solid rgba(151,171,214,.12);
-  color:#f4f7ff;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 24px;
-}
-
-.logo{
-  width:34px;
-  height:34px;
-  border-radius:10px;
-  background:white;
-  object-fit:cover;
-}
-
-.brand{
-  font-size:22px;
-  font-weight:900;
-  letter-spacing:-.04em;
-}
-
-.badge{
-  background:rgba(39,140,255,.1);
-  color:#72d8ff;
-  border:1px solid rgba(85,183,255,.55);
-  padding:4px 8px;
-  border-radius:7px;
-  font-size:11px;
-  font-weight:850;
-  letter-spacing:.1em;
-}
-
-.title{
-  margin-left:10px;
-  color:#8d9ab7;
-  font-size:15px;
-  font-weight:750;
-}
-
 main{
   display:grid;
   grid-template-columns:330px 1fr;
   gap:18px;
-  padding:18px;
+  max-width:1236px;
+  margin:0 auto;
+  padding:24px 18px 40px;
 }
 
 .panel,.box{
@@ -285,6 +244,3 @@ button.secondary:hover{
   accent-color:var(--jb-primary);
 }
 
-.logo{
-  background:linear-gradient(135deg,var(--jb-violet),var(--jb-primary));
-}

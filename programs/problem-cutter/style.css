@@ -37,11 +37,10 @@ input{
 }
 
 .app{
-  min-height:100vh;
   display:flex;
   justify-content:center;
-  align-items:center;
-  padding:30px;
+  align-items:flex-start;
+  padding:32px 20px 48px;
 }
 
 .panel{
@@ -53,32 +52,6 @@ input{
   border:1px solid var(--jb-line);
   box-shadow:0 22px 65px rgba(0,0,0,.3);
   backdrop-filter:blur(15px);
-}
-
-.badge{
-  display:inline-block;
-  margin-bottom:16px;
-  padding:4px 8px;
-  border:1px solid rgba(85,183,255,.55);
-  border-radius:7px;
-  background:rgba(39,140,255,.1);
-  color:#72d8ff;
-  font-size:11px;
-  font-weight:850;
-  letter-spacing:.1em;
-}
-
-h1{
-  font-size:36px;
-  font-weight:900;
-  letter-spacing:-.05em;
-  margin-bottom:14px;
-}
-
-p{
-  color:var(--jb-muted);
-  line-height:1.7;
-  margin-bottom:24px;
 }
 
 input[type="file"]{
@@ -151,14 +124,3 @@ button:disabled{
   font-size:14px;
 }
 
-.back{
-  display:block;
-  margin-top:22px;
-  color:var(--jb-muted);
-  text-decoration:none;
-  font-size:14px;
-}
-
-.back:hover{
-  color:#8edfff;
-}

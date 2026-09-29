@@ -6,19 +6,35 @@
   <meta name="description" content="모의고사 문항 기록, 유형 비교, 정답 분포 분석">
   <title>J&amp;B 모의고사 기록·비교·분석</title>
   <link rel="stylesheet" href="./analysis.css">
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <header class="jb-header">
-    <a href="../../index.html" class="jb-logo"><span class="jb-brand">J&amp;B</span><span class="jb-badge">LAB</span></a>
-    <div class="jb-title">모의고사 기록·비교·분석</div>
-    <nav class="jb-nav" aria-label="도구 이동">
-      <a class="jb-nav-link" href="./index.html">문항 검색</a>
-      <a class="jb-nav-link active" href="./answer-analysis.html">모의고사 분석</a>
-      <a href="../../index.html" class="jb-home">J&amp;B 홈으로</a>
-    </nav>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">프로그램 · 모의고사 기록·분석</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
   </header>
 
-  <main class="container">
+  <section class="jb-banner jb-banner--program">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">PROGRAM · 프로그램</p>
+        <h1 class="jb-banner-title">모의고사 기록·비교·분석</h1>
+        <p class="jb-banner-desc">문항을 기록하면 비교표와 분석 결과가 자동으로 만들어집니다.</p>
+      </div>
+      <div class="jb-banner-actions">
+        <a class="jb-nav-link" href="./index.html">문항 검색</a>
+        <a class="jb-nav-link active" href="./answer-analysis.html" aria-current="page">모의고사 분석</a>
+      </div>
+    </div>
+  </section>
+
+<main class="container">
     <section class="tool-head">
       <div><span>MOCK EXAM ARCHIVE</span><h1>모의고사 문항 기록</h1><p>문항을 기록하면 비교표와 분석 결과가 자동으로 만들어집니다.</p></div>
       <div id="totalStatus" class="total-status">0개 모의고사 · 0문항</div>

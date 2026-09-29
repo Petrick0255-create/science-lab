@@ -9,25 +9,9 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+  font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
   background:#f4f7fb;
   color:#111827;
-}
-header{
-  background:linear-gradient(135deg,#064e3b,#166534);
-  color:white;
-  padding:14px;
-  text-align:center;
-  font-weight:900;
-  line-height:1.5;
-}
-.home{
-  display:inline-block;
-  color:white;
-  text-decoration:none;
-  font-size:13px;
-  margin-top:5px;
-  opacity:.85;
 }
 .container{
   max-width:1220px;
@@ -138,14 +122,31 @@ th{background:#f3f4f6}
   canvas{height:460px}
 }
 </style>
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 
 <body>
 
-<header>
-  🧬 단백질 구조와 유전자 정보 탐구<br>
-  <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
-</header>
+<header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">생명과학 · 단백질 구조와 유전자 정보 탐구</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
+  </header>
+
+  <section class="jb-banner jb-banner--biology">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">LIFE SCIENCE · 생명과학</p>
+        <h1 class="jb-banner-title">단백질 구조와 유전자 정보 탐구</h1>
+        <p class="jb-banner-desc">대표 단백질을 살펴보거나 나만의 단백질을 만들어 구조와 유전자 정보를 탐구합니다.</p>
+      </div>
+    </div>
+  </section>
 
 <div class="container">
 

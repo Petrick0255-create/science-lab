@@ -6,38 +6,8 @@
 <title>중화반응 그래프</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",Arial,sans-serif;background:#eef3f8;color:#111}
-header{
-  background:#1f2937;
-  color:white;
-  text-align:center;
-  padding:18px 12px 16px;
-}
-header .title{
-  font-size:24px;
-  font-weight:900;
-  letter-spacing:-.3px;
-}
-header .subtitle{
-  margin-top:5px;
-  font-size:14px;
-  font-weight:700;
-  color:#d1d5db;
-}
-header .home{
-  display:inline-block;
-  margin-top:9px;
-  color:white;
-  font-size:13px;
-  font-weight:800;
-  text-decoration:none;
-  opacity:.9;
-}
-header .home:hover{
-  opacity:1;
-  text-decoration:underline;
-}
-.container{max-width:1280px;margin:0 auto;padding:12px}.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+body{margin:0;font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;background:#eef3f8;color:#111}
+.container{max-width:1224px;margin:0 auto;padding:12px}.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}label{display:block;font-size:12px;font-weight:900;margin-bottom:4px;color:#222}
 select,input,button{width:100%;min-height:36px;border:1px solid #cfd4dc;border-radius:8px;padding:6px 8px;font-size:14px;background:#fff}
 button{border:none;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}.dark{background:#111827}.gray{background:#4b5563}.green{background:#0f766e}
@@ -48,13 +18,30 @@ button{border:none;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
 .ion{position:absolute;font-family:Cambria,"Times New Roman",serif;font-size:27px;line-height:1;color:#111}.ion.blue{color:#1686bd}.result-tag{position:absolute;right:280px;top:98px;font-size:14px;font-weight:900;color:#555}.graphs{display:grid;grid-template-columns:repeat(2,520px);justify-content:center;gap:24px;margin-top:14px}.graph-box{background:#fff}.graph-title{text-align:center;font-weight:900;margin-bottom:8px;font-size:16px}canvas{width:100%;background:#fff;border:1px solid #ddd}.small{font-size:13px;color:#444;line-height:1.55}.note{margin-top:8px;font-size:12px;color:#555}
 @media(max-width:1120px){.grid,.graphs{grid-template-columns:1fr}.beaker-scene{max-width:620px}.beaker.left{left:50px}.beaker.right{right:50px}.left-name{left:50px}.right-name{right:50px}.drop-label{left:55px}.down-arrow{left:138px}.result-tag{right:80px}.mix-arrow{width:44px}}
 </style>
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-<header>
-  <div class="title">중화반응 그래프</div>
-  <div class="subtitle">평가원 스타일 중화반응 그래프 제작 도구</div>
-  <a class="home" href="../../index.html">← J&B LAB 홈으로</a>
-</header>
+<header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">화학 · 중화 반응 그래프</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
+  </header>
+
+  <section class="jb-banner jb-banner--chemistry">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">CHEMISTRY · 화학</p>
+        <h1 class="jb-banner-title">중화반응 그래프</h1>
+        <p class="jb-banner-desc">평가원 스타일 중화반응 그래프 제작 도구</p>
+      </div>
+    </div>
+  </section>
+
 <div class="container">
   <div class="card grid">
     <div><label>산 선택</label><select id="acidPreset"><option value="HCl" selected>HCl</option><option value="HA">HA</option><option value="H2A">H₂A</option></select></div>
