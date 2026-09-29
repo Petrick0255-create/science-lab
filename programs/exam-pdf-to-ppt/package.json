@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "node --test test/*.test.js",
     "check": "npm test && vite build",
-    "build:v23": "node scripts/build-v23.js"
+    "build:v23": "node scripts/build-v23.js",
+    "build:v24": "node scripts/build-v24.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",

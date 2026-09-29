@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import JSZip from 'jszip';
-import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools.js';
+import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools-v24.js';
 import {sampleExam} from './fixtures.js';
 function api(version) {
  const source=fs.readFileSync(new URL(`../assets/index-${version}.js`,import.meta.url),'utf8');
@@ -11,10 +11,10 @@ function api(version) {
  vm.runInContext(source.slice(source.indexOf('var Fo =')).replaceAll('import.meta.url','"file:///bundle.js"').replace(/ov\.createRoot\(document\.getElementById\("root"\)\)\.render\(at\.jsx\(My, \{\}\)\);\s*$/,'')+'\nglobalThis.api={plan:Ku,create:Ey,prompt:Tv,parse:_v,validate:Fu,request:Rv};',context);
  return context.api;
 }
-const old=api('v22'),current=api('v23');
+const old=api('v22'),current=api('v24');
 const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9XcAAAAASUVORK5CYII=';
 const image={id:'test',label:'구리 정육면체',data:pixel,width:200,height:160};
-test('v23 leaves the transcription prompt, parser, validator and request unchanged',()=>{
+test('v24 leaves the transcription prompt, parser, validator and request unchanged',()=>{
  assert.equal(current.prompt,old.prompt);
  for(const key of ['parse','validate','request'])assert.equal(current[key].toString(),old[key].toString());
  const q=sampleExam(20).questions[0];

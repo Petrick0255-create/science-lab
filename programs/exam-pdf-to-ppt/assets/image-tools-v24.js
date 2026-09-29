@@ -1,5 +1,5 @@
 // v24: find embedded PDF images locally before asking a model for coordinates.
-import {findPdfFigures} from './pdf-figures.js';
+import {findPdfFigures,verifyFigureOwnership} from './pdf-figures.js';
 const sessions = new WeakMap();
 export function normalizeBox(box) {
   if (!Array.isArray(box) || box.length !== 4 || !box.every(Number.isFinite)) throw Error('그림 좌표를 읽지 못했습니다.');
@@ -98,8 +98,10 @@ page는 파일의 실제 1부터 시작하는 페이지 번호다. box는 페이
   const schema={type:'object',properties:{figures:{type:'array',items:{type:'object',properties:{question:{type:'string'},page:{type:'integer'},box:{type:'array',items:{type:'number'}},label:{type:'string'}},required:['question','page','box','label']}}},required:['figures']};
   const response=await fetch(new URL('./api/analyze',window.location.href),{method:'POST',headers:{'Content-Type':'application/json'},signal,body:JSON.stringify({model,documentData:data,instruction,schema})});
   if(!response.ok) {let msg;try{msg=(await response.json()).error;}catch{}throw Error(msg || `그림 찾기 요청 실패 (${response.status})`);}
-  const {figures,skipped}=parseFigureResponse(await response.json(),doc.questions,session.pdf.numPages);
-  if(!figures.length)throw Error('그림 영역이 0개로 반환되었습니다. 문항 그림에서 PDF 직접 캡처를 이용하세요.');
+  const parsed=parseFigureResponse(await response.json(),doc.questions,session.pdf.numPages);
+  const figures=await verifyFigureOwnership(session,parsed.figures,doc.questions);
+  const skipped=parsed.skipped+parsed.figures.length-figures.length;
+  if(!figures.length)throw Error('해당 문항 안에 온전히 포함된 그림 영역을 확인하지 못했습니다. 잘못된 그림은 넣지 않았습니다. PDF 직접 캡처를 이용하세요.');
   const result=new Map();let failed=skipped;
   for(let i=0;i<figures.length;i++) {
     if(signal?.aborted) throw new DOMException('취소됨','AbortError');
