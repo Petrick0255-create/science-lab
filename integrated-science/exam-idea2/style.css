@@ -2497,6 +2497,7 @@ main {
 
 @media (max-width: 640px) {
   .site-header .header-inner {
+    min-height: 51px;
     padding: 0 16px;
   }
 

@@ -46,7 +46,7 @@ button{cursor:pointer}
 h1{margin:0;font-size:34px;font-weight:850;letter-spacing:-.045em}
 .header-copy{margin:8px 0 0;color:var(--muted);font-size:14px}
 .preset-box{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.preset-box>span{font-size:12px;color:var(--muted);font-weight:700;margin-right:2px}
-.workspace{max-width:1420px;margin:0 auto;padding:0 28px 40px;display:grid;grid-template-columns:520px minmax(0,1fr);gap:18px;align-items:start}
+.workspace{max-width:1256px;margin:0 auto;padding:24px 28px 40px;display:grid;grid-template-columns:520px minmax(0,1fr);gap:18px;align-items:start}
 .setup-column,.result-column{display:grid;gap:18px}.setup-column{position:sticky;top:12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--jb-radius-lg);box-shadow:var(--shadow);padding:20px}
 .panel-title{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin-bottom:16px}.panel-title.simple{grid-template-columns:1fr auto}.panel-title h2,.result-heading h2{margin:0;font-size:20px;letter-spacing:-.03em}.panel-title p{margin:4px 0 0;color:var(--muted);font-size:12px}

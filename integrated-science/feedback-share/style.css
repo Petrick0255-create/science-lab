@@ -136,7 +136,8 @@ button {
 /* 전체 레이아웃 */
 
 .layout {
-  height: calc(100vh - 64px);
+  height: calc(100vh - 168px);
+  min-height: 560px;
   display: grid;
   grid-template-columns: 300px minmax(580px, 1fr) 300px;
   overflow: hidden;
@@ -899,4 +900,12 @@ button {
 
 .feedback-card i.blue {
   background: var(--blue);
+}
+
+/* J&B LAB 공통 틀: 배너 안 연결 상태 */
+.jb-banner .connection {
+  margin-left: 0;
+  color: #e6ecfa;
+  font-size: 12px;
+  font-weight: 600;
 }

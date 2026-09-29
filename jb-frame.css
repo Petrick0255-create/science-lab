@@ -177,6 +177,76 @@
   word-break: keep-all;
 }
 
+/* 페이지 전용 버튼 (배너 오른쪽) */
+.jb-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.jb-banner .jb-banner-actions :is(button, a, .jb-banner-action) {
+  height: 36px;
+  margin: 0;
+  padding: 0 14px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #e6ecfa;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid rgba(151, 171, 214, .25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .06);
+  box-shadow: none;
+  transform: none;
+  filter: none;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.jb-banner .jb-banner-actions :is(button, a):hover {
+  border-color: rgba(85, 183, 255, .5);
+  background: rgba(39, 140, 255, .18);
+}
+
+.jb-banner .jb-banner-actions :is(button, a).jb-primary {
+  color: #ffffff;
+  border-color: #167dff;
+  background: #167dff;
+}
+
+.jb-banner .jb-banner-actions :is(button, a).jb-primary:hover {
+  border-color: #0b5fd1;
+  background: #0b5fd1;
+}
+
+.jb-banner .jb-banner-actions :is(button, a).is-active,
+.jb-banner .jb-banner-actions :is(button, a).active {
+  color: #ffffff;
+  border-color: rgba(85, 183, 255, .6);
+  background: rgba(39, 140, 255, .25);
+}
+
+.jb-banner .jb-banner-actions :is(button, a):disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.jb-banner-note {
+  color: #8d9ab7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* 과목 색 (허브 원형 메뉴와 동일) */
 .jb-banner--integrated { --jb-subject: #7667f1; --jb-subject-text: #a99fff; }
 .jb-banner--physics    { --jb-subject: #167dff; --jb-subject-text: #65c4ff; }
@@ -222,5 +292,15 @@
 
   .jb-banner-title {
     font-size: 23px;
+  }
+
+  .jb-banner-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .jb-banner-actions {
+    justify-content: flex-start;
   }
 }

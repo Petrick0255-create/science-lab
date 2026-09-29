@@ -10,9 +10,9 @@
       --line:#dce4ed;--bg:#f3f6f9;--paper:#fff;--red:#d95454;--green:#208769;
       --shadow:0 12px 34px rgba(16,36,63,.09)
     }
-    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 92% 0,rgba(184,222,67,.18),transparent 30rem),var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 92% 0,rgba(184,222,67,.18),transparent 30rem),var(--bg);color:var(--ink);font-family:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif}
     button,input{font:inherit}.top{height:7px;background:linear-gradient(90deg,var(--lime) 0 23%,var(--blue) 23%)}
-    .wrap{width:min(1240px,calc(100% - 32px));margin:auto;padding:32px 0 52px}
+    .wrap{width:min(1200px,calc(100% - 32px));margin:auto;padding:24px 0 52px}
     header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:22px}
     .brand{display:flex;align-items:center;gap:9px;color:var(--blue);font-weight:900}.logo{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--lime);color:var(--navy)}
     h1{margin:13px 0 8px;color:var(--navy);font-size:clamp(28px,4vw,42px);line-height:1.12;letter-spacing:-.045em}.sub{margin:0;color:var(--muted);line-height:1.7}
@@ -37,24 +37,36 @@
     @media(max-width:950px){header{display:block}.head-actions{justify-content:flex-start;margin-top:18px}.layout,.sim-layout{grid-template-columns:1fr}.input-card{position:static}.summary-grid{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:620px){.wrap{width:calc(100% - 20px);padding-top:23px}.tabs{display:grid;grid-template-columns:1fr}.inputs,.control-grid,.strand-pick{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr 1fr}.formula-grid{grid-template-columns:1fr}.stock-table{grid-template-columns:repeat(2,1fr)}.stock-cell:nth-child(4n){border-right:1px solid #9aa4af}.stock-cell:nth-child(2n){border-right:0}.stock-cell:nth-last-child(-n+4){border-bottom:1px solid #9aa4af}.stock-cell:nth-last-child(-n+2){border-bottom:0}.card{border-radius:16px}.input-card,.summary,.section,.draft{padding:17px}.sim-buttons{grid-template-columns:1fr}}
   </style>
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <div class="top"></div>
-  <main class="wrap">
-    <header>
-      <div>
-        <div class="brand"><span class="logo">J&amp;B</span> SCIENCE LAB</div>
-        <h1>DNA 전사 시뮬레이터</h1>
-        <p class="sub">DNA 부품 재고 문제 제작부터 두 가닥의 전사, 실제 코돈에 따른 번역까지 한 페이지에서 연결합니다.</p>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">생명과학 · DNA 전사 시뮬레이터</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
+  </header>
+
+  <section class="jb-banner jb-banner--biology">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">LIFE SCIENCE · 생명과학</p>
+        <h1 class="jb-banner-title">DNA 전사 시뮬레이터</h1>
+        <p class="jb-banner-desc">DNA 부품 재고 문제 제작부터 두 가닥의 전사, 실제 코돈에 따른 번역까지 한 페이지에서 연결합니다.</p>
       </div>
-      <div class="head-actions">
-        <a class="btn btn-main" href="../../index.html">← J&amp;B LAB 홈</a>
-        <button class="btn btn-lime" id="goodExample">좋은 문제 생성</button>
+      <div class="jb-banner-actions">
+        <button class="btn btn-lime jb-primary" id="goodExample">좋은 문제 생성</button>
         <button class="btn btn-light" id="imageExample">사진 예시 입력</button>
         <button class="btn btn-light" id="reset">초기화</button>
       </div>
-    </header>
+    </div>
+  </section>
 
+  <main class="wrap">
     <nav class="tabs" aria-label="기능 선택">
       <button class="tab active" data-tab="stockPanel">모형 X 문제 제작</button>
       <button class="tab" data-tab="strandPanel">가닥 Ⅰ·Ⅱ 전사</button>
