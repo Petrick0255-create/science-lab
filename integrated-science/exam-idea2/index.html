@@ -18,6 +18,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../../jb-frame.css" />
     <script src="config.js" defer></script>
     <script src="app.js" defer></script>
   </head>
@@ -27,14 +28,10 @@
 
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="./" aria-label="J&B LAB 홈">
-          <span class="brand-mark" aria-hidden="true">
-            <span>J</span><i>&amp;</i><span>B</span>
-          </span>
-          <span class="brand-text">
-            <strong>J&amp;B LAB</strong>
-            <small>SCIENCE CONTENT STUDIO</small>
-          </span>
+        <a class="brand jb-top-brand" href="./" aria-label="J&B LAB 홈">
+          <img class="jb-top-logo" src="../../logo.png" alt="">
+          <span class="jb-top-name">J&amp;B</span>
+          <span class="jb-top-badge">LAB</span>
         </a>
 
         <nav class="main-nav" aria-label="주요 기능">
@@ -59,13 +56,7 @@
         <button class="api-setting-button" id="apiSettingButton" type="button">
           시트 연동 설정
         </button>
-        <a
-          class="jnb-home-button"
-          href="https://science-lab1.parkjunbum0255.workers.dev/"
-          aria-label="J&B 홈으로"
-        >
-          J&amp;B 홈으로
-        </a>
+        <a class="jnb-home-button jb-top-home" href="https://science-lab1.parkjunbum0255.workers.dev/" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
       </div>
     </header>
 

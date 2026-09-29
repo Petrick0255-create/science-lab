@@ -5,22 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>금속 산화·환원 문항 제작기</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">J&amp;B LAB · REDOX MAKER</p>
-      <h1>금속 산화·환원 문항 제작기</h1>
-      <p class="header-copy">처음 수용액을 정하고 금속을 넣으면 반응 후 이온 수, 비율, 입자 모형을 바로 계산합니다.</p>
-    </div>
-    <div class="preset-box">
-      <span>예시 바로 시작</span>
-      <button data-preset="abc">A~C 2단계</button>
-      <button data-preset="agcu">AgNO₃ + Cu</button>
-      <button data-preset="xy">XClₐ + Y</button>
-      <button id="resetBtn" class="quiet danger">초기화</button>
-    </div>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">화학 · 산화와 환원</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
   </header>
+
+  <section class="jb-banner jb-banner--chemistry">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">CHEMISTRY · 화학</p>
+        <h1 class="jb-banner-title">금속 산화·환원 문항 제작기</h1>
+        <p class="jb-banner-desc">처음 수용액을 정하고 금속을 넣으면 반응 후 이온 수, 비율, 입자 모형을 바로 계산합니다.</p>
+      </div>
+      <div class="jb-banner-actions">
+        <span class="jb-banner-note">예시 바로 시작</span>
+        <button data-preset="abc">A~C 2단계</button>
+        <button data-preset="agcu">AgNO₃ + Cu</button>
+        <button data-preset="xy">XClₐ + Y</button>
+        <button id="resetBtn" class="quiet danger">초기화</button>
+      </div>
+    </div>
+  </section>
 
   <main class="workspace">
     <section class="setup-column">

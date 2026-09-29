@@ -9,11 +9,34 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script type="module" src="app.js"></script>
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <header><a class="brand" href="../../">J&amp;B <span>LAB</span></a><span class="header-note">SCIENCE SHORTS STUDIO</span><button id="settings-toggle" class="quiet" aria-expanded="false" aria-controls="settings">연결 설정</button></header>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">프로그램 · 과학 쇼츠 작업실</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
+  </header>
+
+  <section class="jb-banner jb-banner--program">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">PROGRAM · 프로그램</p>
+        <h1 class="jb-banner-title">과학 쇼츠 작업실</h1>
+        <p class="jb-banner-desc">하나의 과학 원리, 1분의 이야기. 주제를 고르면 1분 분량의 쇼츠 대본을 만들어 DB에 저장합니다.</p>
+      </div>
+      <div class="jb-banner-actions">
+        <button id="settings-toggle" class="quiet" aria-expanded="false" aria-controls="settings">연결 설정</button>
+      </div>
+    </div>
+  </section>
+
   <main>
-    <section class="intro"><div><p class="eyebrow">관찰에서 시작해, 여운으로 끝나는</p><h1>과학 쇼츠 작업실<span class="spark">✳</span></h1><p class="lead">하나의 과학 원리, 1분의 이야기.</p></div><div class="duration-seal"><strong>60</strong><span>SECONDS<br>OF SCIENCE</span></div></section>
     <section id="settings" class="panel settings" hidden aria-labelledby="settings-heading">
       <h2 id="settings-heading">연결 설정</h2>
       <div class="settings-grid"><label>Gemini API 키<input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Gemini API 키를 입력하세요"></label><label>Google OAuth 클라이언트 ID<input id="client-id" autocomplete="off" spellcheck="false" placeholder="…apps.googleusercontent.com"></label></div>

@@ -6,20 +6,31 @@
   <meta name="description" content="물리학·화학·생명과학·지구과학·통합과학 모의고사 문항 검색">
   <title>J&amp;B 통합 모의고사 문항 검색</title>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <header class="jb-header">
-    <a href="../../index.html" class="jb-logo"><span class="jb-brand">J&amp;B</span><span class="jb-badge">LAB</span></a>
-    <div class="jb-title">통합 모의고사 문항 검색기</div>
-    <a href="../../index.html" class="jb-home">J&amp;B 홈으로</a>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">프로그램 · 유형별 문항 검색기</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>문제 속 단어로 문항 찾기</h1>
-      <p>발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.<br>문항 이미지는 로컬 PNG로 미리 보고, 문제·해설 PDF는 Drive 또는 로컬 파일로 바로 연결합니다.</p>
-    </section>
+  <section class="jb-banner jb-banner--program">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">PROGRAM · 프로그램</p>
+        <h1 class="jb-banner-title">문제 속 단어로 문항 찾기</h1>
+        <p class="jb-banner-desc">발문·보기·선지·유형·해설의 키워드를 검색합니다. 여러 단어를 입력하면 모두 포함된 문항을 찾습니다.</p>
+      </div>
+    </div>
+  </section>
 
+  <main class="container">
     <section class="control-panel">
       <form id="searchForm" class="search-row" role="search">
         <label class="sr-only" for="searchInput">검색어</label>

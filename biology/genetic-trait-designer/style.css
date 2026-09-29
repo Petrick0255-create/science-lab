@@ -1,60 +1,50 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* J&B LAB design tokens */
+:root{
+  --jb-header:#070b18;
+  --jb-bg:#f3f6fb;
+  --jb-surface:#ffffff;
+  --jb-surface-soft:#f6f8fc;
+  --jb-line:#e1e7f1;
+  --jb-ink:#0d1429;
+  --jb-ink-2:#334060;
+  --jb-muted:#6b7794;
+  --jb-primary:#167dff;
+  --jb-primary-deep:#0b5fd1;
+  --jb-primary-soft:#eaf3ff;
+  --jb-mint:#00a896;
+  --jb-violet:#7667f1;
+  --jb-radius-sm:10px;
+  --jb-radius:14px;
+  --jb-radius-lg:20px;
+  --jb-shadow:0 10px 30px rgba(13,20,41,.07);
+  --jb-font:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+}
+
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  background:#eef3f8;
-  color:#1f2937;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;
-}
-
-header{
-  height:66px;
-  background:#1f3b57;
-  color:white;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 24px;
-}
-
-.logo{
-  width:34px;
-  height:34px;
-  border-radius:10px;
-  background:white;
-}
-
-.brand{
-  font-size:23px;
-  font-weight:900;
-}
-
-.badge{
-  background:#4fd1c5;
-  color:#10202a;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:900;
-}
-
-.title{
-  margin-left:10px;
-  font-size:18px;
-  font-weight:800;
+  background:var(--jb-bg);
+  color:var(--jb-ink);
+  font-family:var(--jb-font);
 }
 
 main{
   display:grid;
   grid-template-columns:330px 1fr;
   gap:18px;
-  padding:18px;
+  max-width:1236px;
+  margin:0 auto;
+  padding:24px 18px 40px;
 }
 
 .panel,.box{
   background:white;
-  border-radius:20px;
-  box-shadow:0 10px 28px rgba(15,23,42,.08);
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius-lg);
+  box-shadow:var(--jb-shadow);
   padding:18px;
 }
 
@@ -67,13 +57,15 @@ main{
 h2{
   margin:0 0 12px;
   font-size:19px;
+  font-weight:800;
+  letter-spacing:-.03em;
 }
 
 h3{
   margin:18px 0 9px;
   font-size:15px;
-  color:#1f3b57;
-  border-bottom:1px solid #e5e7eb;
+  color:var(--jb-primary-deep);
+  border-bottom:1px solid var(--jb-line);
   padding-bottom:6px;
 }
 
@@ -89,7 +81,7 @@ h3{
 }
 
 .check:hover{
-  background:#f1f5f9;
+  background:var(--jb-surface-soft);
 }
 
 .check input{
@@ -98,7 +90,7 @@ h3{
 
 .small{
   font-size:12px;
-  color:#64748b;
+  color:var(--jb-muted);
   margin-top:2px;
 }
 
@@ -110,7 +102,7 @@ h3{
   font-size:15px;
   font-weight:900;
   margin-bottom:10px;
-  color:#1f3b57;
+  color:var(--jb-primary-deep);
 }
 
 .example-card,.logic-card{
@@ -120,29 +112,29 @@ h3{
   font-size:14px;
   line-height:1.5;
   background:#fff;
-  border:1px solid #e5e7eb;
+  border:1px solid var(--jb-line);
 }
 
 .example-card{
-  border-left:6px solid #8b5cf6;
+  border-left:6px solid var(--jb-violet);
 }
 
 .good{border-left:6px solid #22c55e}
 .warn{border-left:6px solid #f59e0b}
 .bad{border-left:6px solid #ef4444}
-.info{border-left:6px solid #3b82f6}
+.info{border-left:6px solid var(--jb-primary)}
 
 svg{
   width:100%;
   height:430px;
   background:white;
   border-radius:14px;
-  border:1px solid #e5e7eb;
+  border:1px solid var(--jb-line);
 }
 
 .note{
   font-size:13px;
-  color:#475569;
+  color:var(--jb-ink-2);
   line-height:1.55;
 }
 
@@ -151,20 +143,20 @@ svg{
   justify-content:space-between;
   gap:12px;
   padding:9px 0;
-  border-bottom:1px dashed #e5e7eb;
+  border-bottom:1px dashed var(--jb-line);
   font-size:14px;
 }
 
 .result-line b{
-  color:#111827;
+  color:var(--jb-ink);
 }
 
 .tag{
   display:inline-block;
   padding:4px 9px;
   border-radius:999px;
-  background:#e0f2fe;
-  color:#075985;
+  background:var(--jb-primary-soft);
+  color:var(--jb-primary-deep);
   font-size:12px;
   font-weight:900;
 }
@@ -198,16 +190,18 @@ button{
   padding:11px;
   border:0;
   border-radius:12px;
-  background:#1f3b57;
+  background:var(--jb-primary);
   color:white;
-  font-weight:900;
+  font:inherit;
+  font-weight:800;
+  transition:background .2s ease;
   cursor:pointer;
   margin-top:12px;
 }
 
 button.secondary{
-  background:#e5edf5;
-  color:#1f2937;
+  background:#e8eef8;
+  color:var(--jb-ink);
 }
 
 .person-ref{
@@ -225,10 +219,10 @@ button.secondary{
   margin-top:8px;
   padding:9px 11px;
   border-radius:10px;
-  background:#f8fafc;
-  border:1px dashed #cbd5e1;
+  background:var(--jb-surface-soft);
+  border:1px dashed #cfd8e6;
   font-size:13px;
-  color:#334155;
+  color:var(--jb-ink-2);
 }
 
 @media(max-width:950px){
@@ -236,3 +230,17 @@ button.secondary{
     grid-template-columns:1fr;
   }
 }
+
+/* ===== J&B LAB unified overrides ===== */
+button:hover{
+  background:var(--jb-primary-deep);
+}
+
+button.secondary:hover{
+  background:#dde6f3;
+}
+
+.check input{
+  accent-color:var(--jb-primary);
+}
+

@@ -9,12 +9,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=2">
   <link rel="stylesheet" href="compare-preview.css">
+  <link rel="stylesheet" href="../../jb-frame.css">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="./index.html" aria-label="Exam Director 처음으로"><span class="brand-mark">E</span><span><strong>EXAM DIRECTOR</strong><small>MOCK EXAM MANAGER</small></span></a>
-    <div class="top-actions"><span id="saveState" class="save-state">로컬 준비됨</span><button class="button ghost" id="settingsBtn">연결 설정</button><button class="button primary" id="syncBtn">동기화</button></div>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
+    </a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">통합과학 · 모의고사 관리</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
   </header>
+
+  <section class="jb-banner jb-banner--integrated">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">INTEGRATED SCIENCE · 통합과학</p>
+        <h1 class="jb-banner-title">모의고사 관리</h1>
+        <p class="jb-banner-desc">모의고사 문항을 기록하고 시험별로 비교·분석합니다.</p>
+      </div>
+      <div class="jb-banner-actions">
+        <span id="saveState" class="save-state jb-banner-note">로컬 준비됨</span>
+        <button class="button ghost" id="settingsBtn">연결 설정</button>
+        <button class="button primary jb-primary" id="syncBtn">동기화</button>
+      </div>
+    </div>
+  </section>
 
   <main>
     <section class="page active" id="recordPage">
