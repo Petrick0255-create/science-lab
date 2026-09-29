@@ -37,32 +37,9 @@ input{
   font:inherit;
 }
 
-header{
-  height:68px;
-  background:var(--jb-header);
-  border-bottom:1px solid rgba(151,171,214,.12);
-  color:#f4f7ff;
-  display:flex;
-  align-items:center;
-  padding:0 24px;
-  gap:12px;
-}
-
-.logo{
-  font-size:22px;
-  font-weight:900;
-  letter-spacing:-.04em;
-}
-
-.title{
-  color:#8d9ab7;
-  font-size:15px;
-  font-weight:750;
-}
-
 main{
-  max-width:1200px;
-  margin:30px auto;
+  max-width:1240px;
+  margin:24px auto 40px;
   padding:0 20px;
 }
 
@@ -200,19 +177,3 @@ main{
 
 }
 
-.home-btn{
-  color:#e6ecfa;
-  text-decoration:none;
-  padding:8px 12px;
-  border:1px solid rgba(151,171,214,.22);
-  border-radius:var(--jb-radius-sm);
-  background:rgba(255,255,255,.08);
-  font-size:14px;
-  font-weight:700;
-  transition:.2s;
-}
-
-.home-btn:hover{
-  border-color:rgba(85,183,255,.5);
-  background:rgba(39,140,255,.18);
-}

@@ -5,25 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>판의 경계 시뮬레이터</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../../jb-frame.css">
   <link rel="icon" href="../../logo.png" />
 </head>
 
 <body>
-  <header>
-    <a href="../../index.html" class="home-link">
-      <img src="../../logo.png" class="logo" alt="J&B LAB" />
-      <div class="brand">J&B</div>
-      <div class="badge">LAB</div>
+  <header class="jb-top">
+    <a class="jb-top-brand" href="../../index.html" aria-label="J&amp;B LAB 허브">
+      <img class="jb-top-logo" src="../../logo.png" alt="">
+      <span class="jb-top-name">J&amp;B</span>
+      <span class="jb-top-badge">LAB</span>
     </a>
-    <a href="../../index.html" class="home-btn">J&B 홈으로</a>
+    <span class="jb-top-divider" aria-hidden="true"></span>
+    <span class="jb-top-page">지구과학 · 판의 경계 시뮬레이터</span>
+    <a class="jb-top-home" href="../../index.html" aria-label="허브로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>허브로</a>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>판의 경계 시뮬레이터</h1>
-      <p>발산형 · 보존형 · 수렴형 경계에서 판의 운동, 마그마 상승, 섭입, 지진 발생을 3D로 관찰합니다.</p>
-    </section>
+  <section class="jb-banner jb-banner--earth">
+    <div class="jb-banner-inner">
+      <div class="jb-banner-copy">
+        <p class="jb-banner-label">EARTH SCIENCE · 지구과학</p>
+        <h1 class="jb-banner-title">판의 경계 시뮬레이터</h1>
+        <p class="jb-banner-desc">발산형 · 보존형 · 수렴형 경계에서 판의 운동, 마그마 상승, 섭입, 지진 발생을 3D로 관찰합니다.</p>
+      </div>
+    </div>
+  </section>
 
+  <main class="container">
     <section class="layout">
       <aside class="panel">
         <h2>설정</h2>
