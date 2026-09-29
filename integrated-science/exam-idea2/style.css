@@ -2404,3 +2404,108 @@ main {
     font-size: 11px;
   }
 }
+
+/* ===== J&B LAB 공통 틀: 헤더 56px · 배너 ===== */
+.site-header {
+  background: #070b18;
+  border-bottom: 1px solid rgba(151, 171, 214, 0.14);
+}
+
+.site-header .header-inner {
+  width: auto;
+  min-height: 55px;
+  margin: 0;
+  padding: 0 32px;
+}
+
+.site-header .brand {
+  gap: 9px;
+}
+
+.main-nav {
+  margin-left: 32px;
+}
+
+.site-header .jnb-home-button {
+  margin-left: 12px;
+  padding: 0 13px;
+  color: #e6ecfa;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(151, 171, 214, 0.25);
+  box-shadow: none;
+  transform: none;
+}
+
+.site-header .jnb-home-button:hover {
+  background: rgba(39, 140, 255, 0.18);
+  border-color: rgba(85, 183, 255, 0.5);
+  transform: none;
+}
+
+.api-setting-button {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+}
+
+.hero {
+  background:
+    radial-gradient(circle at 12% -20%, rgba(118, 103, 241, 0.26), transparent 24rem),
+    #0d1429;
+  border-bottom: 3px solid #7667f1;
+}
+
+.hero::after,
+.hero-glow,
+.hero-index {
+  display: none;
+}
+
+.hero .hero-inner {
+  width: min(calc(100% - 64px), 1200px);
+  min-height: 109px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  padding: 14px 0;
+  box-sizing: border-box;
+}
+
+.hero .eyebrow {
+  color: #a99fff;
+  line-height: 1.2;
+}
+
+.hero h1 {
+  margin: 6px 0;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+
+.hero h1 br {
+  display: none;
+}
+
+.hero-description {
+  max-width: none;
+  color: #8d9ab7;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .site-header .header-inner {
+    padding: 0 16px;
+  }
+
+  .hero .hero-inner {
+    width: calc(100% - 32px);
+    padding: 18px 0;
+  }
+
+  .hero h1 {
+    font-size: 23px;
+  }
+}
