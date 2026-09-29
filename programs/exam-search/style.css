@@ -1,3 +1,24 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* J&B LAB design tokens */
+:root{
+  --jb-header:#070b18;
+  --jb-bg:#f3f6fb;
+  --jb-surface:#ffffff;
+  --jb-surface-soft:#f6f8fc;
+  --jb-line:#e1e7f1;
+  --jb-ink:#0d1429;
+  --jb-ink-2:#334060;
+  --jb-muted:#6b7794;
+  --jb-primary:#167dff;
+  --jb-primary-deep:#0b5fd1;
+  --jb-radius-sm:10px;
+  --jb-radius:14px;
+  --jb-radius-lg:20px;
+  --jb-shadow:0 10px 30px rgba(13,20,41,.07);
+  --jb-font:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+}
+
 *{
   margin:0;
   padding:0;
@@ -5,15 +26,22 @@
 }
 
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#eef3f8;
-  color:#222;
+  font-family:var(--jb-font);
+  background:var(--jb-bg);
+  color:var(--jb-ink);
+  letter-spacing:-.01em;
+}
+
+button,
+input{
+  font:inherit;
 }
 
 header{
-  height:60px;
-  background:#1f2d3d;
-  color:white;
+  height:68px;
+  background:var(--jb-header);
+  border-bottom:1px solid rgba(151,171,214,.12);
+  color:#f4f7ff;
   display:flex;
   align-items:center;
   padding:0 24px;
@@ -21,13 +49,15 @@ header{
 }
 
 .logo{
-  font-size:24px;
-  font-weight:800;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:-.04em;
 }
 
 .title{
-  font-size:18px;
-  font-weight:700;
+  color:#8d9ab7;
+  font-size:15px;
+  font-weight:750;
 }
 
 main{
@@ -37,19 +67,22 @@ main{
 }
 
 .search-card{
-  background:white;
-  border-radius:20px;
+  background:var(--jb-surface);
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius-lg);
   padding:30px;
-  box-shadow:0 6px 20px rgba(0,0,0,.08);
+  box-shadow:var(--jb-shadow);
 }
 
 .search-card h1{
   margin-bottom:10px;
   font-size:30px;
+  font-weight:850;
+  letter-spacing:-.04em;
 }
 
 .guide{
-  color:#666;
+  color:var(--jb-muted);
   line-height:1.7;
   margin-bottom:25px;
 }
@@ -62,30 +95,42 @@ main{
 #searchInput{
   flex:1;
   height:50px;
-  border:1px solid #ccd4dd;
-  border-radius:12px;
+  color:var(--jb-ink);
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius);
+  background:var(--jb-surface-soft);
   padding:0 15px;
   font-size:16px;
+  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+#searchInput:focus{
+  outline:none;
+  border-color:var(--jb-primary);
+  background:var(--jb-surface);
+  box-shadow:0 0 0 4px rgba(22,125,255,.12);
 }
 
 #searchBtn{
   width:120px;
   border:none;
-  border-radius:12px;
-  background:#1f2d3d;
+  border-radius:var(--jb-radius);
+  background:var(--jb-primary);
   color:white;
   font-size:16px;
   font-weight:700;
   cursor:pointer;
+  box-shadow:0 8px 20px rgba(22,125,255,.22);
+  transition:background .2s ease;
 }
 
 #searchBtn:hover{
-  background:#34495e;
+  background:var(--jb-primary-deep);
 }
 
 #searchInfo{
   margin-top:15px;
-  color:#444;
+  color:var(--jb-ink-2);
   line-height:1.7;
 }
 
@@ -95,14 +140,17 @@ main{
 
 .result-card{
   margin-top:25px;
-  background:white;
-  border-radius:20px;
+  background:var(--jb-surface);
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius-lg);
   padding:25px;
-  box-shadow:0 6px 20px rgba(0,0,0,.08);
+  box-shadow:var(--jb-shadow);
 }
 
 .result-card h2{
   margin-bottom:20px;
+  font-weight:800;
+  letter-spacing:-.03em;
 }
 
 .image-wrap{
@@ -111,8 +159,8 @@ main{
 
 #questionImage{
   max-width:100%;
-  border:1px solid #ddd;
-  border-radius:12px;
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius);
 }
 
 .button-wrap{
@@ -126,15 +174,17 @@ main{
 .pdf-btn{
   display:inline-block;
   padding:12px 20px;
-  background:#1f2d3d;
+  background:var(--jb-primary);
   color:white;
   text-decoration:none;
-  border-radius:12px;
+  border-radius:var(--jb-radius);
   font-weight:700;
+  box-shadow:0 8px 20px rgba(22,125,255,.2);
+  transition:background .2s ease;
 }
 
 .pdf-btn:hover{
-  background:#34495e;
+  background:var(--jb-primary-deep);
 }
 
 @media(max-width:700px){
@@ -151,14 +201,18 @@ main{
 }
 
 .home-btn{
-  color:white;
+  color:#e6ecfa;
   text-decoration:none;
   padding:8px 12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.15);
+  border:1px solid rgba(151,171,214,.22);
+  border-radius:var(--jb-radius-sm);
+  background:rgba(255,255,255,.08);
+  font-size:14px;
+  font-weight:700;
   transition:.2s;
 }
 
 .home-btn:hover{
-  background:rgba(255,255,255,.25);
+  border-color:rgba(85,183,255,.5);
+  background:rgba(39,140,255,.18);
 }
