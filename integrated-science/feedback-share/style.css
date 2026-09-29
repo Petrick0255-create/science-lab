@@ -1,14 +1,38 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* J&B LAB design tokens */
+:root{
+  --jb-header:#070b18;
+  --jb-bg:#f3f6fb;
+  --jb-surface:#ffffff;
+  --jb-surface-soft:#f6f8fc;
+  --jb-line:#e1e7f1;
+  --jb-ink:#0d1429;
+  --jb-ink-2:#334060;
+  --jb-muted:#6b7794;
+  --jb-primary:#167dff;
+  --jb-primary-deep:#0b5fd1;
+  --jb-primary-soft:#eaf3ff;
+  --jb-mint:#00a896;
+  --jb-violet:#7667f1;
+  --jb-radius-sm:10px;
+  --jb-radius:14px;
+  --jb-radius-lg:20px;
+  --jb-shadow:0 10px 30px rgba(13,20,41,.07);
+  --jb-font:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+}
+
 :root {
-  --navy: #081b35;
-  --blue: #246beb;
-  --blue-light: #eef5ff;
-  --teal: #0f9e91;
+  --navy: var(--jb-header);
+  --blue: var(--jb-primary);
+  --blue-light: var(--jb-primary-soft);
+  --teal: var(--jb-mint);
   --amber: #e99a05;
   --coral: #f25f4c;
-  --ink: #132238;
-  --muted: #738096;
-  --line: #d6dfea;
-  --surface: #f6f8fb;
+  --ink: var(--jb-ink);
+  --muted: var(--jb-muted);
+  --line: var(--jb-line);
+  --surface: var(--jb-bg);
 }
 
 * {
@@ -20,12 +44,7 @@ body {
   margin: 0;
   height: 100%;
   font-family:
-    Pretendard,
-    "Noto Sans KR",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+    var(--jb-font);
   color: var(--ink);
   background: var(--surface);
 }
@@ -45,8 +64,9 @@ button {
 
 .topbar {
   height: 64px;
-  background: linear-gradient(90deg, #06172f, #062248);
-  color: #fff;
+  background: var(--jb-header);
+  border-bottom: 1px solid rgba(151, 171, 214, 0.12);
+  color: #f4f7ff;
   display: flex;
   align-items: center;
   padding: 0 24px;
@@ -56,20 +76,23 @@ button {
 .logo {
   width: 34px;
   height: 34px;
-  background: var(--blue);
-  border-radius: 6px;
+  background: linear-gradient(135deg, var(--jb-violet), var(--jb-primary));
+  border-radius: 10px;
   display: grid;
   place-items: center;
 }
 
 .topbar strong {
   font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
 }
 
 .topbar > span {
   font-size: 12px;
-  letter-spacing: 0.12em;
-  color: #cbd7e8;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+  color: #7583a3;
 }
 
 .connection {
@@ -99,14 +122,14 @@ button {
   height: 42px;
   padding: 0 20px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--jb-radius-sm);
   background: var(--blue);
   color: #fff;
   font-weight: 700;
 }
 
 .primary:hover {
-  filter: brightness(0.96);
+  background: var(--jb-primary-deep);
   transform: translateY(-1px);
 }
 
@@ -159,7 +182,7 @@ button {
   margin: 12px 20px;
   padding: 0 12px;
   border: 1px solid #bdc9d8;
-  border-radius: 7px;
+  border-radius: var(--jb-radius-sm);
   background: #fff;
   display: flex;
   align-items: center;
@@ -230,7 +253,7 @@ button {
   left: 0;
   top: 0;
   bottom: 0;
-  background: #3578f6;
+  background: var(--jb-primary);
 }
 
 .lecture-row > span {
@@ -399,7 +422,7 @@ button {
 }
 
 .feedback-card:focus-within {
-  border-color: #3578f6;
+  border-color: var(--jb-primary);
   box-shadow: 0 0 0 3px rgba(36, 107, 235, 0.08);
 }
 
@@ -459,7 +482,7 @@ button {
 }
 
 .feedback-card textarea:focus {
-  border-color: #7fa6ee;
+  border-color: #7fb6ff;
 }
 
 .feedback-card textarea::placeholder {
@@ -497,7 +520,7 @@ button {
 .savebar button {
   height: 42px;
   padding: 0 18px;
-  border-radius: 7px;
+  border-radius: var(--jb-radius-sm);
   font-size: 12px;
   font-weight: 700;
 }
@@ -674,14 +697,14 @@ button {
   margin-top: 7px;
   padding: 0 11px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--jb-radius-sm);
 }
 
 .import {
   height: 38px;
   margin-top: 8px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--jb-radius-sm);
   background: #fff;
   color: #4a5a6f;
   font-size: 11px;
