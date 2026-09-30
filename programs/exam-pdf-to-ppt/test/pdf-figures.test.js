@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {imageBoxes,assignBoxes} from '../assets/pdf-figures.js';
+import {imageBoxes,assignBoxes} from '../assets/pdf-figures-v36.js';
 const viewport={width:842,height:1191,convertToViewportPoint:(x,y)=>[x,1191-y]};
 const anchors=[{str:'3.',height:14,transform:[14,0,0,14,436,952]},{str:'4.',height:14,transform:[14,0,0,14,436,445]}];
 test('embedded image bounds follow PDF transforms rather than AI crop estimates',()=>{
@@ -37,4 +37,20 @@ test('question 5 in the left column never receives question 7 teacher images on 
 test('a box crossing a column or question boundary is rejected, never truncated',()=>{
  const items=[{str:'5.',height:14,transform:[14,0,0,14,87.9,1023]},{str:'6.',height:14,transform:[14,0,0,14,87.9,651]},{str:'7.',height:14,transform:[14,0,0,14,436.56,1023]}];
  assert.equal(assignBoxes([[185,400,300,490],[450,200,700,350]],items,viewport,[{number:'5'},{number:'7'}],2).length,0);
+});
+test('diagram beginning beside the question header retains both image strips',()=>{
+ const items=[{str:'11.',height:13.8,width:17,transform:[13.8,0,0,13.8,436.56,1023.059]}];
+ const figures=assignBoxes([[158.8,610.6,230.5,754],[230.5,610.6,302.2,754]],items,viewport,[{number:'11'}],3);
+ assert.equal(figures.length,1);
+ assert.ok(figures[0].box[0]*1191/1000<=158.8);
+ assert.ok(figures[0].box[2]*1191/1000>=302.2);
+});
+test('inline diagram symbols are excluded before they can merge into a false illustration',()=>{
+ const items=[{str:'12.',height:13.8,width:17,transform:[13.8,0,0,13.8,436.56,770]},
+ {str:',',height:11.52,width:3.5,transform:[11.52,0,0,11.52,501,708]},
+ {str:',',height:11.52,width:3.5,transform:[11.52,0,0,11.52,522,708]},
+ {str:'는 각각',height:11.52,width:40,transform:[11.52,0,0,11.52,544,708]}];
+ const boxes=[[473.2,487.5,485.2,499.5],[473.8,508.7,485.2,520.1],[472.7,529.4,485.3,543.8],[496.9,515.1,567.7,686.7]];
+ const figures=assignBoxes(boxes,items,viewport,[{number:'12'}],3);
+ assert.equal(figures.length,1);assert.ok(figures[0].box[0]*1191/1000>490);
 });

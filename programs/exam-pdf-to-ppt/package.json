@@ -11,7 +11,19 @@
     "test": "node --test test/*.test.js",
     "check": "npm test && vite build",
     "build:v23": "node scripts/build-v23.js",
-    "build:v24": "node scripts/build-v24.js"
+    "build:v24": "node scripts/build-v24.js",
+    "build:v25": "node scripts/build-v25.js",
+    "build:v26": "node scripts/build-v26.js",
+    "build:v27": "node scripts/build-v27.js",
+    "build:v28": "node scripts/build-v28.js",
+    "build:v29": "node scripts/build-v29.js",
+    "build:v30": "node scripts/build-v30.js",
+    "build:v31": "node scripts/build-v31.js",
+    "build:v32": "node scripts/build-v32.js",
+    "build:v33": "node scripts/build-v33.js",
+    "build:v34": "node scripts/build-v34.js",
+    "build:v35": "node scripts/build-v35.js",
+    "build:v36": "node scripts/build-v36.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",

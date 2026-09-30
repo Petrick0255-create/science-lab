@@ -1,20 +1,25 @@
+import {placeCaptions,separateCaptions} from "../assets/figure-captions-v36.js";
+import {parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,boxedSymbolEvidence} from "../assets/inline-boxes-v36.js";
+import {normalizeListMarkers} from "../assets/text-style-v36.js";
+import {storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter} from "../assets/fraction-style-v36.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import JSZip from 'jszip';
-import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools-v24.js';
+import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools-v36.js';
+import {tableHeight,pptRows,promptBeforeTables} from '../assets/native-tables-v36.js';
 import {sampleExam} from './fixtures.js';
 function api(version) {
  const source=fs.readFileSync(new URL(`../assets/index-${version}.js`,import.meta.url),'utf8');
- const context=vm.createContext({withFigures,Blob,Buffer,Uint8Array,ArrayBuffer,Promise,setImmediate,clearImmediate,setTimeout,clearTimeout,console});
+ const context=vm.createContext({placeCaptions,parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,normalizeListMarkers,storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter,tableHeight,pptRows,promptBeforeTables,withFigures,Blob,Buffer,Uint8Array,ArrayBuffer,Promise,setImmediate,clearImmediate,setTimeout,clearTimeout,console});
  vm.runInContext(source.slice(source.indexOf('var Fo =')).replaceAll('import.meta.url','"file:///bundle.js"').replace(/ov\.createRoot\(document\.getElementById\("root"\)\)\.render\(at\.jsx\(My, \{\}\)\);\s*$/,'')+'\nglobalThis.api={plan:Ku,create:Ey,prompt:Tv,parse:_v,validate:Fu,request:Rv};',context);
  return context.api;
 }
-const old=api('v22'),current=api('v24');
+const old=api('v22'),current=api('v36');
 const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9XcAAAAASUVORK5CYII=';
 const image={id:'test',label:'구리 정육면체',data:pixel,width:200,height:160};
-test('v24 leaves the transcription prompt, parser, validator and request unchanged',()=>{
+test('v36 leaves the transcription prompt, parser, validator and request unchanged',()=>{
  assert.equal(current.prompt,old.prompt);
  for(const key of ['parse','validate','request'])assert.equal(current[key].toString(),old[key].toString());
  const q=sampleExam(20).questions[0];
@@ -51,3 +56,6 @@ test('PPT contains actual embedded images and keeps existing text',async()=>{
  const xml=await zip.file('ppt/slides/slide1.xml').async('string');
  assert.match(xml,/<p:pic>/);assert.match(xml,/question-number/);assert.match(xml,/question-block-1-/);
 });
+
+test('native tables preserve editable text, merged cells, and 2.25pt borders',async()=>{const doc=sampleExam(20);doc.questions[0].blocks.push({kind:'table',rows:2,columns:2,cells:[{row:0,column:0,rowSpan:1,colSpan:2,text:'병합 제목'},{row:1,column:0,rowSpan:1,colSpan:1,text:'H<sub>2</sub>O'},{row:1,column:1,rowSpan:1,colSpan:1,text:'원본 내용'}]});const {blob}=await current.create(doc,{});const z=await JSZip.loadAsync(await blob.arrayBuffer());const xml=(await Promise.all(Object.keys(z.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>z.file(n).async('string')))).join('');assert.match(xml,/<a:tbl>/);assert.match(xml,/gridSpan="2"/);assert.match(xml,/병합 제목/);assert.match(xml,/원본 내용/);assert.match(xml,/<a:lnL w="28575"/);});
+
