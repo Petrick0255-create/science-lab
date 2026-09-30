@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {isAnswerHeadingRule} from '../assets/pdf-figures-v36.js';
+import {isAnswerHeadingRule} from '../assets/pdf-figures-v40.js';
 const label=[{str:'보 기',box:[100,200,112,225]}];
 test('decorated rules on either side of the answer heading are excluded',()=>{
  assert.equal(isAnswerHeadingRule([103,70,117,194],label,12),true);

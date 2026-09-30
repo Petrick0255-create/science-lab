@@ -23,7 +23,11 @@
     "build:v33": "node scripts/build-v33.js",
     "build:v34": "node scripts/build-v34.js",
     "build:v35": "node scripts/build-v35.js",
-    "build:v36": "node scripts/build-v36.js"
+    "build:v36": "node scripts/build-v36.js",
+    "build:v37": "node scripts/build-v37.js",
+    "build:v38": "node scripts/build-v38.js",
+    "build:v39": "node scripts/build-v39.js",
+    "build:v40": "node scripts/build-v40.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",

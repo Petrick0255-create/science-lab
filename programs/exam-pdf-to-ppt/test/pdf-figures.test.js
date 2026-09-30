@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {imageBoxes,assignBoxes} from '../assets/pdf-figures-v36.js';
+import {imageBoxes,assignBoxes} from '../assets/pdf-figures-v40.js';
 const viewport={width:842,height:1191,convertToViewportPoint:(x,y)=>[x,1191-y]};
 const anchors=[{str:'3.',height:14,transform:[14,0,0,14,436,952]},{str:'4.',height:14,transform:[14,0,0,14,436,445]}];
 test('embedded image bounds follow PDF transforms rather than AI crop estimates',()=>{

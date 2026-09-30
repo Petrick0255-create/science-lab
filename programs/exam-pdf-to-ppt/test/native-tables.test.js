@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {gridTable,applyTableText,attachTables} from '../assets/native-tables-v36.js';
+import {gridTable,applyTableText,attachTables} from '../assets/native-tables-v40.js';
 const viewport={convertToViewportPoint:(x,y)=>[x,y]};
 const item=(str,x,y)=>({str,width:10,height:10,transform:[10,0,0,10,x,y]});
 const table={kind:'table',rows:2,columns:2,cells:[{row:0,column:0,rowSpan:1,colSpan:2,text:'제목'},{row:1,column:0,rowSpan:1,colSpan:1,text:'값'},{row:1,column:1,rowSpan:1,colSpan:1,text:'2'}]};

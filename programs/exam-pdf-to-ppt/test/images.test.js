@@ -1,25 +1,25 @@
-import {placeCaptions,separateCaptions} from "../assets/figure-captions-v36.js";
-import {parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,boxedSymbolEvidence} from "../assets/inline-boxes-v36.js";
-import {normalizeListMarkers} from "../assets/text-style-v36.js";
-import {storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter} from "../assets/fraction-style-v36.js";
+import {placeCaptions,separateCaptions} from "../assets/figure-captions-v40.js";
+import {parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,boxedSymbolEvidence} from "../assets/inline-boxes-v40.js";
+import {removeViewHeading,repairScientificTags,normalizeListMarkers} from "../assets/text-style-v40.js";
+import {storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter} from "../assets/fraction-style-v40.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import JSZip from 'jszip';
-import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools-v36.js';
-import {tableHeight,pptRows,promptBeforeTables} from '../assets/native-tables-v36.js';
+import {normalizeBox,invertPixels,parseFigureResponse,withFigures} from '../assets/image-tools-v40.js';
+import {tableHeight,pptRows,promptBeforeTables} from '../assets/native-tables-v40.js';
 import {sampleExam} from './fixtures.js';
 function api(version) {
  const source=fs.readFileSync(new URL(`../assets/index-${version}.js`,import.meta.url),'utf8');
- const context=vm.createContext({placeCaptions,parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,normalizeListMarkers,storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter,tableHeight,pptRows,promptBeforeTables,withFigures,Blob,Buffer,Uint8Array,ArrayBuffer,Promise,setImmediate,clearImmediate,setTimeout,clearTimeout,console});
+ const context=vm.createContext({removeViewHeading,placeCaptions,parseBoxRuns,wrapBoxRuns,addBoxedText,BoxedGroup,repairScientificTags,normalizeListMarkers,storePictureOriginals,brightenPixels,fractionColorRuns,applyFractionMath,fractionView,applyPictureBrightness,pictureBrightnessFilter,tableHeight,pptRows,promptBeforeTables,withFigures,Blob,Buffer,Uint8Array,ArrayBuffer,Promise,setImmediate,clearImmediate,setTimeout,clearTimeout,console});
  vm.runInContext(source.slice(source.indexOf('var Fo =')).replaceAll('import.meta.url','"file:///bundle.js"').replace(/ov\.createRoot\(document\.getElementById\("root"\)\)\.render\(at\.jsx\(My, \{\}\)\);\s*$/,'')+'\nglobalThis.api={plan:Ku,create:Ey,prompt:Tv,parse:_v,validate:Fu,request:Rv};',context);
  return context.api;
 }
-const old=api('v22'),current=api('v36');
+const old=api('v22'),current=api('v40');
 const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9XcAAAAASUVORK5CYII=';
 const image={id:'test',label:'구리 정육면체',data:pixel,width:200,height:160};
-test('v36 leaves the transcription prompt, parser, validator and request unchanged',()=>{
+test('v40 leaves the transcription prompt, parser, validator and request unchanged',()=>{
  assert.equal(current.prompt,old.prompt);
  for(const key of ['parse','validate','request'])assert.equal(current[key].toString(),old[key].toString());
  const q=sampleExam(20).questions[0];

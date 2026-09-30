@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assignBoxes,vectorBoxes,textDiagramBoxes} from '../assets/pdf-figures-v36.js';
+import {assignBoxes,vectorBoxes,textDiagramBoxes} from '../assets/pdf-figures-v40.js';
 const viewport={width:600,height:800,convertToViewportPoint:(x,y)=>[x,800-y]};
 const item=(str,x,top,w=20,h=12)=>({str,width:w,height:h,transform:[h,0,0,h,x,800-top-h]});
 const anchor=item('1.',50,50);

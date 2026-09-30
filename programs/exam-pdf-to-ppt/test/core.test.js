@@ -15,8 +15,8 @@ test('native superscripts, subscripts, unicode and underline preserve meaning', 
   assert.ok(runs.some(r => r.script === 'sup' && r.text === '2-'));
   assert.ok(runs.some(r => r.script === 'sup' && r.underline));
   assert.equal(parseScientificText('a < b & c > d')[0].text, 'a < b & c > d');
-  assert.throws(() => parseScientificText('H<sub>2'), /닫히지/);
-  assert.throws(() => parseScientificText('<sup><sub>2</sub></sup>'), /겹쳐/);
+  assert.equal(parseScientificText('H<sub>2').map(r=>r.text).join(''), 'H2');
+  assert.equal(parseScientificText('<sup><sub>2</sub></sup>')[0].script, 'sub');
 });
 test('20/25 exams reject missing, duplicate and out-of-range numbers', () => {
   for (const n of [20, 25]) assert.equal(coverage(validateDocument(sampleExam(n))).complete, true);
