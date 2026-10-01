@@ -1,0 +1,13 @@
+.image-panel{margin-top:20px;padding:14px;border:1px solid #46505e;border-radius:6px}.image-panel h3{margin-top:0}.image-actions{display:flex;flex-wrap:wrap;gap:8px}.image-card{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-top:1px solid #46505e;margin-top:12px;padding-top:12px;font-size:.8rem}.image-card img{width:100%;max-height:240px;object-fit:contain;background:#000}.image-card input{width:auto}.crop-page{position:relative;user-select:none;cursor:crosshair;margin:10px 0}.crop-page>img{display:block;width:100%;pointer-events:none}.crop-box{position:absolute;border:2px solid #00b9ff;background:#00b9ff22;pointer-events:none;box-sizing:border-box}.crop-editor{padding:10px;background:#202733;margin-top:12px}.crop-editor input{width:90px}.slide-figure{position:absolute;object-fit:contain;display:block}.image-auto{font-size:.8rem;display:block;margin-top:14px}.image-auto input{width:auto;margin-right:7px}
+
+/* 2.25 pt at a 10-inch (720 pt) slide width. Avoid doubled inner rules. */
+.slide-table{border:0.3125cqw solid #fff!important;gap:0!important}
+.slide-table>span{border:0!important;border-right:0.3125cqw solid #fff!important;border-bottom:0.3125cqw solid #fff!important}
+.slide-table>span:nth-child(3n){border-right:0!important}
+.slide-table>span:nth-last-child(-n+3){border-bottom:0!important}
+
+.native-table-frame{position:absolute}.native-table-preview{width:100%;height:100%;table-layout:fixed;border-collapse:collapse;color:white;background:black;font-size:2.5cqw;line-height:1.15}.native-table-preview td{border:.3125cqw solid white;padding:.25cqw;white-space:pre-wrap;overflow-wrap:anywhere}.native-editor{display:block;overflow:auto}.native-table-editor{width:100%;border-collapse:collapse;table-layout:fixed}.native-table-editor td{border:1px solid #8893a0;padding:3px}.native-table-editor textarea{width:100%;min-width:0;min-height:55px;font-size:14px;padding:4px}
+
+.native-table-preview td{text-align:center;vertical-align:middle;font-weight:400}
+
+.stacked-fraction{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.7em;line-height:1.15;white-space:nowrap;margin:0 .12em}.stacked-fraction>span:first-child{border-bottom:1px solid currentColor;padding:0 .15em .08em}.stacked-fraction>span:last-child{padding:.08em .15em 0}

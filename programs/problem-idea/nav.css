@@ -1,0 +1,6 @@
+.jb-header{height:auto;min-height:64px;padding-top:10px;padding-bottom:10px}
+.jb-nav{display:flex;align-items:center;gap:7px}
+.jb-nav-link{color:#cbd5e1;text-decoration:none;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:800}
+.jb-nav-link:hover,.jb-nav-link.active{background:rgba(79,140,255,.25);color:#fff}
+@media(max-width:780px){.jb-nav-link,.jb-home{padding:8px;font-size:12px}}
+@media(max-width:600px){.jb-header{flex-wrap:wrap}.jb-nav{width:100%;justify-content:flex-end}.jb-home{display:none}}

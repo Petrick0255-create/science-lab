@@ -1,0 +1,36 @@
+import pptxgen from 'pptxgenjs';
+import { FONT } from '../shared/document.js';
+import { planDocument, SLIDE } from '../shared/layout.js';
+
+export async function createPptxBlob(doc, options) {
+  const plans = planDocument(doc, options);
+  const ppt = new pptxgen();
+  ppt.defineLayout({ name: 'BBH_4X3', width: SLIDE.width, height: SLIDE.height });
+  ppt.layout = 'BBH_4X3'; ppt.author = 'BBH COMPANY'; ppt.title = doc.title;
+  ppt.subject = '편집 가능한 문항별 텍스트'; ppt.lang = 'ko-KR';
+  ppt.theme = { headFontFace: FONT, bodyFontFace: FONT, lang: 'ko-KR' };
+  for (const plan of plans) {
+    const slide = ppt.addSlide(); slide.background = { color: SLIDE.background };
+    const base = { fontFace: FONT, lang: 'ko-KR', margin: 0, valign: 'top', bold: false,
+      paraSpaceAfterPt: 0, paraSpaceBeforePt: 0 };
+    slide.addText(plan.number.text, { ...base, ...plan.number, objectName: 'question-number' });
+    plan.body.lines.forEach((line, i) => {
+      if (!line.length) return;
+      const runs = line.map(run => ({ text: run.text, options: {
+        // Keep the declared font size unchanged. PowerPoint's native
+        // superscript/subscript formatting performs the visual treatment.
+        fontFace: FONT, fontSize: 24,
+        superscript: run.script === 'sup',
+        // PowerPoint stores native subscript as a negative DrawingML baseline.
+        // PptxGenJS's subscript preset is -40%, which is too deep at 24pt;
+        // -25% matches the normal PowerPoint appearance more closely.
+        baseline: run.script === 'sub' ? -500 : undefined,
+        underline: run.underline ? { style: 'sng' } : undefined,
+      } }));
+      slide.addText(runs, { ...base, x: plan.body.x, y: plan.body.y + i * plan.body.lineHeight,
+        w: plan.body.w, h: .44, fontSize: 24, color: 'FFFFFF', objectName: `question-body-${i + 1}` });
+    });
+    slide.addNotes(`원본 PDF ${plan.sourcePage}쪽 · ${plan.questionNumber}번 · ${plan.page}/${plan.pageCount}\n${plan.notes}`);
+  }
+  return { blob: await ppt.write({ outputType: 'blob', compression: true }), slideCount: plans.length };
+}

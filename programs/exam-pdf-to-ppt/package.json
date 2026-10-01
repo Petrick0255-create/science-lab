@@ -1,0 +1,46 @@
+{
+  "name": "exam-pdf-to-ppt",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:v22": "node scripts/build-v22.js",
+    "preview": "vite preview",
+    "test": "node --test test/*.test.js",
+    "check": "npm test && vite build",
+    "build:v23": "node scripts/build-v23.js",
+    "build:v24": "node scripts/build-v24.js",
+    "build:v25": "node scripts/build-v25.js",
+    "build:v26": "node scripts/build-v26.js",
+    "build:v27": "node scripts/build-v27.js",
+    "build:v28": "node scripts/build-v28.js",
+    "build:v29": "node scripts/build-v29.js",
+    "build:v30": "node scripts/build-v30.js",
+    "build:v31": "node scripts/build-v31.js",
+    "build:v32": "node scripts/build-v32.js",
+    "build:v33": "node scripts/build-v33.js",
+    "build:v34": "node scripts/build-v34.js",
+    "build:v35": "node scripts/build-v35.js",
+    "build:v36": "node scripts/build-v36.js",
+    "build:v37": "node scripts/build-v37.js",
+    "build:v38": "node scripts/build-v38.js",
+    "build:v39": "node scripts/build-v39.js",
+    "build:v40": "node scripts/build-v40.js",
+    "build:v41": "node scripts/build-v41.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.2",
+    "jszip": "^3.10.1",
+    "vite": "^7.1.5"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

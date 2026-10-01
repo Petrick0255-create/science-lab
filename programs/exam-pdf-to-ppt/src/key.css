@@ -1,0 +1,12 @@
+.key-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 7px;
+}
+
+.key-actions button {
+  padding: .3rem .55rem;
+  background: transparent;
+  color: #c7ced9;
+  font-size: .75rem;
+}

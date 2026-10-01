@@ -1,0 +1,246 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* J&B LAB design tokens */
+:root{
+  --jb-header:#070b18;
+  --jb-bg:#f3f6fb;
+  --jb-surface:#ffffff;
+  --jb-surface-soft:#f6f8fc;
+  --jb-line:#e1e7f1;
+  --jb-ink:#0d1429;
+  --jb-ink-2:#334060;
+  --jb-muted:#6b7794;
+  --jb-primary:#167dff;
+  --jb-primary-deep:#0b5fd1;
+  --jb-primary-soft:#eaf3ff;
+  --jb-mint:#00a896;
+  --jb-violet:#7667f1;
+  --jb-radius-sm:10px;
+  --jb-radius:14px;
+  --jb-radius-lg:20px;
+  --jb-shadow:0 10px 30px rgba(13,20,41,.07);
+  --jb-font:Pretendard,"Pretendard Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--jb-bg);
+  color:var(--jb-ink);
+  font-family:var(--jb-font);
+}
+
+main{
+  display:grid;
+  grid-template-columns:330px 1fr;
+  gap:18px;
+  max-width:1236px;
+  margin:0 auto;
+  padding:24px 18px 40px;
+}
+
+.panel,.box{
+  background:white;
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius-lg);
+  box-shadow:var(--jb-shadow);
+  padding:18px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:18px;
+}
+
+h2{
+  margin:0 0 12px;
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+
+h3{
+  margin:18px 0 9px;
+  font-size:15px;
+  color:var(--jb-primary-deep);
+  border-bottom:1px solid var(--jb-line);
+  padding-bottom:6px;
+}
+
+.check{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:8px 6px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:14px;
+  line-height:1.35;
+}
+
+.check:hover{
+  background:var(--jb-surface-soft);
+}
+
+.check input{
+  margin-top:2px;
+}
+
+.small{
+  font-size:12px;
+  color:var(--jb-muted);
+  margin-top:2px;
+}
+
+.box{
+  margin-bottom:18px;
+}
+
+.box-title{
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:10px;
+  color:var(--jb-primary-deep);
+}
+
+.example-card,.logic-card{
+  border-radius:14px;
+  padding:12px 14px;
+  margin:10px 0;
+  font-size:14px;
+  line-height:1.5;
+  background:#fff;
+  border:1px solid var(--jb-line);
+}
+
+.example-card{
+  border-left:6px solid var(--jb-violet);
+}
+
+.good{border-left:6px solid #22c55e}
+.warn{border-left:6px solid #f59e0b}
+.bad{border-left:6px solid #ef4444}
+.info{border-left:6px solid var(--jb-primary)}
+
+svg{
+  width:100%;
+  height:430px;
+  background:white;
+  border-radius:14px;
+  border:1px solid var(--jb-line);
+}
+
+.note{
+  font-size:13px;
+  color:var(--jb-ink-2);
+  line-height:1.55;
+}
+
+.result-line{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px dashed var(--jb-line);
+  font-size:14px;
+}
+
+.result-line b{
+  color:var(--jb-ink);
+}
+
+.tag{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:999px;
+  background:var(--jb-primary-soft);
+  color:var(--jb-primary-deep);
+  font-size:12px;
+  font-weight:900;
+}
+
+.possible{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.impossible{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.mid{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+ul{
+  margin:8px 0 0 20px;
+  padding:0;
+}
+
+li{
+  margin:6px 0;
+}
+
+button{
+  width:100%;
+  padding:11px;
+  border:0;
+  border-radius:12px;
+  background:var(--jb-primary);
+  color:white;
+  font:inherit;
+  font-weight:800;
+  transition:background .2s ease;
+  cursor:pointer;
+  margin-top:12px;
+}
+
+button.secondary{
+  background:#e8eef8;
+  color:var(--jb-ink);
+}
+
+.person-ref{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:999px;
+  background:#ede9fe;
+  color:#5b21b6;
+  font-size:12px;
+  font-weight:900;
+  margin:0 2px;
+}
+
+.evidence{
+  margin-top:8px;
+  padding:9px 11px;
+  border-radius:10px;
+  background:var(--jb-surface-soft);
+  border:1px dashed #cfd8e6;
+  font-size:13px;
+  color:var(--jb-ink-2);
+}
+
+@media(max-width:950px){
+  main,.grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== J&B LAB unified overrides ===== */
+button:hover{
+  background:var(--jb-primary-deep);
+}
+
+button.secondary:hover{
+  background:#dde6f3;
+}
+
+.check input{
+  accent-color:var(--jb-primary);
+}
+
