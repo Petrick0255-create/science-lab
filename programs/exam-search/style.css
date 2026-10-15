@@ -43,6 +43,38 @@ main{
   padding:0 20px;
 }
 
+.example-shortcuts{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.example-shortcut{
+  padding:24px;
+  background:var(--jb-surface);
+  border:1px solid var(--jb-line);
+  border-radius:var(--jb-radius-lg);
+  box-shadow:var(--jb-shadow);
+}
+
+.example-shortcut h2{
+  margin-bottom:16px;
+  font-size:18px;
+  font-weight:800;
+}
+
+.example-shortcut-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.example-shortcut-links a:focus-visible{
+  outline:3px solid var(--jb-primary-deep);
+  outline-offset:3px;
+}
+
 .search-card{
   background:var(--jb-surface);
   border:1px solid var(--jb-line);
@@ -165,6 +197,10 @@ main{
 }
 
 @media(max-width:700px){
+
+  .example-shortcuts{
+    grid-template-columns:1fr;
+  }
 
   .search-row{
     flex-direction:column;
