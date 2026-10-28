@@ -41,6 +41,28 @@ const selectedTitle = document.querySelector("#selected-title");
 const selectedDescription = document.querySelector("#selected-description");
 const scienceMenu = document.querySelector("#science-menu");
 
+function trackEvent(eventName, parameters = {}) {
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    console.debug("[analytics]", eventName, parameters);
+  }
+
+  if (typeof window.gtag !== "function") return;
+
+  window.gtag("event", eventName, parameters);
+}
+
+function getLinkDetails(link) {
+  const url = new URL(link.href, window.location.href);
+  const label = link.querySelector("span")?.textContent?.trim()
+    || link.textContent.trim().replace(/\s+/g, " ");
+
+  return {
+    link_name: label.slice(0, 100),
+    destination_host: url.hostname,
+    destination_type: url.origin === window.location.origin ? "internal" : "external"
+  };
+}
+
 function polarPoint(radius, degrees) {
   const radians = degrees * Math.PI / 180;
   return {
@@ -86,6 +108,12 @@ function activateCategory(category, shouldScroll = false) {
 
   selectedTitle.textContent = info.title;
   selectedDescription.textContent = info.description;
+
+  if (shouldScroll) {
+    trackEvent("subject_selected", {
+      subject: category
+    });
+  }
 
   if (shouldScroll && window.matchMedia("(max-width: 760px)").matches) {
     scienceMenu.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -149,6 +177,37 @@ const programButton = document.querySelector(".program-card");
 programButton.addEventListener("click", () => {
   const isOpen = programItem.classList.toggle("open");
   programButton.setAttribute("aria-expanded", String(isOpen));
+  trackEvent("program_menu_toggled", {
+    menu_state: isOpen ? "open" : "closed"
+  });
+});
+
+document.querySelectorAll(".program-dropdown a").forEach((link) => {
+  link.addEventListener("click", () => {
+    trackEvent("tool_opened", {
+      ...getLinkDetails(link),
+      subject: "general",
+      tool_group: "program"
+    });
+  });
+});
+
+document.querySelectorAll(".menu-links a").forEach((link) => {
+  link.addEventListener("click", () => {
+    const panel = link.closest("[data-panel]");
+
+    trackEvent("tool_opened", {
+      ...getLinkDetails(link),
+      subject: panel?.dataset.panel || "unknown",
+      tool_group: "science"
+    });
+  });
+});
+
+document.querySelectorAll(".quick-banner a").forEach((link) => {
+  link.addEventListener("click", () => {
+    trackEvent("quick_link_opened", getLinkDetails(link));
+  });
 });
 
 document.addEventListener("click", (event) => {

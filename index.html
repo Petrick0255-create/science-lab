@@ -9,6 +9,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="J&B LAB">
   <title>J&B LAB | 통합과학 온라인 실험실</title>
+  <!-- Google Analytics 4: 내부 연구원 사용 흐름을 익명 집계합니다. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NW3QEH0DF5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+
+    gtag("consent", "default", {
+      analytics_storage: "granted",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied"
+    });
+    gtag("js", new Date());
+    gtag("config", "G-NW3QEH0DF5", {
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false
+    });
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
