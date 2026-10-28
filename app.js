@@ -57,6 +57,8 @@ function getLinkDetails(link) {
     || link.textContent.trim().replace(/\s+/g, " ");
 
   return {
+    tool_id: link.dataset.toolId || "unknown",
+    tool_name: label.slice(0, 100),
     link_name: label.slice(0, 100),
     destination_host: url.hostname,
     destination_type: url.origin === window.location.origin ? "internal" : "external"
