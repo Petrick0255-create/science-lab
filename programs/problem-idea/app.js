@@ -42,7 +42,9 @@ async function init(){
   }catch(error){console.error(error);el.dataStatus.textContent="데이터 로딩 실패";el.problemGrid.replaceChildren(makeEmpty("ZIP을 압축 해제한 뒤 웹 서버에서 실행해 주세요."))}
 }
 
-function normalize(value){return String(value||"").replace(/[Ⅰⅰ]/g,"1").normalize("NFKC").toLocaleLowerCase("ko-KR").replace(/(물리학|화학|생명과학|지구과학)\s*(?:1|i)\b/g,"$1").replace(/\s+/g," ").trim()}
+const SUBJECT_NAMES={물리학:"물리학",물리:"물리학",물:"물리학",화학:"화학",화:"화학",생명과학:"생명과학",생명:"생명과학",생물:"생명과학",생:"생명과학",지구과학:"지구과학",지구:"지구과학",지:"지구과학"};
+function querySubject(value){const match=String(value||"").normalize("NFKC").match(/(물리학|물리|물|화학|화|생명과학|생명|생물|생|지구과학|지구|지)\s*(II|I|2|1)(?![A-Za-z0-9])/i);return match?SUBJECT_NAMES[match[1]]+(/^(II|2)$/i.test(match[2])?"Ⅱ":""):""}
+function normalize(value){return String(value||"").replace(/(물리학|물리|물|화학|화|생명과학|생명|생물|생|지구과학|지구|지)\s*(?:Ⅱ|ⅱ|II|2)(?![A-Za-z0-9])/gi,(_,subject)=>`${SUBJECT_NAMES[subject]}Ⅱ`).replace(/[Ⅰⅰ]/g,"1").normalize("NFKC").toLocaleLowerCase("ko-KR").replace(/(물리학|화학|생명과학|지구과학)\s*(?:1|i)\b/g,"$1").replace(/\s+/g," ").trim()}
 function hasCondition(){return Boolean(el.searchInput.value.trim()||el.subjectFilter.value||el.typeFilter.value||el.gradeFilter.value||el.evaluationOnly.checked)}
 function unique(values){return [...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ko"))}
 
@@ -70,19 +72,21 @@ function search(updateUrl){
   }
   const query=normalize(el.searchInput.value),tokens=query.split(" ").filter(Boolean);
   const subject=el.subjectFilter.value,type=el.typeFilter.value,grade=el.gradeFilter.value,evaluationOnly=el.evaluationOnly.checked;
+  const namedSubject=querySubject(el.searchInput.value);
   const exact=normalize(el.searchInput.value).replace(/\s/g,"").toUpperCase();
-  const directCode=/^[123][A-Z]\d{6}$/.test(exact);
+  const directCode=/^[123][A-Z](?:II)?\d{6}$/.test(exact);
   const dateMatch=!directCode&&query.match(/(?:^|\s)(\d{2})\s*(0[1-9]|1[0-2]|[1-9])(?:\s|$)/);
   const printedYear=dateMatch?Number(dateMatch[1]):null,printedMonth=dateMatch?Number(dateMatch[2]):null;
   state.results=[];
   for(const item of state.data){
     if(subject&&item.s!==subject||type&&(item.t||"미분류")!==type||grade&&item.g!==grade)continue;
+    if(namedSubject&&item.s!==namedSubject)continue;
     if(evaluationOnly&&(item.g!=="고3"||![6,9,11].includes(Number(item.m))))continue;
     if(dateMatch&&(item.sy!==printedYear||item.m!==printedMonth))continue;
     const haystack=searchHaystack(item);
     if(!tokens.every(token=>haystack.includes(token)))continue;
     let score=0;
-    if(item.i===exact)score+=10000;
+    if(normalize(item.i).toUpperCase()===exact)score+=10000;
     if(query&&normalize(item.i).includes(query))score+=1000;
     if(query&&normalize(item.t).includes(query))score+=250;
     if(query&&normalize(item.e).includes(query))score+=100;

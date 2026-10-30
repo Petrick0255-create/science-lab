@@ -3,6 +3,19 @@ const SUBJECT_INFO = {
   "통합과학": { code: "T", folder: "통합과학" },
   "통과": { code: "T", folder: "통합과학" },
 
+  "물리학Ⅱ": { code: "MⅡ", folder: "물리학Ⅱ" },
+  "물리Ⅱ": { code: "MⅡ", folder: "물리학Ⅱ" },
+  "물Ⅱ": { code: "MⅡ", folder: "물리학Ⅱ" },
+  "화학Ⅱ": { code: "HⅡ", folder: "화학Ⅱ" },
+  "화Ⅱ": { code: "HⅡ", folder: "화학Ⅱ" },
+  "생명과학Ⅱ": { code: "SⅡ", folder: "생명과학Ⅱ" },
+  "생명Ⅱ": { code: "SⅡ", folder: "생명과학Ⅱ" },
+  "생물Ⅱ": { code: "SⅡ", folder: "생명과학Ⅱ" },
+  "생Ⅱ": { code: "SⅡ", folder: "생명과학Ⅱ" },
+  "지구과학Ⅱ": { code: "GⅡ", folder: "지구과학Ⅱ" },
+  "지구Ⅱ": { code: "GⅡ", folder: "지구과학Ⅱ" },
+  "지Ⅱ": { code: "GⅡ", folder: "지구과학Ⅱ" },
+
   "물리학Ⅰ": { code: "M", folder: "물리학" },
   "물리학1": { code: "M", folder: "물리학" },
   "물리": { code: "M", folder: "물리학" },
@@ -26,6 +39,8 @@ function pad2(n){
 
 function normalize(text){
   return text
+    .replace(/Ⅱ|ⅱ|II/gi, "Ⅱ")
+    .replace(/(물리학|물리|물|화학|화|생명과학|생명|생물|생|지구과학|지구|지)\s*(?:2|Ⅱ)(?![A-Za-z0-9])/g, "$1Ⅱ")
     .replace(/I/g, "Ⅰ")
     .replace(/ⅰ/g, "Ⅰ")
     .replace(/\s+/g, " ")
@@ -122,7 +137,7 @@ function parseSearch(text){
     pad2(month) +
     pad2(number);
 
-  const pdfKey = code.slice(0, 6);
+  const pdfKey = code.slice(0, -2);
 
   const gradeFolder = `고${grade} 기출`;
   const subjectFolder = subject.folder;

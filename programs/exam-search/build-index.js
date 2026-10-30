@@ -44,7 +44,7 @@ const images = files
 
     return {
       code,
-      pdfKey: code.slice(0, 6),
+      pdfKey: code.match(/^([123][A-Z](?:Ⅱ)?\d{4})\d{2}$/)?.[1] || code.slice(0, 6),
       imageName: name,
       image: toWebPath(file)
     };
@@ -55,7 +55,7 @@ const pdfs = files
   .map(file => {
     const name = path.basename(file);
     const upper = name.toUpperCase();
-    const keyMatch = upper.match(/[23][MCBG]\d{4}/);
+    const keyMatch = upper.match(/[123][MHCBSGT](?:Ⅱ)?\d{4}/);
 
     return {
       name,
