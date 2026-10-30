@@ -28,9 +28,8 @@ async function init(){
   document.addEventListener("keydown",event=>{if(event.key==="Escape")closeModal()});
   restoreParams();
   try{
-    const [indexResponse,catalogResponse]=await Promise.all([fetch(CONFIG.indexUrl,{cache:"no-cache"}),fetch(CONFIG.typeCatalogUrl,{cache:"no-cache"})]);
-    if(!indexResponse.ok)throw new Error(`HTTP ${indexResponse.status}`);
-    state.data=(await indexResponse.json()).map(item=>({...item,_originalType:item.t||"미분류"}));
+    const [index,catalogResponse]=await Promise.all([loadSearchIndex(),fetch(CONFIG.typeCatalogUrl,{cache:"no-cache"})]);
+    state.data=index.map(item=>({...item,_originalType:item.t||"미분류"}));
     if(catalogResponse.ok)state.catalog=await catalogResponse.json();
     if(hasSyncSettings())await refreshTypesFromDb(true);else applySavedTypeEdits();
     state.ready=true;
@@ -42,11 +41,37 @@ async function init(){
   }catch(error){console.error(error);el.dataStatus.textContent="데이터 로딩 실패";el.problemGrid.replaceChildren(makeEmpty("ZIP을 압축 해제한 뒤 웹 서버에서 실행해 주세요."))}
 }
 
+async function loadSearchIndex(){
+  const response=await fetch(CONFIG.indexUrl,{cache:"no-cache"});
+  if(!response.ok)throw new Error(`HTTP ${response.status}`);
+  const index=await response.json();
+  if(Array.isArray(index))return index;
+  if(index.format!=="jb-search-index-v1"||!Array.isArray(index.parts))throw new Error("검색 데이터 형식 오류");
+  const base=new URL(CONFIG.indexUrl,window.location.href);
+  const parts=await Promise.all(index.parts.map(async part=>{
+    const result=await fetch(new URL(part.file,base),{cache:"no-cache"});
+    if(!result.ok)throw new Error(`검색 데이터 로딩 실패: HTTP ${result.status}`);
+    const rows=await result.json();
+    if(!Array.isArray(rows)||rows.length!==part.count)throw new Error("검색 데이터 문항 수 오류");
+    return rows;
+  }));
+  const rows=parts.flat();
+  if(rows.length!==index.count)throw new Error("전체 검색 문항 수 오류");
+  return rows;
+}
+
 const SUBJECT_NAMES={물리학:"물리학",물리:"물리학",물:"물리학",화학:"화학",화:"화학",생명과학:"생명과학",생명:"생명과학",생물:"생명과학",생:"생명과학",지구과학:"지구과학",지구:"지구과학",지:"지구과학"};
 function querySubject(value){const match=String(value||"").normalize("NFKC").match(/(물리학|물리|물|화학|화|생명과학|생명|생물|생|지구과학|지구|지)\s*(II|I|2|1)(?![A-Za-z0-9])/i);return match?SUBJECT_NAMES[match[1]]+(/^(II|2)$/i.test(match[2])?"Ⅱ":""):""}
 function normalize(value){return String(value||"").replace(/(물리학|물리|물|화학|화|생명과학|생명|생물|생|지구과학|지구|지)\s*(?:Ⅱ|ⅱ|II|2)(?![A-Za-z0-9])/gi,(_,subject)=>`${SUBJECT_NAMES[subject]}Ⅱ`).replace(/[Ⅰⅰ]/g,"1").normalize("NFKC").toLocaleLowerCase("ko-KR").replace(/(물리학|화학|생명과학|지구과학)\s*(?:1|i)\b/g,"$1").replace(/\s+/g," ").trim()}
 function hasCondition(){return Boolean(el.searchInput.value.trim()||el.subjectFilter.value||el.typeFilter.value||el.gradeFilter.value||el.evaluationOnly.checked)}
 function unique(values){return [...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ko"))}
+
+function typeOptions(subject,extra=[]){
+  const catalog=state.catalog[subject]||[];
+  if(!subject.endsWith("Ⅱ"))return unique([...catalog,...extra]);
+  const ordered=[...new Set(catalog.filter(Boolean))],known=new Set(ordered);
+  return [...ordered,...unique(extra).filter(type=>!known.has(type))];
+}
 
 function buildSubjectOptions(){
   const current=el.subjectFilter.value;
@@ -56,7 +81,7 @@ function buildSubjectOptions(){
 function buildTypeOptions(){
   const current=el.typeFilter.value,subject=el.subjectFilter.value;
   const dataTypes=state.data.filter(item=>!subject||item.s===subject).map(item=>item.t||"미분류");
-  const types=unique([...(subject?state.catalog[subject]||[]:[]),...dataTypes]);
+  const types=typeOptions(subject,dataTypes);
   el.typeFilter.replaceChildren(option("","전체 유형"),...types.map(value=>option(value,value)));
   if(types.includes(current))el.typeFilter.value=current;
 }
@@ -148,7 +173,7 @@ function makeTypeEditor(item){
   const wrap=document.createElement("div");wrap.className="type-editor";
   const label=document.createElement("label");label.textContent="문항 유형";
   const select=document.createElement("select");select.className="card-type-select";
-  const current=item.t||"미분류",types=unique([...(state.catalog[item.s]||[]),current]);
+  const current=item.t||"미분류",types=typeOptions(item.s,[current]);
   select.replaceChildren(...types.map(value=>option(value,value)));select.value=current;
   select.addEventListener("change",()=>changeItemType(item.i,select.value));label.append(select);wrap.append(label);
   if(current!==item._originalType){
