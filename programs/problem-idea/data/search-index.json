@@ -1,6 +1,6 @@
 {
   "format": "jb-search-index-v1",
-  "count": 16412,
+  "count": 17632,
   "parts": [
     {
       "file": "search-index/part-000-987079ceeff9.json",
@@ -43,9 +43,14 @@
       "bytes": 4194034
     },
     {
-      "file": "search-index/part-008-e1c3b04fcb63.json",
-      "count": 1560,
-      "bytes": 3761677
+      "file": "search-index/part-008-fe13d2bc492f.json",
+      "count": 1778,
+      "bytes": 4192512
+    },
+    {
+      "file": "search-index/part-009-49b66aca92fe.json",
+      "count": 1002,
+      "bytes": 2274482
     }
   ]
 }
