@@ -316,9 +316,28 @@ const HOME_POS = camera.position.clone();
 const HOME_TARGET = controls.target.clone();
 // Ctrl(또는 트랙패드 핀치) + 스크롤일 때만 확대/축소, 아니면 페이지 스크롤
 // (전체화면에서는 스크롤만으로 확대/축소)
+// 부드러운 확대/축소: 스크롤 양에 비례해 목표 거리를 정하고, 매 프레임 천천히 따라감
+let zoomGoal = null;
 wrap.addEventListener("wheel", (e) => {
-  if (!e.ctrlKey && !e.metaKey && !isFullscreen()) e.stopPropagation();
-}, { capture: true });
+  if (e.target.closest && e.target.closest(".panel")) return;
+  e.stopPropagation(); // OrbitControls의 계단식 휠 확대는 사용하지 않음
+  if (!e.ctrlKey && !e.metaKey && !isFullscreen()) return; // 일반 스크롤 → 페이지 스크롤
+  e.preventDefault();
+  let dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+  dy = clamp(dy, -120, 120);
+  const cur = zoomGoal ?? camera.position.distanceTo(controls.target);
+  zoomGoal = clamp(cur * Math.exp(dy * 0.0008), controls.minDistance, controls.maxDistance);
+}, { capture: true, passive: false });
+const _zoomOff = new THREE.Vector3();
+function applySmoothZoom(dt) {
+  if (zoomGoal === null) return;
+  _zoomOff.subVectors(camera.position, controls.target);
+  const d = _zoomOff.length();
+  const nd = d + (zoomGoal - d) * (1 - Math.exp(-dt * 8));
+  _zoomOff.setLength(nd);
+  camera.position.copy(controls.target).add(_zoomOff);
+  if (Math.abs(zoomGoal - nd) < 0.005) zoomGoal = null;
+}
 // 이동 범위 제한
 controls.addEventListener("change", () => {
   const t = controls.target;
@@ -329,6 +348,7 @@ controls.addEventListener("change", () => {
   }
 });
 canvas.addEventListener("dblclick", () => {
+  zoomGoal = null;
   camera.position.copy(HOME_POS);
   controls.target.copy(HOME_TARGET);
   controls.update();
@@ -1794,6 +1814,7 @@ function animate() {
 
   water.material.normalMap.offset.set(simTime * 0.012, simTime * 0.007);
 
+  applySmoothZoom(dt);
   controls.update();
   // 지진 흔들림
   let sx = 0, sy = 0;
