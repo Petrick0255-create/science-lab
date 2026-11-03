@@ -1826,8 +1826,28 @@ function toggleFullscreen() {
     if (req) req.call(wrap);
   }
 }
+// 전체화면에서는 설정 패널을 화면 위에 띄움
+const panel = document.querySelector(".panel");
+const panelHome = panel.parentNode;
+const panelNext = panel.nextSibling;
+const fsPanelBtn = $("fsPanelBtn");
+function setPanelCollapsed(c) {
+  panel.classList.toggle("collapsed", c);
+  fsPanelBtn.querySelector("span").textContent = c ? "설정 보기" : "설정 숨기기";
+  fsPanelBtn.setAttribute("aria-label", c ? "설정 패널 보기" : "설정 패널 숨기기");
+}
+fsPanelBtn.addEventListener("click", () => setPanelCollapsed(!panel.classList.contains("collapsed")));
+panel.addEventListener("wheel", (e) => e.stopPropagation());
 function onFsChange() {
   const fs = isFullscreen();
+  if (fs && panel.parentNode !== wrap) {
+    wrap.appendChild(panel);
+    panel.classList.add("fs-panel");
+    setPanelCollapsed(false);
+  } else if (!fs && panel.parentNode === wrap) {
+    panel.classList.remove("fs-panel", "collapsed");
+    panelHome.insertBefore(panel, panelNext);
+  }
   fsBtn.querySelector("span").textContent = fs ? "나가기 (Esc)" : "전체화면";
   fsBtn.setAttribute("aria-label", fs ? "전체화면 나가기" : "전체화면");
   hintEl.textContent = fs ? "드래그 회전 · 우클릭 드래그 이동 · 스크롤 확대 · 더블클릭 초기화 · Esc 나가기" : HINT_NORMAL;
