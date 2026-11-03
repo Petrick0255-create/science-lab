@@ -302,18 +302,45 @@ const controls = new OrbitControls(camera, canvas);
 controls.target.set(0.3, -2.0, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.enableZoom = false;
-controls.enablePan = false;
+controls.enableZoom = true;
+controls.zoomSpeed = 1.1;
+controls.minDistance = 6;
+controls.maxDistance = 45;
+controls.enablePan = true;
+controls.screenSpacePanning = true;
+controls.panSpeed = 0.8;
 controls.minPolarAngle = 0.15;
 controls.maxPolarAngle = 1.5;
 controls.update();
+const HOME_POS = camera.position.clone();
+const HOME_TARGET = controls.target.clone();
+// Ctrl(또는 트랙패드 핀치) + 스크롤일 때만 확대/축소, 아니면 페이지 스크롤
+// (전체화면에서는 스크롤만으로 확대/축소)
+wrap.addEventListener("wheel", (e) => {
+  if (!e.ctrlKey && !e.metaKey && !isFullscreen()) e.stopPropagation();
+}, { capture: true });
+// 이동 범위 제한
+controls.addEventListener("change", () => {
+  const t = controls.target;
+  const cx = clamp(t.x, -9, 9), cy = clamp(t.y, -5.5, 2), cz = clamp(t.z, -5, 5);
+  if (cx !== t.x || cy !== t.y || cz !== t.z) {
+    const d = new THREE.Vector3(cx - t.x, cy - t.y, cz - t.z);
+    t.add(d); camera.position.add(d);
+  }
+});
+canvas.addEventListener("dblclick", () => {
+  camera.position.copy(HOME_POS);
+  controls.target.copy(HOME_TARGET);
+  controls.update();
+});
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
 // 태양 / 하늘 환경광
-const SUN_DIR = new THREE.Vector3(0.55, 0.78, 0.42).normalize();
-const sun = new THREE.DirectionalLight(0xfff1dc, 3.1);
+const SUN_DIR = new THREE.Vector3(0.66, 0.56, 0.5).normalize();
+const sun = new THREE.DirectionalLight(0xffeed6, 3.4);
 sun.position.copy(SUN_DIR).multiplyScalar(30);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(4096, 4096);
 sun.shadow.camera.left = -15; sun.shadow.camera.right = 15;
 sun.shadow.camera.top = 15; sun.shadow.camera.bottom = -15;
 sun.shadow.camera.near = 5; sun.shadow.camera.far = 70;
@@ -548,6 +575,13 @@ terrainMat.onBeforeCompile = (sh) => {
           float edge = 1. - pb_ss(.006, .014, abs(abs(rz)-.135));
           diffuseColor.rgb = mix(diffuseColor.rgb, pb_lin(vec3(.85)), edge*road);
         }
+        if (uMode > .5 && uMode < 1.5) {
+          float sh = vWP.y;
+          float wave = .5 + .5*sin(vWP.x*9. - uTime*1.6 + pb_noise(vWP.xz*3.)*4.);
+          float foam = (1. - pb_ss(.0, .05, abs(sh + .015))) * pb_ss(.35, .75, pb_noise(vWP.xz*14. + uTime*.4)*wave + .3);
+          diffuseColor.rgb *= mix(1., .7, (1. - pb_ss(-.01, .07, sh)) * pb_ss(-.08, -.0, sh) + (1.-pb_ss(0.,.06,sh))*step(0.,sh)*.6);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.92), foam*.85);
+        }
         if (uMode < 0.5 && uOverlay > 0.5) {
           // 고지자기 줄무늬 (해령 대칭)
           float u = abs(vWP.x) - uT;
@@ -562,8 +596,9 @@ terrainMat.onBeforeCompile = (sh) => {
         float dep = -vWP.y;
         vec2 cp = vWP.xz*3.2 + vec2(uTime*.18, uTime*.11);
         float ca = pow(1. - pb_vor(cp).x, 6.) + pow(1. - pb_vor(cp*1.3 + 5.).x, 6.);
-        outgoingLight += vec3(.55,.8,.9) * ca * .05 * exp(-dep*1.2);
-        outgoingLight = mix(outgoingLight, vec3(.004,.035,.06), 1. - exp(-dep*.62));
+        outgoingLight += vec3(.55,.85,.95) * ca * .1 * exp(-dep*.9);
+        outgoingLight *= mix(vec3(1.), vec3(.55,.85,.95), 1. - exp(-dep*.8));
+        outgoingLight = mix(outgoingLight, vec3(.008,.06,.09), 1. - exp(-dep*.3));
       }
       #include <opaque_fragment>`)
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
@@ -801,7 +836,7 @@ void main(){
   vec3 col=vec3(.5); float bh=0., sl=0., ol=0.; vec3 em=vec3(0.);
   if(y>hs+.001){
     float wd=clamp(-y/2.8,0.,1.);
-    col=mix(vec3(.08,.33,.47),vec3(.012,.06,.15),pow(wd,.7));
+    col=mix(vec3(.16,.50,.60),vec3(.03,.17,.27),pow(wd,.8));
     col+=.05*pb_noise(vec2(x*2.5+uTime*.25,y*4.))*(1.-wd);
     if(uMode<.5){
       float pw=.05+max(0.,y-hs)*.25;
@@ -945,10 +980,10 @@ const waterMat = new THREE.MeshPhysicalMaterial({
   roughness: 0.12,
   metalness: 0,
   transparent: true,
-  opacity: 0.3,
+  opacity: 0.14,
   normalMap: TEX.water,
   normalScale: new THREE.Vector2(0.1, 0.1),
-  envMapIntensity: 0.55,
+  envMapIntensity: 0.4,
   depthWrite: false
 });
 TEX.water.repeat.set(2.2, 1.1);
@@ -999,14 +1034,20 @@ function updateTerrain(full) {
       const k = j * NX + i;
       if (!full && !dynMask[k]) continue;
       const c = colorAt(xs[i], z, heights[k], slopes[k]);
-      tCol[k * 3] = toLin(c[0]);
-      tCol[k * 3 + 1] = toLin(c[1]);
-      tCol[k * 3 + 2] = toLin(c[2]);
+      // 골짜기는 어둡게, 능선은 살짝 밝게 (공동 차폐)
+      const im = i > 1 ? i - 2 : 0, ip = i < NX - 2 ? i + 2 : NX - 1;
+      const jm = j > 1 ? j - 2 : 0, jp = j < NZ - 2 ? j + 2 : NZ - 1;
+      const lap = (heights[j * NX + im] + heights[j * NX + ip] + heights[jm * NX + i] + heights[jp * NX + i]) * 0.25 - heights[k];
+      const ao = clamp(1 - lap * 3.2, 0.6, 1.12);
+      tCol[k * 3] = toLin(c[0]) * ao;
+      tCol[k * 3 + 1] = toLin(c[1]) * ao;
+      tCol[k * 3 + 2] = toLin(c[2]) * ao;
     }
   }
   tGeo.attributes.position.needsUpdate = true;
   tGeo.attributes.normal.needsUpdate = true;
   if (full || colorTick === 0) tGeo.attributes.color.needsUpdate = true;
+  if (modeId === 2 && trees.length) updateTrees();
 
   const w = hasWater();
   for (const f of faces) {
@@ -1241,9 +1282,139 @@ function randomQuake() {
 }
 
 /* =========================================================
+   VEGETATION (InstancedMesh)
+========================================================= */
+const broadGeo = (() => {
+  const g = new THREE.IcosahedronGeometry(1, 1);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const n = 1 + 0.18 * Math.sin(x * 7 + y * 5) * Math.cos(z * 6);
+    p.setXYZ(i, x * n, (y * 0.8 + 0.75) * n, z * n);
+  }
+  g.computeVertexNormals();
+  return g;
+})();
+const conGeo = (() => {
+  const g = new THREE.ConeGeometry(0.55, 2.4, 7, 1);
+  g.translate(0, 1.2, 0);
+  return g;
+})();
+const treeMat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0, envMapIntensity: 0.4 });
+let trees = [];          // {x, z0, s, kind}
+let broadMesh = null, conMesh = null;
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _col = new THREE.Color();
+
+function clearTrees() {
+  for (const m of [broadMesh, conMesh]) if (m) { scene.remove(m); m.dispose(); }
+  broadMesh = conMesh = null;
+  trees = [];
+}
+
+function makeTreeMeshes(nb, nc) {
+  if (nb) {
+    broadMesh = new THREE.InstancedMesh(broadGeo, treeMat, nb);
+    broadMesh.castShadow = true; broadMesh.receiveShadow = true;
+    broadMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(broadMesh);
+  }
+  if (nc) {
+    conMesh = new THREE.InstancedMesh(conGeo, treeMat, nc);
+    conMesh.castShadow = true; conMesh.receiveShadow = true;
+    scene.add(conMesh);
+  }
+}
+
+function treeColor(kind, r) {
+  if (kind === 1) _col.setRGB(lerp(0.07, 0.12, r), lerp(0.15, 0.21, r), lerp(0.08, 0.11, r), THREE.SRGBColorSpace);
+  else _col.setRGB(lerp(0.16, 0.27, r), lerp(0.22, 0.31, r), lerp(0.09, 0.13, r), THREE.SRGBColorSpace);
+  return _col;
+}
+
+function plantConvergent() {
+  let s = 99;
+  const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const list = [];
+  for (let tries = 0; tries < 60000 && list.length < 4200; tries++) {
+    const x = 1.25 + rnd() * 8.65, z = Z0 + 0.06 + rnd() * (Z1 - Z0 - 0.12);
+    const h = convH(x, z);
+    if (h < 0.1 || h > 1.45) continue;
+    const e = 0.06;
+    const sl = Math.hypot(convH(x + e, z) - convH(x - e, z), convH(x, z + e) - convH(x, z - e)) / (2 * e);
+    if (sl > 0.95) continue;
+    const [, vinf] = volcAt(x, z);
+    if (vinf > 0.12) continue;
+    const n = snoise(x * 1.1, z * 1.1) * 0.5 + 0.5;
+    const dens = n * 1.3 - 0.35 - (h > 1.0 ? (h - 1.0) * 1.5 : 0);
+    if (rnd() > dens) continue;
+    list.push({ x, z0: z, y: h, kind: h > 0.75 ? 1 : 0, s: 0.05 + rnd() * 0.035, r: rnd(), rot: rnd() * 6.28 });
+  }
+  trees = list;
+  const nb = list.filter((t) => t.kind === 0).length, nc = list.length - nb;
+  makeTreeMeshes(nb, nc);
+  let ib = 0, ic = 0;
+  for (const t of list) {
+    _q.setFromAxisAngle(_p.set(0, 1, 0), t.rot);
+    if (t.kind === 0) {
+      _s.set(t.s, t.s * 0.9, t.s);
+      _m.compose(_p.set(t.x, t.y - 0.01, t.z0), _q, _s);
+      broadMesh.setMatrixAt(ib, _m); broadMesh.setColorAt(ib, treeColor(0, t.r)); ib++;
+    } else {
+      _s.set(t.s, t.s, t.s);
+      _m.compose(_p.set(t.x, t.y - 0.01, t.z0), _q, _s);
+      conMesh.setMatrixAt(ic, _m); conMesh.setColorAt(ic, treeColor(1, t.r)); ic++;
+    }
+  }
+  for (const m of [broadMesh, conMesh]) if (m) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+}
+
+function plantTransform() {
+  let s = 4242;
+  const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const list = [];
+  for (let i = 0; i < 2600; i++) {
+    const x = X0 + 0.08 + rnd() * (X1 - X0 - 0.16);
+    if (Math.abs(x) < 0.1) continue;
+    list.push({ x, z0: Z0 + rnd() * (Z1 - Z0), s: 0.045 + rnd() * 0.035, r: rnd(), rot: rnd() * 6.28, kind: 0 });
+  }
+  trees = list;
+  makeTreeMeshes(list.length, 0);
+  list.forEach((t, i) => broadMesh.setColorAt(i, treeColor(0, t.r)));
+  broadMesh.instanceColor.needsUpdate = true;
+  updateTrees();
+}
+
+// 보존형: 나무가 판과 함께 이동 (평면 좌표에서 숲 밀도를 평가)
+function updateTrees() {
+  const span = Z1 - Z0;
+  for (let i = 0; i < trees.length; i++) {
+    const t = trees[i];
+    const d = trDisp(t.x);
+    let z = t.z0 + d;
+    z = Z0 + ((((z - Z0) % span) + span) % span);
+    const zz = z - d;
+    const off = t.x < 0 ? 11.7 : 0;
+    const n = snoise(t.x * 0.55 + off, zz * 0.55) * 0.5 + 0.5;
+    const n2 = snoise(t.x * 2.6 + off, zz * 2.6) * 0.5 + 0.5;
+    const trough = 1 - smooth(0.15, 0.7, Math.abs(t.x));
+    const per = 6.5;
+    const rz = (((zz + 1.3) % per) + per) % per - per * 0.5;
+    const dens = smooth(0.62, 0.78, n2) * smooth(0.3, 0.7, n) + trough * 0.55 + smooth(0.6, 0.85, n) * 0.25;
+    const ok = Math.abs(rz) > 0.32 && z > Z0 + 0.06 && z < Z1 - 0.06 && t.r < dens;
+    const sc = ok ? t.s : 0;
+    _q.setFromAxisAngle(_p.set(0, 1, 0), t.rot);
+    _s.set(sc, sc * 0.85, sc);
+    _m.compose(_p.set(t.x, ok ? trH(t.x, z) - 0.01 : -50, z), _q, _s);
+    broadMesh.setMatrixAt(i, _m);
+  }
+  broadMesh.instanceMatrix.needsUpdate = true;
+}
+
+/* =========================================================
    MODE BUILDERS
 ========================================================= */
 function clearMode() {
+  clearTrees();
   for (const e of emitters) e.dispose();
   emitters = [];
   dustEmitter = null;
@@ -1295,6 +1466,7 @@ function buildConvergent() {
   modeId = 1;
   for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) dynMask[j * NX + i] = xs[i] < XT + 0.05 ? 1 : 0;
   updateTerrain(true);
+  plantConvergent();
 
   const v0 = VOLCANOES[0];
   const top = convH(v0.x, v0.z);
@@ -1352,6 +1524,7 @@ function buildTransform() {
   modeId = 2;
   for (let k = 0; k < NV; k++) dynMask[k] = 1;
   updateTerrain(true);
+  plantTransform();
 
   dustEmitter = new Emitter({
     rate: 0, life: 2.5, size: [0.2, 1.1], vel: [0, 0.25, 0], spread: 0.12, jitter: 0.1,
@@ -1463,9 +1636,13 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(1100, 620), 0.55, 0.55, 0.92
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
+function isFullscreen() {
+  return (document.fullscreenElement || document.webkitFullscreenElement) === wrap;
+}
 function resize() {
-  const w = Math.max(320, wrap.clientWidth);
-  const h = Math.round(w * 620 / 1100);
+  const fs = isFullscreen();
+  const w = fs ? window.innerWidth : Math.max(320, wrap.clientWidth);
+  const h = fs ? window.innerHeight : Math.round(w * 620 / 1100);
   const pr = Math.min(window.devicePixelRatio || 1, 1.5);
   renderer.setPixelRatio(pr);
   renderer.setSize(w, h, false);
@@ -1589,6 +1766,34 @@ function animate() {
    EVENTS
 ========================================================= */
 boundaryType.addEventListener("change", rebuild);
+
+// 전체화면 (Esc로 나가기 — 브라우저 기본 동작)
+const fsBtn = $("fsBtn");
+const hintEl = wrap.querySelector(".sim-hint");
+const HINT_NORMAL = hintEl.textContent;
+function toggleFullscreen() {
+  if (isFullscreen()) {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } else {
+    const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+    if (req) req.call(wrap);
+  }
+}
+function onFsChange() {
+  const fs = isFullscreen();
+  fsBtn.querySelector("span").textContent = fs ? "나가기 (Esc)" : "전체화면";
+  fsBtn.setAttribute("aria-label", fs ? "전체화면 나가기" : "전체화면");
+  hintEl.textContent = fs ? "드래그 회전 · 우클릭 드래그 이동 · 스크롤 확대 · 더블클릭 초기화 · Esc 나가기" : HINT_NORMAL;
+  resize();
+}
+fsBtn.addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", onFsChange);
+document.addEventListener("webkitfullscreenchange", onFsChange);
+window.addEventListener("resize", () => { if (isFullscreen()) resize(); });
+window.addEventListener("keydown", (e) => {
+  if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey &&
+      !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || "")) toggleFullscreen();
+});
 
 $("captureBtn").addEventListener("click", () => {
   composer.render();
