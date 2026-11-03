@@ -996,6 +996,46 @@ scene.add(water);
 
 const hasWater = () => modeId !== 2;
 
+// 바닷물 옆면 (투명 물기둥: 해저면 ~ 해수면)
+const waterWallMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: U.uTime },
+  transparent: true,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+  vertexShader: `
+    varying vec3 vW;
+    void main(){ vec4 wp = modelMatrix * vec4(position,1.0); vW = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+  fragmentShader: `
+    uniform float uTime;
+    varying vec3 vW;
+    void main(){
+      float d = clamp(-vW.y / 2.8, 0., 1.);
+      vec3 c = mix(vec3(.16,.55,.66), vec3(.04,.22,.34), pow(d, .8));
+      float a = .16 + .3 * pow(d, .9);
+      float rip = .5 + .5*sin(vW.x*6. + vW.z*6. + uTime*1.2);
+      float surf = exp(-pow(vW.y / .025, 2.));
+      c += vec3(.6,.85,.95) * surf * .5;
+      a += surf * .35 + .03 * rip * (1. - d);
+      gl_FragColor = vec4(pow(c, vec3(2.2)), a);
+    }`
+});
+const waterWalls = faces.map((f) => {
+  const n = f.idxList.length;
+  const pos = new Float32Array(n * 2 * 3);
+  for (let k = 0; k < n; k++) {
+    const vi = f.idxList[k];
+    pos.set([tPos[vi * 3], 0, tPos[vi * 3 + 2], tPos[vi * 3], 0, tPos[vi * 3 + 2]], k * 6);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setIndex(f.geo.index);
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, -1, 0), 16);
+  const mesh = new THREE.Mesh(g, waterWallMat);
+  mesh.renderOrder = 3;
+  scene.add(mesh);
+  return { mesh, pos, geo: g, idxList: f.idxList };
+});
+
 /* =========================================================
    TERRAIN UPDATE
 ========================================================= */
@@ -1050,11 +1090,18 @@ function updateTerrain(full) {
   if (modeId === 2 && trees.length) updateTrees();
 
   const w = hasWater();
+  for (const ww of waterWalls) {
+    ww.mesh.visible = w;
+    if (!w) continue;
+    const n = ww.idxList.length;
+    for (let k = 0; k < n; k++) ww.pos[2 * k * 3 + 1] = Math.min(heights[ww.idxList[k]], 0);
+    ww.geo.attributes.position.needsUpdate = true;
+  }
   for (const f of faces) {
     const n = f.idxList.length;
     for (let k = 0; k < n; k++) {
       const h = heights[f.idxList[k]];
-      f.pos[(2 * k + 1) * 3 + 1] = w ? Math.max(h, 0) : h;
+      f.pos[(2 * k + 1) * 3 + 1] = h;
       f.surf[2 * k] = h;
       f.surf[2 * k + 1] = h;
     }
