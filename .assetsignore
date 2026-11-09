@@ -6,3 +6,7 @@
 /.wrangler/
 /.DS_Store
 /wrangler.jsonc
+
+# Graph service implementation and verification files are not public assets.
+/graph-worker.mjs
+/tests/

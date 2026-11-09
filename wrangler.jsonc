@@ -2,6 +2,12 @@
   "name": "science-lab1",
   "compatibility_date": "2026-10-23",
   "assets": {
-    "directory": "."
-  }
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/programs/graph-maker/mcp",
+      "/programs/graph-maker/api/*"
+    ]
+  },
+  "main": "graph-worker.mjs"
 }
