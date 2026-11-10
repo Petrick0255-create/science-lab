@@ -1,4 +1,4 @@
-import {renderGraph,encodeSpec,decodeSpec} from './graph-core.mjs';
+import {renderGraph,encodeSpec,decodeSpec,peakPoints} from './graph-core.mjs';
 import {PRESETS,getPreset} from './presets.mjs';
 const $=id=>document.getElementById(id), copy=v=>structuredClone(v);
 const STORE='jnb-graph-studio-v2'; let spec=getPreset('weather'), result, pi=0, si=0, yi=0, past=[], future=[];
@@ -24,7 +24,7 @@ function fillControls(){
   const s=panel().series[si];
   if(s){for(const key of ['Name','Axis','Type','Line','Marker','Color'])$('series'+key).value=s[key.toLowerCase()];$('seriesTrend').checked=s.trend;$('data').value=s.points.map(p=>p.join(', ')).join('\n');}
   else{$('data').value='';$('seriesName').value='';}
-  ['applyData','removeSeries','seriesName','seriesAxis','seriesType','seriesLine','seriesMarker','seriesColor','seriesTrend','data'].forEach(id=>$(id).disabled=!s);
+  ['applyData','applyPeak','removeSeries','seriesName','seriesAxis','seriesType','seriesLine','seriesMarker','seriesColor','seriesTrend','data'].forEach(id=>$(id).disabled=!s);
   $('subFontSize').value=spec.subFontSize??'';$('printWidth').value=spec.print?.widthMm??'';$('printPt').value=spec.print?.textPt??'';
   $('printInfo').textContent=result?.print?`문서에 넣으면 폭 ${result.print.widthMm} mm · 높이 약 ${result.print.heightMm} mm, 본문 ${result.print.textPt} pt · 가장 작은 글자 ${result.print.smallestPt} pt`:'한글에 넣을 폭과 원하는 글자 크기를 적으면 글자 크기를 자동으로 맞춥니다.';
   $('spec').value=JSON.stringify(spec,null,2);$('undo').disabled=!past.length;$('redo').disabled=!future.length;
@@ -32,7 +32,7 @@ function fillControls(){
 function show(res,controls=true){
   result=res;spec=res.spec;$('preview').innerHTML=res.svg;$('previewTitle').textContent=spec.title||'미리보기';
   $('warnings').replaceChildren(...res.warnings.map(w=>{const li=document.createElement('li');li.textContent=w;return li;}));
-  $('stats').textContent=res.regressions.map(r=>`패널 ${r.panel+1} · 자료 ${r.series+1} 추세선: y = ${r.slope.toPrecision(4)}x ${r.intercept<0?'−':'+'} ${Math.abs(r.intercept).toPrecision(4)} · R² = ${r.rSquared.toFixed(4)} · ${r.n}개 좌표`).join(' / ');
+  $('stats').textContent=[...res.regressions.map(r=>`패널 ${r.panel+1} · 자료 ${r.series+1} 추세선: y = ${r.slope.toPrecision(4)}x ${r.intercept<0?'−':'+'} ${Math.abs(r.intercept).toPrecision(4)} · R² = ${r.rSquared.toFixed(4)} · ${r.n}개 좌표`),...(res.areas||[]).map(a=>`패널 ${a.panel+1} · ${a.name||`자료 ${a.series+1}`} 그래프 아래 넓이: ${Number(a.area.toPrecision(4))}${a.unit?` ${a.unit}`:''}`)].join(' / ');
   try{localStorage.setItem(STORE,JSON.stringify(spec));}catch{status('브라우저 저장 공간을 사용할 수 없습니다. 작업 파일로 저장해 주세요.');}
   if(controls)fillControls();
 }
@@ -58,6 +58,7 @@ $('addSeries').onclick=()=>commit(s=>{const p=s.panels[pi];p.series.push({name:`
 $('removeSeries').onclick=()=>commit(s=>{s.panels[pi].series.splice(si,1);});
 export function parseData(text){const rows=text.trim().split(/\r?\n/).filter(x=>x.trim());let data=[];rows.forEach((r,i)=>{const cols=r.trim().split(/[\t,;]+/).map(x=>x.trim());if(i===0&&cols.length===2&&cols.every(x=>x&&!Number.isFinite(Number(x))))return;if(cols.length!==2||cols.some(x=>!x||!Number.isFinite(Number(x))))throw new Error(`데이터 ${i+1}행: x와 y 숫자 두 개를 입력하세요.`);data.push(cols.map(Number));});if(!data.length)throw new Error('좌표를 하나 이상 입력하세요.');return data;}
 $('applyData').onclick=()=>commit(s=>s.panels[pi].series[si].points=parseData(value('data')));
+$('applyPeak').onclick=()=>commit(s=>{const from=num('peakFrom'),to=num('peakTo');if(to<=from)throw new Error('봉우리 끝 x는 시작 x보다 커야 합니다.');const ser=s.panels[pi].series[si];ser.points=peakPoints(from,to,num('peakMax'));ser.type='line';},'봉우리 곡선으로 바꿨습니다.');
 $('addBand').onclick=()=>commit(s=>s.panels[pi].bands.push({from:num('bandFrom'),to:num('bandTo'),shade:.13,label:''}));
 $('addMark').onclick=()=>commit(s=>s.panels[pi].annotations.push({type:'vline',x:num('markX'),label:value('markLabel')}));
 $('clearBands').onclick=()=>commit(s=>s.panels[pi].bands=[]);$('clearMarks').onclick=()=>commit(s=>s.panels[pi].annotations=[]);

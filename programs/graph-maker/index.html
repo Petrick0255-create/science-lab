@@ -34,6 +34,9 @@
         <label class="check"><input id="seriesTrend" type="checkbox"> 이 자료로 직선 추세선 계산</label>
         <label>좌표 데이터 <span class="hint">한 줄에 x, y · 엑셀 붙여넣기 가능</span><textarea id="data" rows="8" spellcheck="false"></textarea></label>
         <div class="cols"><button id="applyData" class="primary">데이터 반영</button><button id="removeSeries">자료 삭제</button></div>
+        <div class="cols"><label>봉우리 시작 x<input id="peakFrom" type="number" step="any" value="1"></label><label>봉우리 끝 x<input id="peakTo" type="number" step="any" value="3"></label></div>
+        <div class="cols"><label>봉우리 최댓값<input id="peakMax" type="number" step="any" value="3"></label><button id="applyPeak">봉우리 곡선 넣기</button></div>
+        <p class="hint">충돌할 때의 힘처럼 0에서 매끄럽게 올라갔다 내려오는 정규분포 모양 곡선으로 이 자료의 좌표를 바꿉니다. 그래프 아래 넓이(충격량)는 미리보기 아래에 표시됩니다.</p>
       </details>
       <details><summary>구간 음영과 지점 표시</summary>
         <div class="cols"><label>시작 x<input id="bandFrom" type="number" step="any" value="1"></label><label>끝 x<input id="bandTo" type="number" step="any" value="2"></label></div><button id="addBand">회색 구간 추가</button>

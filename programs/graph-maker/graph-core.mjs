@@ -1,6 +1,12 @@
 // Shared, deterministic renderer: browser, Worker and command-line use this file.
 export const VERSION = '2.1.0';
 export const PT_MM = 25.4 / 72;   // 1 pt = 0.3528 mm
+// 충돌할 때의 힘처럼 0에서 매끄럽게 올라갔다가 다시 0으로 내려오는 봉우리 곡선(정규분포 모양, ±3σ).
+// from~to 밖에서는 0이고, 양 끝에서 축에 거의 접하며, 한가운데에서 max가 된다.
+export function peakPoints(from, to, max, n=121) {
+  const e=Math.exp(-4.5), r=v=>Math.round(v*1e4)/1e4;
+  return Array.from({length:n},(_,i)=>{const z=-3+6*i/(n-1), t=from+(to-from)*i/(n-1);return [r(t), r(max*(Math.exp(-z*z/2)-e)/(1-e))];});
+}
 const fail = message => { throw new Error(message); };
 const finite = (v, name, min=-1e12, max=1e12) => {
   if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) fail(`${name}: ${min}~${max} 범위의 숫자가 필요합니다.`);
@@ -43,7 +49,9 @@ export function normalizeSpec(input) {
     obj(p,'패널'); const y=arr(p.y,'y축',3).map((a,i)=>axis(a,`패널 ${pi+1} y${i+1}`)); if(!y.length) fail('y축이 필요합니다.');
     const q={caption:str(p.caption),x:axis(p.x,'x축'),y,frame:pick(p.frame??'box',['box','arrows'],'축 모양'),grid:pick(p.grid??'none',['none','major','dense'],'격자'),legend:pick(p.legend??'top-right',['none','top-left','top-right','bottom-right','above'],'범례'),zeroLines:bool(p.zeroLines,true),series:[],bands:[],annotations:[]};
     for(const [si,s] of arr(p.series,'자료',12).entries()) {
-      obj(s,'자료'); const points=arr(s.points,`자료 ${si+1} 좌표`,5000).map(pt=>{if(!Array.isArray(pt)||pt.length!==2)fail('좌표는 [x,y]입니다.');return [finite(pt[0],'x'),finite(pt[1],'y')];});
+      obj(s,'자료'); let raw=s.points;
+      if(s.peak!==undefined){if(s.points!==undefined)fail(`자료 ${si+1}: points와 peak 중 하나만 쓰세요.`);const pk=obj(s.peak,`자료 ${si+1} 봉우리`),from=finite(pk.from,'peak.from'),to=finite(pk.to,'peak.to'),mx=finite(pk.max,'peak.max');if(to<=from)fail('peak.to는 peak.from보다 커야 합니다.');raw=peakPoints(from,to,mx);}
+      const points=arr(raw,`자료 ${si+1} 좌표`,5000).map(pt=>{if(!Array.isArray(pt)||pt.length!==2)fail('좌표는 [x,y]입니다.');return [finite(pt[0],'x'),finite(pt[1],'y')];});
       if(!points.length) fail('자료마다 좌표가 하나 이상 필요합니다.'); total+=points.length;
       const a=scalar(s.axis,0,'자료의 y축',0,y.length-1); if(!Number.isInteger(a)) fail('axis는 정수입니다.');
       q.series.push({name:str(s.name),type:pick(s.type??'line',['line','scatter'],'자료 종류'),axis:a,points,line:pick(s.line??'solid',['solid','dash','dashdot','dot'],'선 모양'),color:pick(s.color??'#111111',colors,'선 색'),width:scalar(s.width,1.5,'선 굵기',.5,4),marker:pick(s.marker??'none',['none','circle','square','open','hidden'],'점 모양'),size:scalar(s.size,2.5,'점 크기',1,7),trend:bool(s.trend),trendLabel:str(s.trendLabel??'추세선'),trendLine:pick(s.trendLine??'solid',['solid','dash','dashdot','dot'],'추세선 모양'),fill:bool(s.fill)});
@@ -79,7 +87,7 @@ function segHitsBox([x1,y1,x2,y2],b){
   return true;
 }
 export function renderGraph(input) {
-  const spec=normalizeSpec(input), warnings=[], regressions=[];
+  const spec=normalizeSpec(input), warnings=[], regressions=[], areas=[];
   let hash=2166136261;for(const c of VERSION+JSON.stringify(spec))hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;const prefix='graph-'+hash.toString(36);
   const f=spec.fontSize, gap=22, pw=(spec.width-gap*(spec.panels.length-1))/spec.panels.length;
   const family=spec.font==='serif'?"'HCR Batang','Batang','Noto Serif CJK KR','Noto Serif KR',serif":"'Malgun Gothic','Noto Sans KR',sans-serif";
@@ -132,7 +140,10 @@ export function renderGraph(input) {
       const d=coords.map(([x,y],i)=>`${i?'L':'M'}${fmt(x)} ${fmt(y)}`).join(' ');
       if(s.fill){const y0=Y(Math.max(p.y[s.axis].min,Math.min(p.y[s.axis].max,0)),s.axis);out.push(`<path d="${d} L${fmt(coords.at(-1)[0])} ${fmt(y0)} L${fmt(coords[0][0])} ${fmt(y0)} Z" fill="${s.color}" fill-opacity=".1"/>`);}
       if(s.type==='line')out.push(`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width}"${dash(s.line)?` stroke-dasharray="${dash(s.line)}"`:''}/>`);
-      if(s.type==='line'&&coords.length>1)coords.slice(1).forEach((c,i)=>segs.push([...coords[i],...c]));
+      if(s.type==='line'&&coords.length>1){coords.slice(1).forEach((c,i)=>segs.push([...coords[i],...c]));
+        // 그래프 아래 넓이(사다리꼴 적분): 힘-시간이면 충격량, 속도-시간이면 변위
+        const area=s.points.slice(1).reduce((n,[x,y],i)=>n+(x-s.points[i][0])*(y+s.points[i][1])/2,0);
+        areas.push({panel:pi,series:si,name:s.name,area:Math.round(area*1e6)/1e6,unit:[p.y[s.axis].unit,p.x.unit].filter(Boolean).join('·')});}
       if(showPoints(s)){coords.forEach(([x,y])=>{point(x,y,s.marker==='none'?'circle':s.marker,s.size,s.color);dots.push([x,y,s.size]);});}
       if(s.trend){const r=regression(s.points);regressions.push({panel:pi,series:si,...r});const lo=Math.min(...s.points.map(p=>p[0])),hi=Math.max(...s.points.map(p=>p[0])),seg=[X(lo),Y(r.slope*lo+r.intercept,s.axis),X(hi),Y(r.slope*hi+r.intercept,s.axis)];line(...seg,1.4,'#111111',s.trendLine);segs.push(seg);}
     }
@@ -194,5 +205,5 @@ export function renderGraph(input) {
     const r1=v=>Math.round(v*10)/10;print={widthMm:spec.print.widthMm,heightMm:r1(spec.height*spec.print.widthMm/spec.width),textPt:r1(spec.fontSize*ptPerPx),smallestPt:r1(Math.min(...used)*ptPerPx)};
     if(print.smallestPt<7)warnings.push(`문서에 넣었을 때 가장 작은 글자가 ${print.smallestPt} pt입니다. print.subPt로 범례·단위 글자를 키울 수 있습니다.`);
   }
-  return {spec,svg:out.join(''),warnings:[...new Set(warnings)],regressions,...(print?{print}:{})};
+  return {spec,svg:out.join(''),warnings:[...new Set(warnings)],regressions,areas,...(print?{print}:{})};
 }

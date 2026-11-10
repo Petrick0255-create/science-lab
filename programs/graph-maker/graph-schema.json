@@ -310,6 +310,27 @@
                   "maxItems": 5000,
                   "minItems": 1
                 },
+                "peak": {
+                  "type": "object",
+                  "description": "points 대신 쓰는 봉우리 곡선(충돌할 때의 힘처럼 정규분포 모양). from~to 밖은 0, 가운데에서 max.",
+                  "properties": {
+                    "from": {
+                      "type": "number"
+                    },
+                    "to": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "max"
+                  ],
+                  "additionalProperties": false
+                },
                 "line": {
                   "type": "string",
                   "enum": [
@@ -370,8 +391,17 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "points"
+              "anyOf": [
+                {
+                  "required": [
+                    "points"
+                  ]
+                },
+                {
+                  "required": [
+                    "peak"
+                  ]
+                }
               ],
               "additionalProperties": false
             },

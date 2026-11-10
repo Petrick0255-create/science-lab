@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
-import {renderGraph,regression,encodeSpec,decodeSpec} from '../programs/graph-maker/graph-core.mjs';
+import {renderGraph,regression,encodeSpec,decodeSpec,peakPoints} from '../programs/graph-maker/graph-core.mjs';
 import {PRESETS,getPreset} from '../programs/graph-maker/presets.mjs';
 import {rpc,callTool} from '../programs/graph-maker/tool-api.mjs';
 import worker from '../graph-worker.mjs';
@@ -40,3 +40,5 @@ test('가로축 마지막 눈금을 최댓값에 두어도 눈금 글자가 그�
 test('기준선 이름 위치를 바꿀 수 있고 선과 겹치면 경고',()=>{const s=simple();s.panels[0].annotations=[{type:'hline',y:9.3,label:'Ⅱ'}];let r=renderGraph(s);assert.ok(r.warnings.some(w=>w.includes('labelPos')));s.panels[0].annotations[0].labelPos='left-above';r=renderGraph(s);assert.deepEqual(r.warnings,[]);assert.match(r.svg,/text-anchor="start">Ⅱ/);});
 test('글자 표시와 범례가 선을 가리면 경고',()=>{const s=simple();s.panels[0].annotations=[{type:'text',x:5,y:5,dx:0,dy:0,label:'가운데'}];assert.ok(renderGraph(s).warnings.some(w=>w.includes('dx·dy')));const t=simple({legend:'top-right'});t.panels[0].series[0].points=[[0,0],[10,9.6]];assert.ok(renderGraph(t).warnings.some(w=>w.includes('범례')));t.panels[0].legend='top-left';assert.deepEqual(renderGraph(t).warnings,[]);});
 test('범례가 지점·구간 이름을 가리면 경고',()=>{const s=getPreset('weather');assert.deepEqual(renderGraph(s).warnings,[]);s.width=560;s.print={widthMm:65,textPt:9};assert.ok(renderGraph(s).warnings.some(w=>w.includes('표시 이름')));});
+test('봉우리 곡선은 0에서 축에 접하듯 올라가 가운데에서 최댓값이 되는 정규분포 모양',()=>{const pts=peakPoints(1,3,3);assert.deepEqual(pts[0],[1,0]);assert.deepEqual(pts.at(-1),[3,0]);assert.deepEqual(pts[60],[2,3]);for(let i=1;i<=60;i++)assert.ok(pts[i][1]>=pts[i-1][1]);const slope=i=>(pts[i+1][1]-pts[i][1])/(pts[i+1][0]-pts[i][0]),steep=Math.max(...pts.slice(0,60).map((_,i)=>slope(i)));assert.ok(slope(0)<steep*.1);const r=renderGraph(getPreset('impulse'));assert.deepEqual(r.warnings,[]);assert.equal(r.areas[0].unit,'N·s');assert.ok(Math.abs(r.areas[0].area-2.4605)<.001);});
+test('peak 입력으로 충격량이 같은 두 충돌 곡선을 만들고 넓이를 확인',()=>{const s={version:1,panels:[{x:{min:0,max:4,unit:'s'},y:[{min:0,max:5,unit:'N'}],series:[{name:'A',peak:{from:1,to:2,max:4}},{name:'B',peak:{from:1,to:3,max:2},line:'dash'}]}]};const r=renderGraph(s);assert.equal(r.spec.panels[0].series[0].points.length,121);assert.ok(!('peak' in r.spec.panels[0].series[0]));assert.ok(Math.abs(r.areas[0].area-r.areas[1].area)<1e-3);assert.equal(renderGraph(decodeSpec(encodeSpec(r.spec))).svg,r.svg);assert.equal(callTool('render_graph',{spec:s}).areas.length,2);s.panels[0].series[0].points=[[0,0]];assert.throws(()=>renderGraph(s),/points와 peak/);});
