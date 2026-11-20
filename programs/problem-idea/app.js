@@ -95,7 +95,7 @@ function search(updateUrl){
     if(updateUrl)updateParams();
     return;
   }
-  const query=normalize(el.searchInput.value),tokens=query.split(" ").filter(Boolean);
+  const query=normalize(el.searchInput.value),tokens=query.split(/[,\s]+/).filter(Boolean);
   const subject=el.subjectFilter.value,type=el.typeFilter.value,grade=el.gradeFilter.value,evaluationOnly=el.evaluationOnly.checked;
   const namedSubject=querySubject(el.searchInput.value);
   const exact=normalize(el.searchInput.value).replace(/\s/g,"").toUpperCase();
