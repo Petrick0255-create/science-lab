@@ -555,6 +555,13 @@ vec2 pb_vor(vec2 x){ vec2 n=floor(x), f=fract(x); float F1=8., F2=8.;
   F1=sqrt(F1); F2=sqrt(F2); return vec2(F1,F2-F1); }
 vec3 pb_lin(vec3 c){ return pow(max(c,vec3(0.)),vec3(2.2)); }
 float pb_trDisp(float x, float slip, float def){ return sign(x)*slip*.5 + def*atan(x/FAULT_D)/3.14159265; }
+// 발산형: 판 사이 틈으로 마그마가 상승하는 주기 (단면·윗면이 같은 시계를 쓴다)
+// 해령 축 전체에서 한꺼번에 올라오고, 해저에 닿으면 축을 따라 동시에 갈라진다.
+#define RISE_P 6.0
+float pb_risePh(float t){ return fract(t/RISE_P); }
+float pb_riseFront(float ph){ return pb_ss(0.,.36,ph); }                    // 마그마 선단 높이 0→1
+float pb_riseOpen(float ph){ return pb_ss(.34,.42,ph)*(1.-pb_ss(.80,.97,ph)); } // 해저가 갈라진 정도
+float pb_riseHeat(float ph){ return 1.-pb_ss(.60,.90,ph); }                  // 식기 전 뜨거운 정도
 `;
 
 /* ---------- 지형(윗면) 재질 ---------- */
@@ -602,6 +609,13 @@ terrainMat.onBeforeCompile = (sh) => {
           diffuseColor.rgb *= mix(1., .7, (1. - pb_ss(-.01, .07, sh)) * pb_ss(-.08, -.0, sh) + (1.-pb_ss(0.,.06,sh))*step(0.,sh)*.6);
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.92), foam*.85);
         }
+        if (uMode < 0.5) {
+          // 마그마가 해저에 닿는 순간 열곡 바닥이 축을 따라 한꺼번에 갈라진다
+          float op = pb_riseOpen(pb_risePh(uTime)) * uMagma;
+          float cw = .02 + .07*op;
+          float crack = (1. - pb_ss(cw*.6, cw, abs(vWP.x))) * op;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.02,.015,.012), crack);
+        }
         if (uMode < 0.5 && uOverlay > 0.5) {
           // 고지자기 줄무늬 (해령 대칭)
           float u = abs(vWP.x) - uT;
@@ -629,9 +643,16 @@ terrainMat.onBeforeCompile = (sh) => {
           totalEmissiveRadiance += vec3(1., .22, .12) * l * 1.6;
         }
         if (uMode < .5) {
-          // 열곡 중앙의 새 용암 틈
-          float fis = (1. - pb_ss(.02, .07, abs(vWP.x))) * pb_ss(.62, .85, pb_noise(vec2(vWP.z*2.4 - uTime*.15, 3.)));
-          totalEmissiveRadiance += vec3(1., .3, .05) * fis * uMagma * 1.6;
+          // 열곡 중앙의 용암 틈: 마그마가 축 전체에서 한꺼번에 올라와 해저가 동시에 갈라진다
+          // (앞뒤로 번져 가지 않도록 z 방향으로 흐르는 무늬는 쓰지 않는다)
+          float rph = pb_risePh(uTime);
+          float op = pb_riseOpen(rph), hot = pb_riseHeat(rph);
+          float cw = .02 + .07*op;
+          float crack = 1. - pb_ss(cw*.5, cw, abs(vWP.x));
+          float tex = .65 + .35*pb_noise(vec2(vWP.z*6., uTime*.8));
+          float flick = .88 + .12*sin(uTime*7.);
+          totalEmissiveRadiance += vec3(1., .32, .06) * crack * op * hot * tex * flick * uMagma * 2.6;
+          totalEmissiveRadiance += vec3(1., .3, .05) * (1. - pb_ss(.01, .04, abs(vWP.x))) * .2 * uMagma;
         }
         if (uMode > .5 && uMode < 1.5) {
           // 활화산 분화구 / 용암류
@@ -721,13 +742,36 @@ void layDiv(float x,float y,float hs,inout vec3 col,inout float bh,inout vec3 em
   float mn=pb_noise(vec2(x*7.,y*5.-uTime*.7));
   em+=pb_lin(vec3(1.,.32,.06))*melt*(.15+.85*pb_ss(.45,.8,mn))*uMagma*1.4;
   col=mix(col,col*vec3(1.2,.8,.6),melt*.5*uMagma);
-  float cy=axisTop-.34;
-  float e=length(vec2(x,y-cy)/vec2(.55,.075)); float ch=1.-pb_ss(.75,1.,e);
-  float e2=length(vec2(x,y-cy+.25)/vec2(.95,.33)); float mush=(1.-pb_ss(.3,1.,e2))*(1.-ch);
-  float dk=(1.-pb_ss(.012,.035,abs(x-.025*sin(y*23.+uTime*.7))))*step(y,hs)*step(cy,y);
-  dk*=.5+.5*sin(uTime*1.1);
-  em+=magmaCol(vec2(x,y))*(ch+mush*.22+dk*.8)*uMagma;
-  col=mix(col,vec3(.18,.05,.02),ch*uMagma);
+  // 판 사이 틈으로 상승하는 마그마: 아래에서 위로 차오르고, 해저에 닿으면 갈라져 분출한 뒤 식는다
+  float lb0=axisTop-.55;                       // 해령 축의 암석권 바닥
+  float ph=pb_risePh(uTime);
+  float riseOn=1.-pb_ss(.33,.38,ph);           // 올라오는 중
+  float heat=pb_riseHeat(ph);
+  // 판 아래에 모인 마그마 (올라가기 직전에 부풀어 밝아진다)
+  float pre=max(pb_ss(.8,1.,ph),1.-pb_ss(0.,.12,ph));
+  float pe=length(vec2(x/.55,(y-(lb0-.3))/.36));
+  float pool=1.-pb_ss(.55,1.,pe);
+  em+=magmaCol(vec2(x,y))*pool*(.35+.45*pre)*uMagma;
+  col=mix(col,vec3(.22,.06,.02),pool*.7*uMagma);
+  // 판 사이 틈 (마그마가 밀고 올라온 만큼만 열린다)
+  float wob=.010*sin(y*19.+uTime*1.3)+.006*sin(y*41.-uTime*2.1);
+  float y0=lb0-.3;                             // 판 아래 마그마가 모인 곳에서 출발
+  float cw=.085+.03*pb_ss(lb0+.25,lb0-.1,y)+.06*pb_riseOpen(ph)*pb_ss(hs-.2,hs,y);
+  float slot=(1.-pb_ss(cw*.6,cw,abs(x-wob)))*step(y0,y)*step(y,hs);
+  float yf=mix(y0,hs+.01,pb_riseFront(ph));
+  float below=step(y,yf);
+  float fill=slot*below;
+  float crackTip=slot*(1.-below)*(1.-pb_ss(0.,.1,y-yf))*riseOn;   // 선단 바로 위의 가는 균열
+  float tip=(1.-pb_ss(cw,cw*2.2,abs(x-wob)))*exp(-pb_sq((y-yf)/.04))*riseOn*step(y0,y);
+  float cooled=fill*(1.-heat)*(1.-pb_ss(.9,1.,ph));
+  col=mix(col,vec3(.05,.03,.03),crackTip*uMagma);
+  col=mix(col,vec3(.18,.05,.02),fill*heat*uMagma);
+  col=mix(col,vec3(.11,.11,.12),cooled*uMagma);
+  em+=magmaCol(vec2(x,y))*fill*heat*1.15*uMagma;
+  em+=vec3(1.,.82,.5)*tip*3.2*uMagma;
+  // 해저에 닿으면 축 위가 벌어지며 용암이 빛난다
+  float vent=(1.-pb_ss(.08,.26,abs(x)))*(1.-pb_ss(0.,.08,hs-y))*step(y,hs)*pb_riseOpen(ph)*heat;
+  em+=magmaCol(vec2(x,y))*vent*.9*uMagma;
   ol=max(ol,lineAt(y-lb));
   ol=max(ol,(1.-pb_ss(.0,.03,a))*step(lb,y)*step(fract(y*5.),.55)*step(y,hs));
 }
@@ -862,6 +906,9 @@ void main(){
       float pw=.05+max(0.,y-hs)*.25;
       float m=exp(-pb_sq(x/pw))*pb_noise(vec2(x*8.,y*5.-uTime*1.2))*pb_ss(0.,-.5,y);
       col=mix(col,vec3(.06,.06,.07),m*.65*uMagma);
+      // 분출 직후 열곡 위 바닷물에 비치는 붉은 빛
+      float rph=pb_risePh(uTime);
+      em+=vec3(1.,.35,.08)*exp(-pb_sq(x/.16))*exp(-max(0.,y-hs)*7.)*pb_riseOpen(rph)*pb_riseHeat(rph)*uMagma*.6;
     }
     sl=.85;
   }
@@ -1520,7 +1567,7 @@ function buildDivergent() {
   setLabels([
     ["해령 · 열곡", () => [0, divH(0, -3.4) + 0.1, -3.4]],
     ["새로운 해양 지각", () => [3.8, divBase(3.8) - 0.32, Z1]],
-    ["마그마 방", () => [0, divBase(0) - 0.34, Z1]],
+    ["판 틈으로 상승하는 마그마", () => [0, divBase(0) - 0.34, Z1]],
     ["부분 용융 (감압 용융)", () => [0, -4.3, Z1]],
     ["암석권 (판)", () => [-7, -3.2, Z1]],
     ["연약권", () => [5.5, -5.3, Z1]],
@@ -1628,7 +1675,7 @@ function buildTransform() {
 const INFO = {
   divergent: {
     title: "발산형 경계 — 해령",
-    text: "두 판이 서로 멀어지는 경계입니다. 판이 벌어진 틈으로 뜨거운 맨틀이 올라오면 압력이 낮아져 부분 용융(감압 용융)이 일어나고, 만들어진 마그마가 해령 아래 마그마 방에 모였다가 분출하여 새로운 해양 지각이 됩니다. 해령에서 멀어질수록 지각의 나이가 많아지고 퇴적물이 두꺼워지며, 판이 식어 무거워지므로 수심도 깊어집니다. 해령 중앙에는 열곡이 발달하고, 얕은 곳에서 지진과 화산 활동이 일어납니다. ‘경계선 · 고지자기 줄무늬’를 켜면 해령을 중심으로 대칭인 고지자기 줄무늬를 볼 수 있습니다."
+    text: "두 판이 서로 멀어지는 경계입니다. 판이 벌어진 틈으로 뜨거운 맨틀이 올라오면 압력이 낮아져 부분 용융(감압 용융)이 일어나고, 만들어진 마그마가 두 판 사이의 틈을 따라 해령 축 전체에서 올라와 해저를 가르고 분출하며, 식어서 새로운 해양 지각이 됩니다. 해령에서 멀어질수록 지각의 나이가 많아지고 퇴적물이 두꺼워지며, 판이 식어 무거워지므로 수심도 깊어집니다. 해령 중앙에는 열곡이 발달하고, 얕은 곳에서 지진과 화산 활동이 일어납니다. ‘경계선 · 고지자기 줄무늬’를 켜면 해령을 중심으로 대칭인 고지자기 줄무늬를 볼 수 있습니다."
   },
   convergent: {
     title: "수렴형 경계 — 섭입대",
