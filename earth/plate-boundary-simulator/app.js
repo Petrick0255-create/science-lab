@@ -754,7 +754,7 @@ void layDiv(float x,float y,float hs,inout vec3 col,inout float bh,inout vec3 em
   // 판 아래에 모인 마그마 (올라가기 직전에 부풀어 밝아진다)
   float pre=max(pb_ss(.8,1.,ph),1.-pb_ss(0.,.12,ph));
   float pe=length(vec2(x/.55,(y-(lb0-.3))/.36));
-  float pool=1.-pb_ss(.55,1.,pe);
+  float pool=(1.-pb_ss(.55,1.,pe))*uChamber;     // 마그마 방을 끄면 함께 숨긴다
   em+=magmaCol(vec2(x,y))*pool*(.35+.45*pre)*uMagma;
   col=mix(col,vec3(.22,.06,.02),pool*.7*uMagma);
   // 마그마 방 (설정의 '마그마 방 표시'로 따로 켜고 끈다)
@@ -770,7 +770,7 @@ void layDiv(float x,float y,float hs,inout vec3 col,inout float bh,inout vec3 em
   float slot=(1.-pb_ss(cw*.6,cw,abs(x-wob)))*step(y0,y)*step(y,hs);
   float yf=mix(y0,hs+.01,pb_riseFront(ph));
   float below=step(y,yf);
-  float fill=slot*below;
+  float fill=slot*below*mix(pb_ss(y0,y0+.22,y),1.,uChamber);  // 마그마 방이 없으면 부분 용융대에서 서서히 이어진다
   float crackTip=slot*(1.-below)*(1.-pb_ss(0.,.1,y-yf))*riseOn;   // 선단 바로 위의 가는 균열
   float tip=(1.-pb_ss(cw,cw*2.2,abs(x-wob)))*exp(-pb_sq((y-yf)/.04))*riseOn*step(y0,y);
   float cooled=fill*(1.-heat)*(1.-pb_ss(.9,1.,ph));
